@@ -1,32 +1,64 @@
 # FortiPoC-mgt-GCP
-Management of FortiPoC on Google Cloud Platform
-To easily handle FortiPoC workload on Google Cloud Platform (GCP) you can use these tools (scripts).
+Manage and configure FortiPoC instances on Google Cloud Platform (GCP).
+These scripts allow you to manage the workload of creating, configuring and deleting FortiPoc's in a consitent and easy way.
 
-This will allow you to:
+The scripts will allow you to:
 
-* **Handle GCP instances**: Build, Start, Stop, Delete, list
-* **Tweak FortiPoC**: config changes available per FortiPoC CLI
+* **Handle GCP instances**: Build, Start, Stop, Delete, list (gcpcmd.sh)
+* **Tweak FortiPoC**: config changes available per FortiPoC CLI (fpoc-to-all.sh)
 
 ## Prerequisites
 
 You will need to arrange GCP account and prepare your local environment
 
 * Active GCP account
-* Subscription to company project or your private project (billing)
+* Subscription to your private or company project (billing)
+* Computer system capable of running bash shell e.g. Linux, MacOs or Windows + Cygwin/Bash-on-Windows10
 * Locally installed `GCP SDK` ([Installing Google Cloud SDK](https://cloud.google.com/sdk/install))
 * Locally installed program `parallel` ([Install parallel on Mac OSX](http://macappstore.org/parallel/))
 
-###Obtaining Scripts
+## Obtaining Scripts
 
-You can obtain the latest scripts from Gitbub via `command to pull`.
+You can obtain the latest scripts versions from Gitbub.
 
-description
+## Install
 
-###Configure
+No package installation is needed besides those listed in prerequisites section.
+Pull the environment from git or unzip in your prefered working directory.
 
-Configuration description
+## Configure
 
-###Directory and file
+Configuration is embeded in gcpcmd.sh and will happen on first execution, or after gcpcmd.sh -d | --delete-config.
+User default settings will be stored in ~/.fpoc/gcpcmd.conf
+
+To create an example config file you can issue ./gcpcmd.sh -c. This will create a fpoc-example.conf template file which can be use to create workload specific config files. Copy fpoc-example.conf to conf directory with an descriptive name for your workload. You will need this file for the Build option via -c conf/fpoc-fwb-workshop.conf as an example.
+
+```
+# Uncomment and speficy to override user defaults
+#GCPPROJECT="cse-projects-xxxxxx"
+#FPPREPEND="fl"
+#LABELS="fortipoc=,flastname="
+#LICENSESERVER="10.1.1.1"
+
+# --- edits below this line ---
+# Specify FortiPoC instance details.
+MACHINETYPE="n1-standard-4"
+FPIMAGE="fortipoc-1-7-2-clear"
+#FPSIMPLEMENU="enable"
+FPTRAILKEY='ES-xamadrid-201907:765eb11f6523382c10513b66a8a4daf5'
+#GCPREPO="flastname"
+POCDEFINITION1="poc/ferry/FortiWeb-Basic-solution-workshop-v2.2.fpoc"
+#POCDEFINITION2="poc/ferry/FortiWeb-Advanced-Solutions-Workshop-v2.5.fpoc"
+#POCDEFINITION3=""
+#POCDEFINITION4=""
+#POCDEFINITION5=""
+#POCDEFINITION6=""
+#POCDEFINITION7=""
+#POCDEFINITION8=""
+#POCLAUNCH="FortiWeb Basic solutions"
+```
+
+## Directory and file
 
 The directory structure and file explained
 
@@ -35,21 +67,16 @@ The directory structure and file explained
  8 -rw-r--r--   1 fkemps  staff   587B Nov  1 16:41 fpoc-example.conf      << Config example created by -c option
 16 -rwxr-xr-x   1 fkemps  staff   5.2K Nov  1 16:10 fpoc-to-all.sh         << FortiPoC config tweaking script
 32 -rwxr-xr-x   1 fkemps  staff    12K Nov  1 16:40 gcpcmd.sh              << Handling instances on GCP
- 8 -rw-r--r--   1 fkemps  staff   160B Nov  1 14:24 logfile-20191030094853 << Put files from gcpcmd.sh
- 8 -rw-r--r--   1 fkemps  staff   140B Nov  1 14:24 logfile-20191030145519 << Put files from gcpcmd.s
+ 0 drwxr-xr-x  30 fkemps  staff   960B Nov  1 21:29 logs                   << Directory holding build log files
 ```
-
+## Managing FortiPoC instances
 
 To control the FortiPoC instances you can use the `gcpcmd.sh` script. This allows you to Build, Start, Stop, Delete and list FortiPoC instances.
 
 Building will be fully automatic per provided config file and FortiPoC will be running with PoC-definitions loaded and VMimages prefetched including the documentation.
 
-
-
 ```
-$ ./gcpcmd.sh
-
-(Version: 2019102301)
+(Version: 2019111101)
 Default deployment region: europe-west4-a
 Personal instance identification: fk
 Default product: test
@@ -57,54 +84,15 @@ Default product: test
 Usage: ./gcpcmd.sh [-c configfile] <region> <product> <action>
        ./gcpcmd.sh [-c configfile] [region] [product] list
        ./gcpcmd.sh [-c configfile] [region] [product] listpubip
-Options:
+OPTIONS:
+        -d    --delete-config     Delete default user config settings
+ARGUMENTS:
        region  : asia, europe, america
        product : fwb, fad, fpx, fsw, fsa, sme, xa, appsec, test
        action  : build, start, stop, delete, list, listpubip
 
 [UNKNOWN REGION] Specify: asia, europe  or america
 ```
-
-### Creating config file
-
-To generate the config template which you can tweak and copy issue the command `./gcpcmd.sh -c`. This will create in your current directory the template file called `fpoc-example.conf`.
-
-Edit this file to your needs, supported parameters are:
-
-```
-GCPPROJECT="<your GCP project name>"
-MACHINETYPE="<GCP machind type>"
-FPIMAGE="<fortipoc-image>"
-LICENSESERVER="<IP-address of license server on GCP"
-LABELS="fortipoc=,<your-name>="
-FPSIMPLEMENU="enable|disable"
-# --- edits below this line ---
-FPPREPEND="<your initials>"
-FPTRAILKEY='<your FortiPoC trail license'
-GCPREPO="<additional private repository>"
-POCDEFINITION1="<reference to POC-definition>"
-POCDEFINITION2=""
-POCDEFINITION3=""
-POCDEFINITION4=""
-POCDEFINITION5=""
-POCDEFINITION6=""
-POCDEFINITION7=""
-POCDEFINITION8=""
-POCLAUNCH="<Name of PoC to launch after build>"
-```
-
-### Set your defaults
-
-You can set some defaults in the `gcpcmd.sh` script to simplify usage, avoid conflicts with others and make your (and others) life easier.
-
-```
-# Your default personal settings. Can be overwritten with -c config option
-FPPREPEND="fk"
-ZONE=$EUROPE
-PRODUCT="test"
-```
-
-
 
 **Disclaimer**   
 *Nothing contained in this article is intended to teach or encourage the use of security tools or methodologies for illegal or unethical purposes. Always act in a responsible manner. Make sure you have written permission from the proper individuals before you use any of the tools or techniques described here outside this environment.*
