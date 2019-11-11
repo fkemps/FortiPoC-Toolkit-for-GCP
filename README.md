@@ -73,7 +73,7 @@ The directory structure and file explained
 
 To control the FortiPoC instances you can use the `gcpcmd.sh` script. This allows you to Build, Start, Stop, Delete and list FortiPoC instances.
 
-Building will be fully automatic per provided config file and FortiPoC will be running with PoC-definitions loaded and VMimages prefetched including the documentation.
+Building will be fully automatic per provided config file. FortiPoC's will be running with e.g. PoC-definitions loaded, VM images plus documentation prefetched, guest/guest account enabled, GUI title set and optionally a PoC-definition launched.
 
 ```
 (Version: 2019111101)
