@@ -8,7 +8,6 @@ The scripts will allow you to:
 * **Tweak FortiPoC**: config changes available per FortiPoC CLI (fpoc-to-all.sh)
 
 ## Prerequisites
-
 You will need access to GCP and prepare your local environment
 
 * Active GCP account
@@ -18,16 +17,24 @@ You will need access to GCP and prepare your local environment
 * Locally installed program `parallel` ([Install parallel on Mac OSX](http://macappstore.org/parallel/))
 
 ## Obtaining Scripts
-
 You can obtain the latest scripts versions from Gitbub.
 
 ## Install
-
 No package installation is needed besides those listed in prerequisites section.
 Pull the environment from git or unzip in your prefered working directory.
 
-## Configure
+## Directory and file
+The directory structure and files explained
 
+```
+ 0 drwxr-xr-x  15 fkemps  staff   480B Nov  1 16:22 conf                   << Directory holding fpoc-xxxxx.conf files
+ 8 -rw-r--r--   1 fkemps  staff   587B Nov  1 16:41 fpoc-example.conf      << Config example created by -c option
+16 -rwxr-xr-x   1 fkemps  staff   5.2K Nov  1 16:10 fpoc-to-all.sh         << FortiPoC config tweaking script
+32 -rwxr-xr-x   1 fkemps  staff    12K Nov  1 16:40 gcpcmd.sh              << Handling instances on GCP
+ 0 drwxr-xr-x  30 fkemps  staff   960B Nov  1 21:29 logs                   << Directory holding build log files
+```
+
+## Configure
 Configuration is embeded in gcpcmd.sh and will happen on first execution, or after gcpcmd.sh -d | --delete-config.   
 User default settings will be stored in ~/.fpoc/gcpcmd.conf
 
@@ -41,6 +48,7 @@ Provide GCP project name : cse-projects-xxxxxx
 Provide GCP license server IP : 10.1.1.1
 ```
 
+## Build Config Template
 To create an example config file you can issue ./gcpcmd.sh -c. This will create a fpoc-example.conf template file which can be use to create workload specific config files. Copy fpoc-example.conf to conf directory with an descriptive name for your workload. You will need this file for the Build option via -c conf/fpoc-fwb-workshop.conf as an example.
 
 ```
@@ -68,19 +76,7 @@ POCDEFINITION1="poc/ferry/FortiWeb-Basic-solution-workshop-v2.2.fpoc"
 #POCLAUNCH="FortiWeb Basic solutions"
 ```
 
-## Directory and file
-
-The directory structure and file explained
-
-```
- 0 drwxr-xr-x  15 fkemps  staff   480B Nov  1 16:22 conf                   << Directory holding fpoc-xxxxx.conf files
- 8 -rw-r--r--   1 fkemps  staff   587B Nov  1 16:41 fpoc-example.conf      << Config example created by -c option
-16 -rwxr-xr-x   1 fkemps  staff   5.2K Nov  1 16:10 fpoc-to-all.sh         << FortiPoC config tweaking script
-32 -rwxr-xr-x   1 fkemps  staff    12K Nov  1 16:40 gcpcmd.sh              << Handling instances on GCP
- 0 drwxr-xr-x  30 fkemps  staff   960B Nov  1 21:29 logs                   << Directory holding build log files
-```
 ## Managing FortiPoC instances
-
 To control the FortiPoC instances you can use the `gcpcmd.sh` script. This allows you to Build, Start, Stop, Delete and list FortiPoC instances.
 
 Building will be fully automatic per provided config file. FortiPoC's will be running with e.g. PoC-definitions loaded, VM images plus documentation prefetched, guest/guest account enabled, GUI title set and optionally a PoC-definition launched.
