@@ -1,6 +1,6 @@
 # FortiPoC management toolkit for GCP
 
-![](img/FortiPoConGCP.png)
+<img src="img/FortiPoConGCP.png" alt="FortiPoC on GCP" width="314" height="375" style="display: block; margin: 0 auto" />
 
 Manage and configure FortiPoC instances on Google Cloud Platform (GCP).
 This toolkit (scripts) allow you to manage the workload of creating, configuring and deleting FortiPoc's in a consitent and easy way.
