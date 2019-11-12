@@ -23,7 +23,7 @@ You can obtain the latest scripts versions from Gitbub.
 No package installation is needed besides those listed in prerequisites section.
 Pull the environment from git or unzip in your prefered working directory.
 
-## Directory and file
+### Directory and file
 The directory structure and files explained
 
 ```
@@ -34,7 +34,7 @@ The directory structure and files explained
  0 drwxr-xr-x  30 fkemps  staff   960B Nov  1 21:29 logs                   << Directory holding build log files
 ```
 
-## Configure
+### Configure
 Configuration is embeded in gcpcmd.sh and will happen on first execution, or after gcpcmd.sh -d | --delete-config.   
 User default settings will be stored in ~/.fpoc/gcpcmd.conf
 
@@ -48,7 +48,7 @@ Provide GCP project name : cse-projects-xxxxxx
 Provide GCP license server IP : 10.1.1.1
 ```
 
-## Build Config Template
+### Build Config Template
 To create an example config file you can issue ./gcpcmd.sh -c. This will create a fpoc-example.conf template file which can be use to create workload specific config files. Copy fpoc-example.conf to conf directory with an descriptive name for your workload. You will need this file for the Build option via -c conf/fpoc-fwb-workshop.conf as an example.
 
 ```
