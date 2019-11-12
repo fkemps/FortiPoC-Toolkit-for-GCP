@@ -1,11 +1,16 @@
-# FortiPoC-mgt-GCP
-Manage and configure FortiPoC instances on Google Cloud Platform (GCP).
-These scripts allow you to manage the workload of creating, configuring and deleting FortiPoc's in a consitent and easy way.
+# FortiPoC management toolkit for GCP
 
-The scripts will allow you to:
+<center>![](img/FortiPoConGCP.png)</center>
+
+Manage and configure FortiPoC instances on Google Cloud Platform (GCP).
+This toolkit (scripts) allow you to manage the workload of creating, configuring and deleting FortiPoc's in a consitent and easy way.
+
+The toolkit allows you to:
 
 * **Handle GCP instances**: Build, Start, Stop, Delete, list (gcpcmd.sh)
 * **Tweak FortiPoC**: config changes available per FortiPoC CLI (fpoc-to-all.sh)
+
+![](img/FortiPoCflow.png)
 
 ## Prerequisites
 You will need access to GCP and prepare your local environment
