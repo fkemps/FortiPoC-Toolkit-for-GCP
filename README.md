@@ -41,6 +41,8 @@ The directory structure and files explained
  0 drwxr-xr-x  30 fkemps  staff   960B Nov  1 21:29 logs                   << Directory holding build log files
 ```
 
+# Handle GCP Instanced - *gcpcmd.sh*
+
 ### Configure
 Configuration is embeded in gcpcmd.sh and will happen on first execution, or after gcpcmd.sh -d | --delete-config.   
 User default settings will be stored in ~/.fpoc/gcpcmd.conf
@@ -84,9 +86,11 @@ POCDEFINITION1="poc/ferry/FortiWeb-Basic-solution-workshop-v2.2.fpoc"
 ```
 
 ## Managing FortiPoC instances
-To control the FortiPoC instances you can use the `gcpcmd.sh` script. This allows you to Build, Start, Stop, Delete and list FortiPoC instances.
+To control the FortiPoC instances you can use the `gcpcmd.sh` script.   
+This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **list** FortiPoC instances.
 
-Building will be fully automatic per provided config file. FortiPoC's will be running with e.g. PoC-definitions loaded, VM images plus documentation prefetched, guest/guest account enabled, GUI title set and optionally a PoC-definition launched.
+### Build
+Building will be fully automatic per config file. FortiPoC's will be running with e.g. PoC-definitions loaded, VM images plus documentation prefetched, guest/guest account enabled, GUI title set and optionally a PoC-definition launched.
 
 ```
 (Version: 2019111101)
@@ -106,6 +110,52 @@ ARGUMENTS:
 
 [UNKNOWN REGION] Specify: asia, europe  or america
 ```
+
+### Clone
+Under development
+
+### Start / Stop
+
+### Delete
+
+
+### List
+
+---
+
+# Tweaking FortiPoC Settings - *fpoc-to-all.sh*
+Settings of running FortiPoC instances can be tweaked in a consistend and automated way.
+
+The `fpoc-to-all.sh` script allows you to issue CLI commands on a single or multiple FortiPoC's.
+
+```
+(Version: 2019110802)
+Usage: ./fpoc-to-all.sh OPTION
+
+OPTION: -a    --address       IP-address FortiPoC 192.168.254.1 or multiple via "192.168.254.2 192.168.254.3" space delimitted
+        -h    --help          Show script usage and options
+        -r    --run           Execute commands on FortiPoC CLI
+        -s    --show          Show commands executed on FortiPoC CLI
+```
+
+### FortiPoC targets (IP-addresses)
+
+`-a | --address` option allows you to provide dynamically the list of FortiPoC's.   
+You can use the `gcpcmd.sh \<region> \<product> listpubip` to generate the list of IP-addresses for the `-a | --address` option.
+
+You can statially provide the list by editing *fpoc-to-all.sh* script and define them in `"IPADDRESS="` parameter.
+
+
+`-s | --show` option shows the CLI command to be executed on FortiPoC's. This allow you to validate before executing.
+
+`-r | --run` option will execute the commands on FortiPoC's.
+
+### CLI commands to execute
+
+
+
+
+
 
 **Disclaimer**   
 *Nothing contained in this article is intended to teach or encourage the use of security tools or methodologies for illegal or unethical purposes. Always act in a responsible manner. Make sure you have written permission from the proper individuals before you use any of the tools or techniques described here outside this environment.*
