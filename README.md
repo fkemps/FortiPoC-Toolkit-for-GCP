@@ -89,8 +89,7 @@ POCDEFINITION1="poc/ferry/FortiWeb-Basic-solution-workshop-v2.2.fpoc"
 To control the FortiPoC instances you can use the `gcpcmd.sh` script.   
 This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **list** FortiPoC instances.
 
-### Build
-Building will be fully automatic per config file. FortiPoC's will be running with e.g. PoC-definitions loaded, VM images plus documentation prefetched, guest/guest account enabled, GUI title set and optionally a PoC-definition launched.
+`./gcpcmd-new.sh`
 
 ```
 (Version: 2019111101)
@@ -111,15 +110,173 @@ ARGUMENTS:
 [UNKNOWN REGION] Specify: asia, europe  or america
 ```
 
+
+### Build
+Building will be fully automatic per config file. FortiPoC's will be running with e.g. PoC-definitions loaded, VM images plus documentation prefetched, guest/guest account enabled, GUI title set and optionally a PoC-definition launched.
+
+`./gcpcmd-new.sh -c conf/fpoc-test.conf europe test build`
+
+```
+---------------------------------------------------------------------
+             FortiPoC management on Google Cloud Platform
+---------------------------------------------------------------------
+
+ Enter amount of FortiPoC's : 3
+ Enter start of numbered range : 1
+
+Okay to build fpoc-fk-test-001 till fpoc-fk-test-003 in region europe-west4-a.   y/n? y
+==> Lets go...using Zone=europe-west4-a, Product=test, Action=build
+==> Sleeping 1s seconds to avoid GCP DB locking
+==> Creating instance fpoc-fk-test-003
+NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP  STATUS
+fpoc-fk-test-003  europe-west4-a  n1-standard-4               10.164.0.64  34.90.88.37  RUNNING
+
+==> Sleeping 90 seconds to allow FortiPoC booting up
+fpoc-fk-test-003 = 34.90.88.37
+FortiPoC fpoc-fk-test-003 on 34.90.88.37 reachable
+==> Registering FortiPoC
+Boot installation:
+1/ Preparing host
+2/ Mounting disks
+- Preparing resources disk
+- Preparing local repository
+- Enabling SWAP
+3/ Validating DB
+- Building en_US locale(s)
+- Set default LANG to en_US.UTF-8
+- Migrating
+- Preparing default values
+- Apply default settings
+- Generating default configuration
+- Defining users permissions
+- Analyzing host hardware
+  synciface
+  hoststate
+  virtcpu
+  complete
+4/ Enabling interfaces
+- Enabling /etc/network/interfaces.d/eth0
+5/ Enabling WebUI
+- Start WebUI
+6/ L0 Hypervisor tasks
+registered
+==> Setting title
+==> Setting licenseserver
+==> Prefetching all images and documentation
+==> End of Build phase <==
+<other output skipped>
+```
+
+Output for all FortiPoC builds will by provided once finished build phase.
+
+
+
 ### Clone
 Under development
 
 ### Start / Stop
 
+`./gcpcmd-new.sh europe test stop`
+
+```
+---------------------------------------------------------------------
+             FortiPoC management on Google Cloud Platform
+---------------------------------------------------------------------
+
+ Enter amount of FortiPoC's : 2
+ Enter start of numbered range : 1
+
+Okay to stop fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west4-a.   y/n? y
+==> Lets go...using Zone=europe-west4-a, Product=test, Action=stop
+
+==> Stopping instance fpoc-fk-test-001
+Stopping instance(s) fpoc-fk-test-001...
+..............................................................................................................................................................................................................................done.
+Updated [https://compute.googleapis.com/compute/v1/projects/cse-projects-202906/zones/europe-west4-a/instances/fpoc-fk-test-001].
+==> Stopping instance fpoc-fk-test-002
+Stopping instance(s) fpoc-fk-test-002...
+..........................................................................................................................................................................................................................................done.
+Updated [https://compute.googleapis.com/compute/v1/projects/cse-projects-202906/zones/europe-west4-a/instances/fpoc-fk-test-002].
+```
+
 ### Delete
 
+`./gcpcmd-new.sh europe test delete`
+
+```
+---------------------------------------------------------------------
+             FortiPoC management on Google Cloud Platform
+---------------------------------------------------------------------
+
+ Enter amount of FortiPoC's : 3
+ Enter start of numbered range : 1
+
+Okay to delete fpoc-fk-test-001 till fpoc-fk-test-003 in region europe-west4-a.   y/n? y
+==> Lets go...using Zone=europe-west4-a, Product=test, Action=delete
+
+==> Deleting instance fpoc-fk-test-002
+The following instances will be deleted. Any attached disks configured
+ to be auto-deleted will be deleted unless they are attached to any
+other instances or the `--keep-disks` flag is given and specifies them
+ for keeping. Deleting a disk is irreversible and any data on the disk
+ will be lost.
+ - [fpoc-fk-test-002] in [europe-west4-a]
+
+Do you want to continue (Y/n)?
+Deleted [https://www.googleapis.com/compute/v1/projects/cse-projects-202906/zones/europe-west4-a/instances/fpoc-fk-test-002].
+==> Deleting instance fpoc-fk-test-001
+The following instances will be deleted. Any attached disks configured
+ to be auto-deleted will be deleted unless they are attached to any
+other instances or the `--keep-disks` flag is given and specifies them
+ for keeping. Deleting a disk is irreversible and any data on the disk
+ will be lost.
+ - [fpoc-fk-test-001] in [europe-west4-a]
+
+Do you want to continue (Y/n)?
+Deleted [https://www.googleapis.com/compute/v1/projects/cse-projects-202906/zones/europe-west4-a/instances/fpoc-fk-test-001].
+==> Deleting instance fpoc-fk-test-003
+The following instances will be deleted. Any attached disks configured
+ to be auto-deleted will be deleted unless they are attached to any
+other instances or the `--keep-disks` flag is given and specifies them
+ for keeping. Deleting a disk is irreversible and any data on the disk
+ will be lost.
+ - [fpoc-fk-test-003] in [europe-west4-a]
+
+Do you want to continue (Y/n)?
+Deleted [https://www.googleapis.com/compute/v1/projects/cse-projects-202906/zones/europe-west4-a/instances/fpoc-fk-test-003].
+```
 
 ### List
+Full overview of FortiPoC's can be obtained with **list** function. Specify *region*, *product* and *list*.
+
+`/gcpcmd-new.sh europe test list`
+
+```
+---------------------------------------------------------------------
+             FortiPoC management on Google Cloud Platform
+---------------------------------------------------------------------
+
+==> Lets go...using Zone=europe-west4-a, Product=test, Action=list
+
+NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
+fpoc-fk-test-001  europe-west4-a  n1-standard-4               10.164.0.66  34.90.107.239  RUNNING
+fpoc-fk-test-002  europe-west4-a  n1-standard-4               10.164.0.65  34.90.90.164   RUNNING
+fpoc-fk-test-003  europe-west4-a  n1-standard-4               10.164.0.64  34.90.88.37    RUNNING
+```
+
+FortiPoC IP-addresses can be obtained to use for `fpoc-to-all.sh` usage.
+
+`./gcpcmd-new.sh europe test listpubip`
+
+```
+---------------------------------------------------------------------
+             FortiPoC management on Google Cloud Platform
+---------------------------------------------------------------------
+
+==> Lets go...using Zone=europe-west4-a, Product=test, Action=listpubip
+
+34.90.107.239 34.90.90.164 34.90.88.37
+```
 
 ---
 
