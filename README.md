@@ -9,7 +9,7 @@ The scripts will allow you to:
 
 ## Prerequisites
 
-You will need to arrange GCP account and prepare your local environment
+You will need access to GCP and prepare your local environment
 
 * Active GCP account
 * Subscription to your private or company project (billing)
@@ -30,6 +30,16 @@ Pull the environment from git or unzip in your prefered working directory.
 
 Configuration is embeded in gcpcmd.sh and will happen on first execution, or after gcpcmd.sh -d | --delete-config.   
 User default settings will be stored in ~/.fpoc/gcpcmd.conf
+
+```
+Welcome to Google Cloud Platform Command tool
+Looks like your first run or no defaults available. Let's set them!
+Provide your initials : fl
+Provide your region 1) Asia, 2) Europe, 3) America : 1
+Provide GCP instance label F(irst)LASTNAME e.g. jdoe : flastname
+Provide GCP project name : cse-projects-xxxxxx
+Provide GCP license server IP : 10.1.1.1
+```
 
 To create an example config file you can issue ./gcpcmd.sh -c. This will create a fpoc-example.conf template file which can be use to create workload specific config files. Copy fpoc-example.conf to conf directory with an descriptive name for your workload. You will need this file for the Build option via -c conf/fpoc-fwb-workshop.conf as an example.
 
