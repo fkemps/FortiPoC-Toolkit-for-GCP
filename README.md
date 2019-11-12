@@ -44,8 +44,8 @@ The directory structure and files explained
 # Handle GCP Instanced - *gcpcmd.sh*
 
 ### Configure
-Configuration is embeded in gcpcmd.sh and will happen on first execution, or after gcpcmd.sh -d | --delete-config.   
-User default settings will be stored in ~/.fpoc/gcpcmd.conf
+Configuration is embeded in gcpcmd.sh and will happen on first execution, or after `gcpcmd.sh -d | --delete-config`.   
+User default settings will be stored in `~/.fpoc/gcpcmd.conf`
 
 ```
 Welcome to Google Cloud Platform Command tool
@@ -58,7 +58,7 @@ Provide GCP license server IP : 10.1.1.1
 ```
 
 ### Build Config Template
-To create an example config file you can issue ./gcpcmd.sh -c. This will create a fpoc-example.conf template file which can be use to create workload specific config files. Copy fpoc-example.conf to conf directory with an descriptive name for your workload. You will need this file for the Build option via -c conf/fpoc-fwb-workshop.conf as an example.
+To create an example config file you can issue `./gcpcmd.sh -c`. This will create a fpoc-example.conf template file which can be use to create workload specific config files. Copy fpoc-example.conf to conf directory with an descriptive name for your workload. You will need this file for the Build option via -c conf/fpoc-fwb-workshop.conf as an example.
 
 ```
 # Uncomment and speficy to override user defaults
