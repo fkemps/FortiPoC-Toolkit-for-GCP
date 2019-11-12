@@ -141,9 +141,10 @@ OPTION: -a    --address       IP-address FortiPoC 192.168.254.1 or multiple via 
 ### FortiPoC targets (IP-addresses)
 
 `-a | --address` option allows you to provide dynamically the list of FortiPoC's.   
-You can use the `gcpcmd.sh \<region> \<product> listpubip` to generate the list of IP-addresses for the `-a | --address` option.
 
-You can statially provide the list by editing *fpoc-to-all.sh* script and define them in `"IPADDRESS="` parameter.
+Use the `gcpcmd.sh \<region> \<product> listpubip` to generate the list of IP-addresses for the `-a | --address` option.
+
+Alternatively you can statially provide the list by editing *fpoc-to-all.sh* script and define them in `"IPADDRESS="` parameter.
 
 
 `-s | --show` option shows the CLI command to be executed on FortiPoC's. This allow you to validate before executing.
@@ -151,9 +152,6 @@ You can statially provide the list by editing *fpoc-to-all.sh* script and define
 `-r | --run` option will execute the commands on FortiPoC's.
 
 ### CLI commands to execute
-
-
-
 
 
 
