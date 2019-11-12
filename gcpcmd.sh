@@ -25,7 +25,8 @@
 # 2019110501 Ferry Kemps, Little output corrections
 # 2019110601 Ferry Kemps, Moved logfiles to logs directory
 # 2019111101 Ferry Kemps, Added automatic defaults per ~/.fpoc/gcpcmd.conf
-GCPCMDVERSION="2019111101"
+# 2019111102 Ferry Kemps, Expanded user defaults
+GCPCMDVERSION="2019111102"
 
 # Zones where to deploy
 ASIA="asia-southeast1-b"
@@ -162,7 +163,11 @@ if [ ! -f $GCPCMDCONF ]; then
       esac
    done
    read -p "Provide GCP instance label F(irst)LASTNAME e.g. jdoe : " CONFGCPLABEL
+   read -p "Provide GCP project name : " CONFPROJECTNAME
+   read -p "Provide GCP license server IP : " CONFLICENSESERVER
    cat << EOF > $GCPCMDCONF
+GCPPROJECT="$CONFPROJECTNAME"
+LICENSESERVER="$CONFLICENSESERVER"
 FPPREPEND="$CONFINITIALS"
 ZONE="$CONFREGION"
 LABELS="fortipoc=,$CONFGCPLABEL="
@@ -181,25 +186,28 @@ case $1 in
     else
       echo "Config file not found. Example file written as fpoc-example.conf"
       cat << EOF > fpoc-example.conf
-GCPPROJECT="cse-projects-202906"
+# Uncomment and speficy to override user defaults
+#GCPPROJECT="$GCPPROJECT"
+#FPPREPEND="$FPPREPEND"
+#LABELS="$LABELS"
+#LICENSESERVER="$LICENSESERVER"
+
+# --- edits below this line ---
+# Specify FortiPoC instance details.
 MACHINETYPE="n1-standard-4"
 FPIMAGE="fortipoc-1-7-2-clear"
-LICENSESERVER="10.132.0.78"
-LABELS="$LABELS"
-FPSIMPLEMENU="enable"
-# --- edits below this line ---
-FPPREPEND="$FPPREPEND"
+#FPSIMPLEMENU="enable"
 FPTRAILKEY='ES-xamadrid-201907:765eb11f6523382c10513b66a8a4daf5'
-GCPREPO="fkemps"
+#GCPREPO="fkemps"
 POCDEFINITION1="poc/ferry/FortiWeb-Basic-solution-workshop-v2.2.fpoc"
-POCDEFINITION2="poc/ferry/FortiWeb-Advanced-Solutions-Workshop-v2.5.fpoc"
-POCDEFINITION3=""
-POCDEFINITION4=""
-POCDEFINITION5=""
-POCDEFINITION6=""
-POCDEFINITION7=""
-POCDEFINITION8=""
-POCLAUNCH="FortiWeb Basic solutions"
+#POCDEFINITION2="poc/ferry/FortiWeb-Advanced-Solutions-Workshop-v2.5.fpoc"
+#POCDEFINITION3=""
+#POCDEFINITION4=""
+#POCDEFINITION5=""
+#POCDEFINITION6=""
+#POCDEFINITION7=""
+#POCDEFINITION8=""
+#POCLAUNCH="FortiWeb Basic solutions"
 EOF
       exit
     fi
