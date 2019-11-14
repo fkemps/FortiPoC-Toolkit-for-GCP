@@ -26,7 +26,8 @@
 # 2019110601 Ferry Kemps, Moved logfiles to logs directory
 # 2019111101 Ferry Kemps, Added automatic defaults per ~/.fpoc/gcpcmd.conf
 # 2019111102 Ferry Kemps, Expanded user defaults
-GCPCMDVERSION="2019111102"
+# 2019111401 Ferry Kemps, Added add/remove IP-address to GCP ACL
+GCPCMDVERSION="2019111401"
 
 # Zones where to deploy
 ASIA="asia-southeast1-b"
@@ -43,6 +44,59 @@ PARALLELOPT="--joblog logs/logfile-`date +%Y%m%d%H%M%S` -j 100 "
 ########################
 # Functions
 ########################
+function validateIP() {
+  local ip=$1
+  local stat=1
+  if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+     OIFS=$IFS
+     IFS='.'
+     ip=($ip)
+     IFS=$OIFS
+     [[ ${ip[0]} -le 239 && ${ip[1]} -le 255 \
+     && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+     stat=$?
+  fi
+  return $stat
+}
+
+function gcpaclupdate() {
+   CMD=$1
+# Obtain current public IP-address
+   PUBLICIP=`dig TXT -4 +short o-o.myaddr.l.google.com @ns1.google.com | sed -e 's/"//g'`
+   validateIP $PUBLICIP
+   [ ! $? -eq 0 ] && (echo "Public IP not retreavable or not valid"; exit) 
+   if [ $CMD == add ]; then
+      echo "Adding public-ip $PUBLICIP to GCP ACL to allow access from this location"
+      while read line
+      do
+         if [ -z $SOURCERANGE ]; then
+            SOURCERANGE="$line"
+         else
+            SOURCERANGE="$SOURCERANGE,$line"
+         fi
+      done < <(gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]')
+      SOURCERANGE="$SOURCERANGE,$PUBLICIP"
+      gcloud compute firewall-rules update workshop-source-networks --source-ranges=$SOURCERANGE
+      echo "Current GCP ACL list"
+      gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]'
+      echo ""
+   else
+      echo "Removing public-ip $PUBLICIP to GCP ACL to remove access from this location"
+      while read line
+      do
+         if [ -z $SOURCERANGE ]; then
+            [ ! $line == $PUBLICIP ] && SOURCERANGE="$line"
+         else
+            [ ! $line == $PUBLICIP ] && SOURCERANGE="$SOURCERANGE,$line"
+         fi
+      done < <(gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]')
+      gcloud compute firewall-rules update workshop-source-networks --source-ranges=$SOURCERANGE
+      echo "Current GCP ACL list"
+      gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]'
+      echo ""
+   fi
+}
+
 function gcpbuild {
 
   if [ "$CONFIGFILE" == "" ]; then
@@ -143,7 +197,8 @@ function gcpdelete {
 #########################
 # First check if required software is available
 type gcloud > /dev/null 2>&1 || (echo "gcloud SDK not installed"; exit)
-type parallel > /dev/null 2>&1 || (echo "parallel command not installed";exit)
+type parallel > /dev/null 2>&1 || (echo "parallel command not installed"; exit)
+type jq > /dev/null 2>&1 || (echo "jq command not installed"; exit)
 echo ""
 
 # Check on first run and user specific defaults
@@ -164,7 +219,14 @@ if [ ! -f $GCPCMDCONF ]; then
    done
    read -p "Provide GCP instance label F(irst)LASTNAME e.g. jdoe : " CONFGCPLABEL
    read -p "Provide GCP project name : " CONFPROJECTNAME
-   read -p "Provide GCP license server IP : " CONFLICENSESERVER
+   until [[ $VALIDIP -eq 1 ]]; do
+      read -p "Provide GCP license server IP (Optional) : " CONFLICENSESERVER
+      if [ -z $CONFLICENSESERVER];then
+         VALIDIP=1
+      else
+         validateIP $CONFLICENSESERVER
+      fi
+   done
    cat << EOF > $GCPCMDCONF
 GCPPROJECT="$CONFPROJECTNAME"
 LICENSESERVER="$CONFLICENSESERVER"
@@ -217,6 +279,14 @@ EOF
      rm $GCPCMDCONF
      exit
      ;;
+  -ia | --ip-address-add)
+     gcpaclupdate add
+     exit
+     ;;
+  -ir | --ip-address-remove)
+     gcpaclupdate remove
+     exit
+     ;;
   *)
    # Check command and options
    if [ $# -lt 2 ]; then
@@ -230,6 +300,8 @@ EOF
       echo "       $0 [-c configfile] [region] [product] listpubip"
       echo "OPTIONS:"
       echo "        -d    --delete-config     Delete default user config settings"
+      echo "        -ia   --ip-address-add    Add current public IP-address to GCP ACL"
+      echo "        -ir   --ip-address-remove Remove current public IP-address from GCP ACL"
       echo "ARGUMENTS:"
       echo "       region  : asia, europe, america"
       echo "       product : fwb, fad, fpx, fsw, fsa, sme, xa, appsec, test"
