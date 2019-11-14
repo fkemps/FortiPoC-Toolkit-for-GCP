@@ -27,7 +27,7 @@
 # 2019111101 Ferry Kemps, Added automatic defaults per ~/.fpoc/gcpcmd.conf
 # 2019111102 Ferry Kemps, Expanded user defaults
 # 2019111401 Ferry Kemps, Added add/remove IP-address to GCP ACL
-GCPCMDVERSION="2019111102"
+GCPCMDVERSION="2019111401"
 
 # Zones where to deploy
 ASIA="asia-southeast1-b"
