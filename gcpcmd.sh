@@ -197,7 +197,8 @@ function gcpdelete {
 #########################
 # First check if required software is available
 type gcloud > /dev/null 2>&1 || (echo "gcloud SDK not installed"; exit)
-type parallel > /dev/null 2>&1 || (echo "parallel command not installed";exit)
+type parallel > /dev/null 2>&1 || (echo "parallel command not installed"; exit)
+type jq > /dev/null 2>&1 || (echo "jq command not installed"; exit)
 echo ""
 
 # Check on first run and user specific defaults
