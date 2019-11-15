@@ -395,7 +395,6 @@ First you need to do the Steps 1, 2 and 3 by uncommenting the "echo" lines as de
 ```
 ----------------- Executing commands on FortiPoCs --------------------------
 echo "Adding SSK-keys"; sshfpoc 'set ssh authorize keys "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNJYNMdL9o1Xt3ADg1DCOBhp8Vvr6eX8KGOK9tpqYH8Q6yW6Y1ARzDwqytg2zacRqwwZdpelEQ2vc9Kd4xsYA2Ds/OvUhwxJ1mPr5AVaqy6UxmkSU4fIQaIwkBgfaVxxntND8WRQVbjvkvlfoVBel93yz4jYcUDG0wsBNawuMS2BYHXDWb+w5RtEtkWf1cGfzHVSQSrhmk1uFFXMhFY95t9b1mMgroZqYkYaYb1sxmOxnQTQwC1J5Hf8LajXAMPV9br523mCXpJ5aeD+1T1706XM8EikT9JHDhgnqyTLMf8FAdaetT2fju2FZ9WnmHM2V3wQnC0t0QIuoYgEnZlQND fkemps@Ferrys-MacBook-Pro.local"'
-echo "Adding SSK-keys"; sshfpoc 'set ssh authorize keys "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDRB3XI5fX/nRfFLscaaAu4Nz0oNk6gzE9qo7sJ318me+y//i1qpjeS2jB6WjWaUgNeaUuolM4dWfZlkpziQD+oKZVz9ov/NS6QGar9KGcNlLoiuyozZcsZf1DULFKHhYwPm8RO/Xlfem8HVUk8tND2UiVGxStRlYK/dWikeEXdMpti3tWHz/00SXSRilS67uhnQ3VQhRmqforizwE+fhLero4kOxQi8ATSvSlgUe/+5SwvjwSi0poeqiZCVd2ljLmxoZck7dLBULFr3FQIHFyCYlmvI2BAn7j0T8OhonjeuM/7/kd2UckTiBa8wZj/9nPw3Ad9C3Lli5eh4O5tbMKD jameschoa@jamess-macbook-pro.local"'
 echo "Validating access"; sshfpoc 'exit'
 echo "Changing admin pwd"; sshfpoc 'set passwd f0rt1n3t2019'
 ----------------------------------------------------------------------------
