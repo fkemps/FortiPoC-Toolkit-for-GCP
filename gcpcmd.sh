@@ -76,34 +76,34 @@ function gcpaclupdate() {
    CMD=$1
 # Obtain current public IP-address
    PUBLICIP=`dig TXT -4 +short o-o.myaddr.l.google.com @ns1.google.com | sed -e 's/"//g'`
-   validateIP $PUBLICIP
+   validateIP ${PUBLICIP}
    [ ! $? -eq 0 ] && (echo "Public IP not retreavable or not valid"; exit) 
-   if [ $CMD == add ]; then
-      echo "Adding public-ip $PUBLICIP to GCP ACL to allow access from this location"
+   if [ ${CMD} == add ]; then
+      echo "Adding public-ip ${PUBLICIP} to GCP ACL to allow access from this location"
       while read line
       do
-         if [ -z $SOURCERANGE ]; then
+         if [ -z ${SOURCERANGE} ]; then
             SOURCERANGE="$line"
          else
-            SOURCERANGE="$SOURCERANGE,$line"
+            SOURCERANGE="${SOURCERANGE},$line"
          fi
       done < <(gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]')
-      SOURCERANGE="$SOURCERANGE,$PUBLICIP"
-      gcloud compute firewall-rules update workshop-source-networks --source-ranges=$SOURCERANGE
+      SOURCERANGE="${SOURCERANGE},${PUBLICIP}"
+      gcloud compute firewall-rules update workshop-source-networks --source-ranges=${SOURCERANGE}
       echo "Current GCP ACL list"
       gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]'
       echo ""
    else
-      echo "Removing public-ip $PUBLICIP to GCP ACL to remove access from this location"
+      echo "Removing public-ip ${PUBLICIP} to GCP ACL to remove access from this location"
       while read line
       do
-         if [ -z $SOURCERANGE ]; then
-            [ ! $line == $PUBLICIP ] && SOURCERANGE="$line"
+         if [ -z ${SOURCERANGE} ]; then
+            [ ! $line == ${PUBLICIP} ] && SOURCERANGE="$line"
          else
-            [ ! $line == $PUBLICIP ] && SOURCERANGE="$SOURCERANGE,$line"
+            [ ! $line == ${PUBLICIP} ] && SOURCERANGE="${SOURCERANGE},$line"
          fi
       done < <(gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]')
-      gcloud compute firewall-rules update workshop-source-networks --source-ranges=$SOURCERANGE
+      gcloud compute firewall-rules update workshop-source-networks --source-ranges=${SOURCERANGE}
       echo "Current GCP ACL list"
       gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]'
       echo ""
@@ -113,7 +113,7 @@ function gcpaclupdate() {
 # Function to build a FortiPoC instance on GCP
 function gcpbuild {
 
-  if [ "$CONFIGFILE" == "" ]; then
+  if [ "${CONFIGFILE}" == "" ]; then
      echo "Config file missing. Use -c option to specify or to generate fpoc-example.conf file"
      exit
   fi
@@ -126,8 +126,8 @@ function gcpbuild {
   INSTANCE=$5
   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
 
-  echo "==> Sleeping $RANDOMSLEEP seconds to avoid GCP DB locking"
-  sleep $RANDOMSLEEP
+  echo "==> Sleeping ${RANDOMSLEEP} seconds to avoid GCP DB locking"
+  sleep ${RANDOMSLEEP}
   echo "==> Creating instance ${INSTANCENAME}"
   gcloud compute \
   instances create ${INSTANCENAME} \
@@ -187,7 +187,7 @@ function gcpclone {
   CLONESNAPSHOT="fpoc-${FPPREPEND}-${PRODUCT}"
   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
 
-  echo "==> Sleeping $RANDOMSLEEP seconds to avoid GCP DB locking"
+  echo "==> Sleeping ${RANDOMSLEEP} seconds to avoid GCP DB locking"
   sleep ${RANDOMSLEEP}
   echo "==> Cloning instance ${CLONESOURCE} to ${INSTANCENAME}"
   echo "==> Creating disk for ${INSTANCENAME}"
@@ -210,13 +210,6 @@ function gcpclone {
   --disk "name=${INSTANCENAME},device-name=${INSTANCENAME},mode=rw,boot=yes,auto-delete=yes" \
   --min-cpu-platform=Intel\ Broadwell \
   --tags=fortipoc-http-https-redir,workshop-source-networks
-
-#  # Give Google 60 seconds to start the instance
-#  echo ""; echo "==> Sleeping 90 seconds to allow FortiPoC booting up"; sleep 90
-#  INSTANCEIP=`gcloud beta compute instances describe ${INSTANCENAME} --zone=${ZONE} | grep natIP | awk '{ print $2 }'`
-#  echo ${INSTANCENAME} "=" ${INSTANCEIP}
-#  curl -k -q --retry 1 --connect-timeout 10 https://${INSTANCEIP}/ && echo "FortiPoC ${INSTANCENAME} on ${INSTANCEIP} reachable"
-#  [ $? != 0 ] && echo "==> Something went wrong. The new instance is not reachable"
 }
 
 # Function to start FortiPoC instance
@@ -266,13 +259,13 @@ echo ""
 # Chech if .fpoc directory exists, create if not exist to store peronal perferences
 [ ! -d ~/.fpoc/ ] && mkdir ~/.fpoc
 eval GCPCMDCONF="~/.fpoc/gcpcmd.conf"
-if [ ! -f $GCPCMDCONF ]; then
+if [ ! -f ${GCPCMDCONF} ]; then
    echo "Welcome to Google Cloud Platform Command tool"
    echo "Looks like your first run or no defaults available. Let's set them!" 
    read -p "Provide your initials : " CONFINITIALS
-   until [ ! -z $CONFREGION ]; do
+   until [ ! -z ${CONFREGION} ]; do
       read -p "Provide your region 1) Asia, 2) Europe, 3) America : " CONFREGIONANSWER
-      case $CONFREGIONANSWER in
+      case ${CONFREGIONANSWER} in
          1) CONFREGION="asia-southeast1-b";;
          2) CONFREGION="europe-west4-a";;
          3) CONFREGION="us-central1-c";;
@@ -280,40 +273,40 @@ if [ ! -f $GCPCMDCONF ]; then
    done
    read -p "Provide GCP instance label F(irst)LASTNAME e.g. jdoe : " CONFGCPLABEL
    read -p "Provide GCP project name : " CONFPROJECTNAME
-   until [[ $VALIDIP -eq 1 ]]; do
+   until [[ ${VALIDIP} -eq 1 ]]; do
       read -p "Provide GCP license server IP (Optional) : " CONFLICENSESERVER
-      if [ -z $CONFLICENSESERVER];then
+      if [ -z ${CONFLICENSESERVER} ];then
          VALIDIP=1
       else
-         validateIP $CONFLICENSESERVER
+         validateIP ${CONFLICENSESERVER}
       fi
    done
-   cat << EOF > $GCPCMDCONF
-GCPPROJECT="$CONFPROJECTNAME"
-LICENSESERVER="$CONFLICENSESERVER"
-FPPREPEND="$CONFINITIALS"
-ZONE="$CONFREGION"
-LABELS="fortipoc=,$CONFGCPLABEL="
+   cat << EOF > ${GCPCMDCONF}
+GCPPROJECT="${CONFPROJECTNAME}"
+LICENSESERVER="${CONFLICENSESERVER}"
+FPPREPEND="${CONFINITIALS}"
+ZONE="${CONFREGION}"
+LABELS="fortipoc=,${CONFGCPLABEL}="
 PRODUCT="test"
 EOF
    echo ""
 fi
-source $GCPCMDCONF
+source ${GCPCMDCONF}
 
 case $1 in
   -c)
 #   Check if build config file is provided
     CONFIGFILE=$2
-    if [ -e $CONFIGFILE ] && [ "$CONFIGFILE" != "" ]; then
-      source $CONFIGFILE
+    if [ -e ${CONFIGFILE} ] && [ "${CONFIGFILE}" != "" ]; then
+      source ${CONFIGFILE}
     else
       echo "Config file not found. Example file written as fpoc-example.conf"
       cat << EOF > fpoc-example.conf
 # Uncomment and speficy to override user defaults
-#GCPPROJECT="$GCPPROJECT"
-#FPPREPEND="$FPPREPEND"
-#LABELS="$LABELS"
-#LICENSESERVER="$LICENSESERVER"
+#GCPPROJECT="${GCPPROJECT}"
+#FPPREPEND="${FPPREPEND}"
+#LABELS="${LABELS}"
+#LICENSESERVER="${LICENSESERVER}"
 
 # --- edits below this line ---
 # Specify FortiPoC instance details.
@@ -337,7 +330,7 @@ EOF
     shift; shift
     ;;
   -d | --delete-defaults) echo "Delete default user settings"
-     rm $GCPCMDCONF
+     rm ${GCPCMDCONF}
      exit
      ;;
   -ia | --ip-address-add)
@@ -378,7 +371,7 @@ ARGUMENT2=$2
 ARGUMENT3=$3
 
 # Validate given arguments
-case $ARGUMENT1 in
+case ${ARGUMENT1} in
   europe) ZONE=${EUROPE};;
   asia) ZONE=${ASIA};;
   america) ZONE=${AMERICA};;
@@ -417,7 +410,7 @@ esac
 # Create log directory if not exist
 [ ! -d logs ] && mkdir logs
 displayheader
-if  [[ $ACTION == build  ||  $ACTION == start || $ACTION == stop || $ACTION == delete ]]
+if  [[ ${ACTION} == build  ||  ${ACTION} == start || ${ACTION} == stop || ${ACTION} == delete ]]
 then
   read -p " Enter amount of FortiPoC's : " FPCOUNT
   read -p " Enter start of numbered range : " FPNUMSTART
@@ -427,11 +420,11 @@ then
   FPNUMEND=$(printf "%03d" ${FPNUMEND})
 
   echo ""
-  read -p "Okay to ${ACTION} fpoc-$FPPREPEND-$PRODUCT-$FPNUMSTART till fpoc-$FPPREPEND-$PRODUCT-$FPNUMEND in region ${ZONE}.   y/n? " choice
+  read -p "Okay to ${ACTION} fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMSTART} till fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMEND} in region ${ZONE}.   y/n? " choice
   [ "${choice}" != "y" ] && exit
 fi
 
-if  [[ $ACTION == clone ]]
+if  [[ ${ACTION} == clone ]]
 then
   displayheader
   read -p " FortiPoC instance number to clone : " FPNUMBERTOCLONE
@@ -445,8 +438,9 @@ then
   CLONESOURCE="fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
   CLONESNAPSHOT="fpoc-${FPPREPEND}-${PRODUCT}"
   echo ""
-  read -p "Okay to ${ACTION} ${CLONESOURCE} to fpoc-$FPPREPEND-$PRODUCT-$FPNUMSTART till fpoc-$FPPREPEND-$PRODUCT-$FPNUMEND in region ${ZONE}.   y/n? " choice
+  read -p "Okay to ${ACTION} ${CLONESOURCE} to fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMSTART} till fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMEND} in region ${ZONE}.   y/n? " choice
   [ "${choice}" != "y" ] && exit
+# Delete any existing snapshots before creating new.There's no overwrite AFAIK and will allow fresh snapshot
   echo "y" |  gcloud compute snapshots delete ${CLONESNAPSHOT} > /dev/null 2>&1
   gcloud compute disks snapshot ${CLONESOURCE} \
   --zone=${ZONE} \
