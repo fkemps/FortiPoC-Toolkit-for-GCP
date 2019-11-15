@@ -28,7 +28,8 @@
 # 2019111102 Ferry Kemps, Expanded user defaults
 # 2019111401 Ferry Kemps, Added add/remove IP-address to GCP ACL
 # 2019111501 Ferry Kemps, Added instance clone function
-GCPCMDVERSION="2019111501"
+# 2019111502 Ferry Kemps, Changed number generator, added comments
+GCPCMDVERSION="2019111502"
 
 # Zones where to deploy. You can adjust if needed to deploy closest to your location
 ASIA="asia-southeast1-b"
