@@ -310,7 +310,7 @@ Alternatively you can statially provide the list by editing *fpoc-to-all.sh* scr
 
 ### CLI commands to execute
 
-
+...
 
 **Disclaimer**   
 *Nothing contained in this article is intended to teach or encourage the use of security tools or methodologies for illegal or unethical purposes. Always act in a responsible manner. Make sure you have written permission from the proper individuals before you use any of the tools or techniques described here outside this environment.*
