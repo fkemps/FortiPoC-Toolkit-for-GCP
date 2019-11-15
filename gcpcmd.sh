@@ -50,7 +50,7 @@ PARALLELOPT="--joblog logs/logfile-`date +%Y%m%d%H%M%S` -j 100 "
 function displayheader() {
 clear
 echo "---------------------------------------------------------------------"
-echo "             FortiPoC management on Google Cloud Platform            "
+echo "             FortiPoC Toolkit for Google Cloud Platform             "
 echo "---------------------------------------------------------------------"
 echo ""
 }
