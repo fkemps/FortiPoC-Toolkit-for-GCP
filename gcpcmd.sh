@@ -30,7 +30,7 @@
 # 2019111501 Ferry Kemps, Added instance clone function
 GCPCMDVERSION="2019111501"
 
-# Zones where to deploy
+# Zones where to deploy. You can adjust if needed to deploy closest to your location
 ASIA="asia-southeast1-b"
 EUROPE="europe-west4-a"
 #EUROPE="europe-west1-b"
@@ -40,6 +40,7 @@ AMERICA="us-central1-c"
 # ------ No editing needed below this line ------
 # -----------------------------------------------
 
+# Let's create uniq logfiles with date-time stamp
 PARALLELOPT="--joblog logs/logfile-`date +%Y%m%d%H%M%S` -j 100 "
 
 ########################
@@ -53,6 +54,7 @@ echo "---------------------------------------------------------------------"
 echo ""
 }
 
+# Function to validate IP-address format
 function validateIP() {
   local ip=$1
   local stat=1
@@ -68,6 +70,7 @@ function validateIP() {
   return $stat
 }
 
+# Function to add/remove workshop location Public IP-address to GCP ACL to allow access
 function gcpaclupdate() {
    CMD=$1
 # Obtain current public IP-address
@@ -106,6 +109,7 @@ function gcpaclupdate() {
    fi
 }
 
+# Function to build a FortiPoC instance on GCP
 function gcpbuild {
 
   if [ "$CONFIGFILE" == "" ]; then
@@ -170,6 +174,7 @@ function gcpbuild {
   echo "==> End of Build phase <=="; echo ""
 }
 
+# Function to clone a FortiPoC instance on GCP
 function gcpclone {
   RANDOMSLEEP=$[($RANDOM % 10) + 1]s
   FPPREPEND=$1
@@ -213,6 +218,7 @@ function gcpclone {
 #  [ $? != 0 ] && echo "==> Something went wrong. The new instance is not reachable"
 }
 
+# Function to start FortiPoC instance
 function gcpstart {
   FPPREPEND=$1
   ZONE=$2
@@ -223,6 +229,7 @@ function gcpstart {
   gcloud compute instances start ${INSTANCENAME} --zone=${ZONE}
 }
 
+# Function to stop FortiPoC instance
 function gcpstop {
   FPPREPEND=$1
   ZONE=$2
@@ -234,6 +241,7 @@ function gcpstop {
   gcloud compute instances stop ${INSTANCENAME} --zone=${ZONE}
 }
 
+# Function to delete FortiPoC instance
 function gcpdelete {
   FPPREPEND=$1
   ZONE=$2
@@ -254,7 +262,7 @@ type jq > /dev/null 2>&1 || (echo "jq command not installed"; exit)
 echo ""
 
 # Check on first run and user specific defaults
-# Chech if .fpoc directory exists, contains conf-file else create
+# Chech if .fpoc directory exists, create if not exist to store peronal perferences
 [ ! -d ~/.fpoc/ ] && mkdir ~/.fpoc
 eval GCPCMDCONF="~/.fpoc/gcpcmd.conf"
 if [ ! -f $GCPCMDCONF ]; then
@@ -291,9 +299,9 @@ EOF
 fi
 source $GCPCMDCONF
 
-# Check if build config file is provided
 case $1 in
   -c)
+#   Check if build config file is provided
     CONFIGFILE=$2
     if [ -e $CONFIGFILE ] && [ "$CONFIGFILE" != "" ]; then
       source $CONFIGFILE
@@ -414,8 +422,8 @@ then
   read -p " Enter start of numbered range : " FPNUMSTART
   let --FPCOUNT
   let FPNUMEND=FPNUMSTART+FPCOUNT
-  FPNUMSTART=`seq -w -f%03g ${FPNUMSTART} ${FPNUMSTART}` > /dev/null 2>&1
-  FPNUMEND=`seq -w -f%03g ${FPNUMEND} ${FPNUMEND}` > /dev/null 2>&1
+  FPNUMSTART=$(printf "%03d" ${FPNUMSTART})
+  FPNUMEND=$(printf "%03d" ${FPNUMEND})
 
   echo ""
   read -p "Okay to ${ACTION} fpoc-$FPPREPEND-$PRODUCT-$FPNUMSTART till fpoc-$FPPREPEND-$PRODUCT-$FPNUMEND in region ${ZONE}.   y/n? " choice
@@ -430,9 +438,9 @@ then
   read -p " Enter start of numbered range : " FPNUMSTART
   let --FPCOUNT
   let FPNUMEND=FPNUMSTART+FPCOUNT
-  FPNUMSTART=`seq -w -f%03g ${FPNUMSTART} ${FPNUMSTART}` > /dev/null 2>&1
-  FPNUMEND=`seq -w -f%03g ${FPNUMEND} ${FPNUMEND}` > /dev/null 2>&1
-  FPNUMBERTOCLONE=`seq -w -f%03g ${FPNUMBERTOCLONE} ${FPNUMBERTOCLONE}` > /dev/null 2>&1
+  FPNUMSTART=$(printf "%03d" ${FPNUMSTART})
+  FPNUMEND=$(printf "%03d" ${FPNUMEND})
+  FPNUMBERTOCLONE=$(printf "%03d" ${FPNUMBERTOCLONE})
   CLONESOURCE="fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
   CLONESNAPSHOT="fpoc-${FPPREPEND}-${PRODUCT}"
   echo ""
