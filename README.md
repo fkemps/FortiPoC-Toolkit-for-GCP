@@ -443,7 +443,6 @@ Executing on targets 35.204.64.17 34.90.183.89
 
 ======== FortiPoC on IP : 35.204.64.17 ========= FPOC: 1
 Setting timezone
-Executing on targets 35.204.64.17 34.90.183.89
 
 ======== FortiPoC on IP : 34.90.183.89 ========= FPOC: 2
 Setting timezone
