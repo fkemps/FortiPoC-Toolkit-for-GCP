@@ -89,7 +89,7 @@ POCDEFINITION1="poc/ferry/FortiWeb-Basic-solution-workshop-v2.2.fpoc"
 To control the FortiPoC instances you can use the `gcpcmd.sh` script.   
 This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **list** FortiPoC instances.
 
-`./gcpcmd-new.sh`
+`./gcpcmd.sh`
 
 ```
 (Version: 2019111101)
@@ -114,7 +114,7 @@ ARGUMENTS:
 ### Build
 Building will be fully automatic per config file. FortiPoC's will be running with e.g. PoC-definitions loaded, VM images plus documentation prefetched, guest/guest account enabled, GUI title set and optionally a PoC-definition launched.
 
-`./gcpcmd-new.sh -c conf/fpoc-test.conf europe test build`
+`./gcpcmd.sh -c conf/fpoc-test.conf europe test build`
 
 ```
 ---------------------------------------------------------------------
@@ -176,7 +176,7 @@ Under development
 
 ### Start / Stop
 
-`./gcpcmd-new.sh europe test start` or `./gcpcmd-new.sh europe test stop`
+`./gcpcmd.sh europe test start` or `./gcpcmd.sh europe test stop`
 
 ```
 ---------------------------------------------------------------------
@@ -201,7 +201,7 @@ Updated [https://compute.googleapis.com/compute/v1/projects/cse-projects-202906/
 
 ### Delete
 
-`./gcpcmd-new.sh europe test delete`
+`./gcpcmd.sh europe test delete`
 
 ```
 ---------------------------------------------------------------------
@@ -249,7 +249,7 @@ Deleted [https://www.googleapis.com/compute/v1/projects/cse-projects-202906/zone
 ### List
 Full overview of FortiPoC's can be obtained with **list** function. Specify *region*, *product* and *list*.
 
-`/gcpcmd-new.sh europe test list`
+`/gcpcmd.sh europe test list`
 
 ```
 ---------------------------------------------------------------------
@@ -266,7 +266,7 @@ fpoc-fk-test-003  europe-west4-a  n1-standard-4               10.164.0.64  34.90
 
 FortiPoC IP-addresses can be obtained to use for `fpoc-to-all.sh` usage.
 
-`./gcpcmd-new.sh europe test listpubip`
+`./gcpcmd.sh europe test listpubip`
 
 ```
 ---------------------------------------------------------------------
