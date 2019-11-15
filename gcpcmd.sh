@@ -27,7 +27,8 @@
 # 2019111101 Ferry Kemps, Added automatic defaults per ~/.fpoc/gcpcmd.conf
 # 2019111102 Ferry Kemps, Expanded user defaults
 # 2019111401 Ferry Kemps, Added add/remove IP-address to GCP ACL
-GCPCMDVERSION="2019111401"
+# 2019111501 Ferry Kemps, Added instance clone function
+GCPCMDVERSION="2019111501"
 
 # Zones where to deploy
 ASIA="asia-southeast1-b"
@@ -44,6 +45,14 @@ PARALLELOPT="--joblog logs/logfile-`date +%Y%m%d%H%M%S` -j 100 "
 ########################
 # Functions
 ########################
+function displayheader() {
+clear
+echo "---------------------------------------------------------------------"
+echo "             FortiPoC management on Google Cloud Platform            "
+echo "---------------------------------------------------------------------"
+echo ""
+}
+
 function validateIP() {
   local ip=$1
   local stat=1
@@ -159,6 +168,49 @@ function gcpbuild {
   [ "${POCLAUNCH}" != "" ] && echo "==> Launching poc-definition"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc launch \"${POCLAUNCH}\""
 #  [ "${FPSIMPLEMENU}" != "" ] && echo "==> Setting GUI-mode to simple"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "set gui simple ${FPSIMPLEMENU}"
   echo "==> End of Build phase <=="; echo ""
+}
+
+function gcpclone {
+  RANDOMSLEEP=$[($RANDOM % 10) + 1]s
+  FPPREPEND=$1
+  ZONE=$2
+  PRODUCT=$3
+  FPNUMBERTOCLONE=$4
+  INSTANCE=$5
+  CLONESOURCE="fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
+  CLONESNAPSHOT="fpoc-${FPPREPEND}-${PRODUCT}"
+  INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
+
+  echo "==> Sleeping $RANDOMSLEEP seconds to avoid GCP DB locking"
+  sleep ${RANDOMSLEEP}
+  echo "==> Cloning instance ${CLONESOURCE} to ${INSTANCENAME}"
+  echo "==> Creating disk for ${INSTANCENAME}"
+  gcloud compute disks create ${INSTANCENAME} \
+  --zone=${ZONE} \
+  --source-snapshot ${CLONESNAPSHOT} \
+  --type "pd-standard" \
+  --size=200
+  echo "==> Create instance ${INSTANCENAME}"
+  gcloud compute instances create ${INSTANCENAME} \
+  --project=${GCPPROJECT} \
+  --verbosity=info \
+  --zone=${ZONE} \
+  --machine-type=n1-standard-4 \
+  --subnet=default --network-tier=PREMIUM \
+  --maintenance-policy=MIGRATE \
+  --service-account=20168517356-compute@developer.gserviceaccount.com \
+  --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
+  --tags=fortipoc-http-https-redir,workshop-source-networks \
+  --disk "name=${INSTANCENAME},device-name=${INSTANCENAME},mode=rw,boot=yes,auto-delete=yes" \
+  --min-cpu-platform=Intel\ Broadwell \
+  --tags=fortipoc-http-https-redir,workshop-source-networks
+
+#  # Give Google 60 seconds to start the instance
+#  echo ""; echo "==> Sleeping 90 seconds to allow FortiPoC booting up"; sleep 90
+#  INSTANCEIP=`gcloud beta compute instances describe ${INSTANCENAME} --zone=${ZONE} | grep natIP | awk '{ print $2 }'`
+#  echo ${INSTANCENAME} "=" ${INSTANCEIP}
+#  curl -k -q --retry 1 --connect-timeout 10 https://${INSTANCEIP}/ && echo "FortiPoC ${INSTANCENAME} on ${INSTANCEIP} reachable"
+#  [ $? != 0 ] && echo "==> Something went wrong. The new instance is not reachable"
 }
 
 function gcpstart {
@@ -305,7 +357,7 @@ EOF
       echo "ARGUMENTS:"
       echo "       region  : asia, europe, america"
       echo "       product : fwb, fad, fpx, fsw, fsa, sme, xa, appsec, test"
-      echo "       action  : build, start, stop, delete, list, listpubip"
+      echo "       action  : build, clone, start, stop, delete, list, listpubip"
       echo ""
    fi
    ;;
@@ -343,6 +395,7 @@ esac
 
 case ${ARGUMENT3} in
   build) ACTION="build";;
+  clone) ACTION="clone";;
   start) ACTION="start";;
   stop) ACTION="stop";;
   delete) ACTION="delete";;
@@ -351,15 +404,11 @@ case ${ARGUMENT3} in
   *) echo "[UNKNOWN ACTION] Specify: build, start, stop, delete, list or listpubip"; exit;;
 esac
 
-# 
-clear
-echo "---------------------------------------------------------------------"
-echo "             FortiPoC management on Google Cloud Platform            "
-echo "---------------------------------------------------------------------"
-echo ""
+# Start of program 
 # Create log directory if not exist
 [ ! -d logs ] && mkdir logs
-if  [[ $ACTION != list  &&  $ACTION != listpubip ]]
+displayheader
+if  [[ $ACTION == build  ||  $ACTION == start || $ACTION == stop || $ACTION == delete ]]
 then
   read -p " Enter amount of FortiPoC's : " FPCOUNT
   read -p " Enter start of numbered range : " FPNUMSTART
@@ -373,13 +422,36 @@ then
   [ "${choice}" != "y" ] && exit
 fi
 
-echo "==> Lets go...using Zone=${ZONE}, Product=${PRODUCT}, Action=${ACTION}"; echo 
+if  [[ $ACTION == clone ]]
+then
+  displayheader
+  read -p " FortiPoC instance number to clone : " FPNUMBERTOCLONE
+  read -p " Enter amount of FortiPoC's clones : " FPCOUNT
+  read -p " Enter start of numbered range : " FPNUMSTART
+  let --FPCOUNT
+  let FPNUMEND=FPNUMSTART+FPCOUNT
+  FPNUMSTART=`seq -w -f%03g ${FPNUMSTART} ${FPNUMSTART}` > /dev/null 2>&1
+  FPNUMEND=`seq -w -f%03g ${FPNUMEND} ${FPNUMEND}` > /dev/null 2>&1
+  FPNUMBERTOCLONE=`seq -w -f%03g ${FPNUMBERTOCLONE} ${FPNUMBERTOCLONE}` > /dev/null 2>&1
+  CLONESOURCE="fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
+  CLONESNAPSHOT="fpoc-${FPPREPEND}-${PRODUCT}"
+  echo ""
+  read -p "Okay to ${ACTION} ${CLONESOURCE} to fpoc-$FPPREPEND-$PRODUCT-$FPNUMSTART till fpoc-$FPPREPEND-$PRODUCT-$FPNUMEND in region ${ZONE}.   y/n? " choice
+  [ "${choice}" != "y" ] && exit
+  echo "y" |  gcloud compute snapshots delete ${CLONESNAPSHOT} > /dev/null 2>&1
+  gcloud compute disks snapshot ${CLONESOURCE} \
+  --zone=${ZONE} \
+  --snapshot-names=${CLONESNAPSHOT}
+fi
 
-export -f gcpbuild gcpstart gcpstop gcpdelete
+  echo "==> Lets go...using Zone=${ZONE}, Product=${PRODUCT}, Action=${ACTION}"; echo 
+
+export -f gcpbuild gcpstart gcpstop gcpdelete gcpclone
 export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE LABELS FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH
 
 case ${ACTION} in
   build)  parallel ${PARALLELOPT} gcpbuild  ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPTITLE}" ::: `seq -w -f%03g ${FPNUMSTART} ${FPNUMEND}`;;
+  clone)  parallel ${PARALLELOPT} gcpclone  ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPNUMBERTOCLONE}" ::: `seq -w -f%03g ${FPNUMSTART} ${FPNUMEND}`;;
   start)  parallel ${PARALLELOPT} gcpstart  ${FPPREPEND} ${ZONE} ${PRODUCT} ::: `seq -w -f%03g ${FPNUMSTART} ${FPNUMEND}`;;
   stop)   parallel ${PARALLELOPT} gcpstop   ${FPPREPEND} ${ZONE} ${PRODUCT} ::: `seq -w -f%03g ${FPNUMSTART} ${FPNUMEND}`;;
   delete) parallel ${PARALLELOPT} gcpdelete ${FPPREPEND} ${ZONE} ${PRODUCT} ::: `seq -w -f%03g ${FPNUMSTART} ${FPNUMEND}`;;

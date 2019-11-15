@@ -176,7 +176,7 @@ Under development
 
 ### Start / Stop
 
-`./gcpcmd-new.sh europe test stop`
+`./gcpcmd-new.sh europe test start` or `./gcpcmd-new.sh europe test stop`
 
 ```
 ---------------------------------------------------------------------
