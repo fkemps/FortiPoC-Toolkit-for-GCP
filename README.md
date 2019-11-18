@@ -1,4 +1,4 @@
-# FortiPoC Toolkit for Gooble Cloud Platform
+# FortiPoC Toolkit for Google Cloud Platform
 
 <p align="center">
   <img width="314" height="375" src="img/FortiPoConGCP.png">
