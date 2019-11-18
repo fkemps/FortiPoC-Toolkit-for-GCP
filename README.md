@@ -42,7 +42,7 @@ The directory structure and files explained
  0 drwxr-xr-x  30 fkemps  staff   960B Nov  1 21:29 logs                   << Directory holding build log files
 ```
 
-# Handle GCP Instanced - *gcpcmd.sh*
+# Handle GCP Instanced (*gcpcmd.sh*)
 
 ### Configure
 Configuration is embeded in gcpcmd.sh and will happen on first execution, or after `gcpcmd.sh -d | --delete-config`.   
@@ -351,7 +351,7 @@ Current GCP ACL list
 
 ---
 
-# Tweaking FortiPoC Settings - *fpoc-to-all.sh*
+# Tweaking FortiPoC Settings (*fpoc-to-all.sh*)
 Settings of running FortiPoC instances can be tweaked in a consistend and automated way.
 
 The `fpoc-to-all.sh` script allows you to issue CLI commands on a single or multiple FortiPoC's.
