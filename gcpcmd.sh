@@ -30,7 +30,8 @@
 # 2019111501 Ferry Kemps, Added instance clone function
 # 2019111502 Ferry Kemps, Changed number generator, added comments
 # 2019112201 Ferry Kemps, Fixed license server inquiry
-GCPCMDVERSION="2019112201"
+# 2019112202 Ferry Kemps, Added conf dir creation and seq fix
+GCPCMDVERSION="2019112202"
 
 # Zones where to deploy. You can adjust if needed to deploy closest to your location
 ASIA="asia-southeast1-b"
@@ -411,6 +412,7 @@ esac
 # Start of program 
 # Create log directory if not exist
 [ ! -d logs ] && mkdir logs
+[ ! -d conf ] && mkdir conf
 displayheader
 if  [[ ${ACTION} == build  ||  ${ACTION} == start || ${ACTION} == stop || ${ACTION} == delete ]]
 then
