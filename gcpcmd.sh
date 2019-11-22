@@ -29,7 +29,8 @@
 # 2019111401 Ferry Kemps, Added add/remove IP-address to GCP ACL
 # 2019111501 Ferry Kemps, Added instance clone function
 # 2019111502 Ferry Kemps, Changed number generator, added comments
-GCPCMDVERSION="2019111502"
+# 2019112201 Ferry Kemps, Fixed license server inquiry
+GCPCMDVERSION="2019112201"
 
 # Zones where to deploy. You can adjust if needed to deploy closest to your location
 ASIA="asia-southeast1-b"
@@ -260,9 +261,10 @@ echo ""
 [ ! -d ~/.fpoc/ ] && mkdir ~/.fpoc
 eval GCPCMDCONF="~/.fpoc/gcpcmd.conf"
 if [ ! -f ${GCPCMDCONF} ]; then
-   echo "Welcome to Google Cloud Platform Command tool"
+   echo "Welcome to FortiPoc Toolkit for Google Cloud Platform"
    echo "Looks like your first run or no defaults available. Let's set them!" 
    read -p "Provide your initials : " CONFINITIALS
+   read -p "Provide GCP instance label F(irst)LASTNAME e.g. jdoe : " CONFGCPLABEL
    until [ ! -z ${CONFREGION} ]; do
       read -p "Provide your region 1) Asia, 2) Europe, 3) America : " CONFREGIONANSWER
       case ${CONFREGIONANSWER} in
@@ -271,7 +273,6 @@ if [ ! -f ${GCPCMDCONF} ]; then
          3) CONFREGION="us-central1-c";;
       esac
    done
-   read -p "Provide GCP instance label F(irst)LASTNAME e.g. jdoe : " CONFGCPLABEL
    read -p "Provide GCP project name : " CONFPROJECTNAME
    until [[ ${VALIDIP} -eq 1 ]]; do
       read -p "Provide GCP license server IP (Optional) : " CONFLICENSESERVER
@@ -279,6 +280,7 @@ if [ ! -f ${GCPCMDCONF} ]; then
          VALIDIP=1
       else
          validateIP ${CONFLICENSESERVER}
+         VALIDIP=!$?
       fi
    done
    cat << EOF > ${GCPCMDCONF}
