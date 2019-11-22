@@ -49,11 +49,11 @@ Configuration is embeded in gcpcmd.sh and will happen on first execution, or aft
 User default settings will be stored in `~/.fpoc/gcpcmd.conf`
 
 ```
-Welcome to Google Cloud Platform Command tool
+Welcome to FortiPoC Toolkit for Google Cloud Platform
 Looks like your first run or no defaults available. Let's set them!
 Provide your initials : fl
-Provide your region 1) Asia, 2) Europe, 3) America : 1
 Provide GCP instance label F(irst)LASTNAME e.g. jdoe : flastname
+Provide your region 1) Asia, 2) Europe, 3) America : 1
 Provide GCP project name : cse-projects-xxxxxx
 Provide GCP license server IP : 10.1.1.1
 ```
