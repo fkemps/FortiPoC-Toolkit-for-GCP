@@ -455,11 +455,11 @@ export -f gcpbuild gcpstart gcpstop gcpdelete gcpclone
 export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE LABELS FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH
 
 case ${ACTION} in
-  build)  parallel ${PARALLELOPT} gcpbuild  ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPTITLE}" ::: `seq -w -f%03g ${FPNUMSTART} ${FPNUMEND}`;;
-  clone)  parallel ${PARALLELOPT} gcpclone  ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPNUMBERTOCLONE}" ::: `seq -w -f%03g ${FPNUMSTART} ${FPNUMEND}`;;
-  start)  parallel ${PARALLELOPT} gcpstart  ${FPPREPEND} ${ZONE} ${PRODUCT} ::: `seq -w -f%03g ${FPNUMSTART} ${FPNUMEND}`;;
-  stop)   parallel ${PARALLELOPT} gcpstop   ${FPPREPEND} ${ZONE} ${PRODUCT} ::: `seq -w -f%03g ${FPNUMSTART} ${FPNUMEND}`;;
-  delete) parallel ${PARALLELOPT} gcpdelete ${FPPREPEND} ${ZONE} ${PRODUCT} ::: `seq -w -f%03g ${FPNUMSTART} ${FPNUMEND}`;;
+  build)  parallel ${PARALLELOPT} gcpbuild  ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPTITLE}" ::: `seq -w ${FPNUMSTART} ${FPNUMEND}`;;
+  clone)  parallel ${PARALLELOPT} gcpclone  ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPNUMBERTOCLONE}" ::: `seq -w  ${FPNUMSTART} ${FPNUMEND}`;;
+  start)  parallel ${PARALLELOPT} gcpstart  ${FPPREPEND} ${ZONE} ${PRODUCT} ::: `seq -w  ${FPNUMSTART} ${FPNUMEND}`;;
+  stop)   parallel ${PARALLELOPT} gcpstop   ${FPPREPEND} ${ZONE} ${PRODUCT} ::: `seq -w  ${FPNUMSTART} ${FPNUMEND}`;;
+  delete) parallel ${PARALLELOPT} gcpdelete ${FPPREPEND} ${ZONE} ${PRODUCT} ::: `seq -w  ${FPNUMSTART} ${FPNUMEND}`;;
   list) gcloud beta compute instances list --filter="name~fpoc-${FPPREPEND}-${PRODUCT}"| grep -e "NAME" -e "${ZONE}";;
   listpubip) gcloud beta compute instances list --filter="name~fpoc-${FPPREPEND}-${PRODUCT}"| grep -e "${ZONE}" | awk '{ printf $5 " " }';;
 esac
