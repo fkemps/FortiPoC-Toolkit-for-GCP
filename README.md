@@ -21,8 +21,8 @@ You will need access to GCP and prepare your local environment
 * Subscription to your private or company project (billing)
 * Computer system capable of running bash shell e.g. Linux, MacOs or Windows + Cygwin/Bash-on-Windows10
 * Locally installed `GCP SDK` ([Installing Google Cloud SDK](https://cloud.google.com/sdk/install))
-* Locally installed program `parallel` ([Install parallel on Mac OSX](http://macappstore.org/parallel/))
-* Locally installed program `jq` ([Install jq on Mac OSX](https://brewinstall.org/install-jq-on-mac-with-brew/))
+* Locally installed program `parallel` ([Install parallel on Mac OSX](http://macappstore.org/parallel/)) (Linux: apt install parallel)
+* Locally installed program `jq` ([Install jq on Mac OSX](https://brewinstall.org/install-jq-on-mac-with-brew/)) (Linux: apt install jq)
 
 ## Obtaining Scripts
 You can obtain the latest scripts versions from Gitbub.
