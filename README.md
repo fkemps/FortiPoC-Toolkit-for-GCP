@@ -75,7 +75,7 @@ FPIMAGE="fortipoc-1-7-2-clear"
 #FPSIMPLEMENU="enable"
 FPTRAILKEY='ES-xamadrid-201907:765eb11f6523382c10513b66a8a4daf5'
 #GCPREPO="flastname"
-POCDEFINITION1="poc/ferry/FortiWeb-Basic-solution-workshop-v2.2.fpoc"
+POCDEFINITION1="poc/ferry/FortiWeb-MachineLearning-v0.9.7.fpoc"
 #POCDEFINITION2="poc/ferry/FortiWeb-Advanced-Solutions-Workshop-v2.5.fpoc"
 #POCDEFINITION3=""
 #POCDEFINITION4=""
@@ -85,6 +85,9 @@ POCDEFINITION1="poc/ferry/FortiWeb-Basic-solution-workshop-v2.2.fpoc"
 #POCDEFINITION8=""
 #POCLAUNCH="FortiWeb Basic solutions"
 ```
+The POCDEFINITION name can be obtained from the available POC-definitions on the repositories.
+
+![POC-definition name](img/poc-definition-name.png)
 
 ## Managing FortiPoC instances
 To control the FortiPoC instances you can use the `gcpcmd.sh` script.   
