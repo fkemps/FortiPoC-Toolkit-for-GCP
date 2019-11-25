@@ -388,9 +388,9 @@ The above steps are part of `fpoc-to-all.sh` automated execution.
 
 ### FortiPoC targets (IP-addresses)
 
-`-a | --address` option allows you to provide dynamically the list of FortiPoC's.   
+`-a | --address` option allows you to execute commands on provide dynamically the list of FortiPoC's.   
 
-Use the `gcpcmd.sh \<region> \<product> listpubip` to generate the list of IP-addresses for the `-a | --address` option.
+Use the `gcpcmd.sh <region> <product> listpubip` to generate the list of IP-addresses for the `-a | --address` option.
 
 Alternatively you can statially provide the list by editing *fpoc-to-all.sh* script and define them in `"IPADDRESS="` parameter.
 

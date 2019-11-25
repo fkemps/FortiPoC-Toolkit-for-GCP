@@ -32,7 +32,8 @@
 # 2019112201 Ferry Kemps, Fixed license server inquiry
 # 2019112202 Ferry Kemps, Added conf dir creation and seq fix
 # 2019112501 Ferry Kemps, Clarified GCP billing project ID
-GCPCMDVERSION="2019112501"
+# 2019112502 Ferry Kemps, Changed GCP instance labling to list owner
+GCPCMDVERSION="2019112502"
 
 # Zones where to deploy. You can adjust if needed to deploy closest to your location
 ASIA="asia-southeast1-b"
@@ -290,7 +291,7 @@ GCPPROJECT="${CONFPROJECTNAME}"
 LICENSESERVER="${CONFLICENSESERVER}"
 FPPREPEND="${CONFINITIALS}"
 ZONE="${CONFREGION}"
-LABELS="fortipoc=,${CONFGCPLABEL}="
+LABELS="fortipoc=,owner=${CONFGCPLABEL}"
 PRODUCT="test"
 EOF
    echo ""
