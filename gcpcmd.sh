@@ -274,7 +274,7 @@ if [ ! -f ${GCPCMDCONF} ]; then
          3) CONFREGION="us-central1-c";;
       esac
    done
-   read -p "Provide GCP project name : " CONFPROJECTNAME
+   read -p "Provide your GCP billing project name : " CONFPROJECTNAME
    until [[ ${VALIDIP} -eq 1 ]]; do
       read -p "Provide GCP license server IP (Optional) : " CONFLICENSESERVER
       if [ -z ${CONFLICENSESERVER} ];then
