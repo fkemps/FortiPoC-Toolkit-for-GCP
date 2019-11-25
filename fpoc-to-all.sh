@@ -4,7 +4,8 @@
 # 2019110801 : Ferry Kemps - Addess -address option for CLI IP-address input
 # 2019110802 : Ferry Kemps - Short and long option specification
 # 2019111101 : Ferry Kemps - Some clean-up and comments
-FPOCSCRIPTVERSION="2019111101"
+# 2019112501 : Ferry Kemps - Updated --address description
+FPOCSCRIPTVERSION="2019112501"
 #
 # This script is to manage running FortiPoCs by executing CLI commands on FortiPoC console.
 # Idea is to:
@@ -58,7 +59,7 @@ case $1 in
   *) echo "(Version: ${FPOCSCRIPTVERSION})"
      echo "Usage: $0 OPTION"
      echo ""
-     echo "OPTION: -a    --address       IP-address FortiPoC 192.168.254.1 or multiple via \"192.168.254.2 192.168.254.3\" space delimitted"
+     echo "OPTION: -a    --address       Execute commands on IP-address FortiPoC 192.168.254.1 or \"192.168.254.2 192.168.254.3\" space delimitted"
      echo "        -h    --help          Show script usage and options"
      echo "        -e    --execute       Execute commands on FortiPoC CLI"
      echo "        -r    --review        Review commands to be executed on FortiPoC CLI"
