@@ -57,7 +57,7 @@ Provide your region 1) Asia, 2) Europe, 3) America : 1
 Provide your GCP billing project ID : cse-projects-xxxxxx
 Provide GCP license server IP : 10.1.1.1
 ```
-* Your GCP billing project can obtain via `gcloud project list` and listed as PROJECT_ID.
+* Your GCP billing project ID can obtain via `gcloud project list` and listed as PROJECT_ID.
 
 ### Build Config Template
 To create an example config file you can issue `./gcpcmd.sh -c`. This will create a fpoc-example.conf template file which can be use to create workload specific config files.
