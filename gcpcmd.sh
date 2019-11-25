@@ -31,7 +31,8 @@
 # 2019111502 Ferry Kemps, Changed number generator, added comments
 # 2019112201 Ferry Kemps, Fixed license server inquiry
 # 2019112202 Ferry Kemps, Added conf dir creation and seq fix
-GCPCMDVERSION="2019112202"
+# 2019112501 Ferry Kemps, Clarified GCP billing project ID
+GCPCMDVERSION="2019112501"
 
 # Zones where to deploy. You can adjust if needed to deploy closest to your location
 ASIA="asia-southeast1-b"
