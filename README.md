@@ -54,12 +54,15 @@ Looks like your first run or no defaults available. Let's set them!
 Provide your initials : fl
 Provide GCP instance label F(irst)LASTNAME e.g. jdoe : flastname
 Provide your region 1) Asia, 2) Europe, 3) America : 1
-Provide your GCP billing project name : cse-projects-xxxxxx
+Provide your GCP billing project ID : cse-projects-xxxxxx
 Provide GCP license server IP : 10.1.1.1
 ```
+* Your GCP billing project can obtain via `gcloud project list` and listed as PROJECT_ID.
 
 ### Build Config Template
-To create an example config file you can issue `./gcpcmd.sh -c`. This will create a fpoc-example.conf template file which can be use to create workload specific config files. Copy fpoc-example.conf to conf directory with an descriptive name for your workload. You will need this file for the Build option via -c conf/fpoc-fwb-workshop.conf as an example.
+To create an example config file you can issue `./gcpcmd.sh -c`. This will create a fpoc-example.conf template file which can be use to create workload specific config files.
+
+Copy fpoc-example.conf to conf directory with an descriptive name for your workload. You will need this file for the Build option via -c conf/fpoc-fwb-workshop.conf as an example.
 
 ```
 # Uncomment and speficy to override user defaults
@@ -85,7 +88,8 @@ POCDEFINITION1="poc/ferry/FortiWeb-MachineLearning-v0.9.7.fpoc"
 #POCDEFINITION8=""
 #POCLAUNCH="FortiWeb Basic solutions"
 ```
-The POCDEFINITION name can be obtained from the available POC-definitions on the repositories.
+
+* The POCDEFINITION name can be obtained from the available POC-definitions on the repositories.
 
 ![POC-definition name](img/poc-definition-name.png)
 
