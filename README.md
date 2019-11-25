@@ -73,7 +73,7 @@ Copy fpoc-example.conf to conf directory with an descriptive name for your workl
 # Uncomment and speficy to override user defaults
 #GCPPROJECT="cse-projects-xxxxxx"
 #FPPREPEND="fl"
-#LABELS="fortipoc=,flastname="
+#LABELS="fortipoc=,owner=flastname"
 #LICENSESERVER="10.1.1.1"
 
 # --- edits below this line ---

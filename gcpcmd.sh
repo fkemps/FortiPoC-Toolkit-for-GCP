@@ -33,7 +33,8 @@
 # 2019112202 Ferry Kemps, Added conf dir creation and seq fix
 # 2019112501 Ferry Kemps, Clarified GCP billing project ID
 # 2019112502 Ferry Kemps, Changed GCP instance labling to list owner
-GCPCMDVERSION="2019112502"
+# 2019112503 Ferry Kemps, Changed moment of conf and log dir creation
+GCPCMDVERSION="2019112503"
 
 # Zones where to deploy. You can adjust if needed to deploy closest to your location
 ASIA="asia-southeast1-b"
@@ -262,6 +263,9 @@ echo ""
 # Check on first run and user specific defaults
 # Chech if .fpoc directory exists, create if not exist to store peronal perferences
 [ ! -d ~/.fpoc/ ] && mkdir ~/.fpoc
+[ ! -d logs ] && mkdir logs
+[ ! -d conf ] && mkdir conf
+
 eval GCPCMDCONF="~/.fpoc/gcpcmd.conf"
 if [ ! -f ${GCPCMDCONF} ]; then
    echo "Welcome to FortiPoc Toolkit for Google Cloud Platform"
@@ -411,10 +415,6 @@ case ${ARGUMENT3} in
   *) echo "[UNKNOWN ACTION] Specify: build, start, stop, delete, list or listpubip"; exit;;
 esac
 
-# Start of program 
-# Create log directory if not exist
-[ ! -d logs ] && mkdir logs
-[ ! -d conf ] && mkdir conf
 displayheader
 if  [[ ${ACTION} == build  ||  ${ACTION} == start || ${ACTION} == stop || ${ACTION} == delete ]]
 then
