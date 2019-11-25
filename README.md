@@ -31,6 +31,11 @@ You can obtain the latest scripts versions from Gitbub.
 No package installation is needed besides those listed in prerequisites section.
 Pull the environment from git or unzip in your prefered working directory.
 
+Make sure you properly install the needed programs and do basis setup:
+
+* `gcloud init`, and logout/login
+* `parallel --citation`, and enter `will cite`
+
 ### Directory and file
 The directory structure and files explained
 
