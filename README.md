@@ -367,7 +367,7 @@ The `fpoc-to-all.sh` script allows you to issue CLI commands on a single or mult
 (Version: 2019110802)
 Usage: ./fpoc-to-all.sh OPTION
 
-OPTION: -a    --address       IP-address FortiPoC 192.168.254.1 or multiple via "192.168.254.2 192.168.254.3" space delimitted
+OPTION: -a    --address       Excute commands on IP-address FortiPoC 192.168.254.1 or via "192.168.254.2 192.168.254.3" space delimitted
         -h    --help          Show script usage and option
         -e    --execute       Execute commands on FortiPoC CLI
         -r    --review        Review commands before executing on FortiPoC CLI
