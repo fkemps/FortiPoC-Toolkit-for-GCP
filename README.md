@@ -117,6 +117,7 @@ OPTIONS:
         -d    --delete-config     Delete default user config settings
         -ia   --ip-address-add    Add current public IP-address to GCP ACL
         -ir   --ip-address-remove Remove current public IP-address from GCP ACL
+        -lg   --list-global       List all your instances globally
 ARGUMENTS:
        region  : asia, europe, america
        product : fwb, fad, fpx, fsw, fsa, sme, xa, appsec, test
@@ -360,6 +361,22 @@ Current GCP ACL list
 203.172.126.3
 10.1.1.1
 ```
+
+#### List all your instances
+`./gcpcmd.sh --list-global` will list all your instances of which you're the owner.
+
+```
+---------------------------------------------------------------------
+             FortiPoC Toolkit for Google Cloud Platform
+---------------------------------------------------------------------
+
+Listing all global instances for fkemps
+
+NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
+fpoc-fk-test-001  europe-west4-a  n1-standard-4               10.164.0.60  34.90.228.152  RUNNING
+fpoc-fk-test-002  europe-west4-a  n1-standard-4               10.164.0.59  34.90.81.85    RUNNING
+```
+
 
 ---
 
