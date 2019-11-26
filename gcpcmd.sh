@@ -34,7 +34,8 @@
 # 2019112501 Ferry Kemps, Clarified GCP billing project ID
 # 2019112502 Ferry Kemps, Changed GCP instance labling to list owner
 # 2019112503 Ferry Kemps, Changed moment of conf and log dir creation
-GCPCMDVERSION="2019112503"
+# 2019112601 Ferry Kemps, Added global list based on owner label
+GCPCMDVERSION="2019112601"
 
 # Zones where to deploy. You can adjust if needed to deploy closest to your location
 ASIA="asia-southeast1-b"
@@ -113,6 +114,12 @@ function gcpaclupdate() {
       gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]'
       echo ""
    fi
+}
+
+# Function to list all gloval instances
+function gcplistglobal {
+  OWNER=$1
+  gcloud compute instances list --filter="labels.owner:${OWNER}"
 }
 
 # Function to build a FortiPoC instance on GCP
@@ -350,6 +357,18 @@ EOF
      gcpaclupdate remove
      exit
      ;;
+  -lg | --list-global)
+     OWNER=`echo ${LABELS} | grep owner | cut -d "=" -f 3`
+     if [ -z ${OWNER} ]; then
+        echo "Run ./gcpcmd.sh -d to set new preferences"
+     else
+       displayheader
+       echo "Listing all global instances for ${OWNER}"
+       echo ""
+       gcplistglobal ${OWNER}
+      fi
+       exit
+       ;;
   *)
    # Check command and options
    if [ $# -lt 2 ]; then
@@ -365,6 +384,7 @@ EOF
       echo "        -d    --delete-config     Delete default user config settings"
       echo "        -ia   --ip-address-add    Add current public IP-address to GCP ACL"
       echo "        -ir   --ip-address-remove Remove current public IP-address from GCP ACL"
+      echo "        -lg   --list-global       List all your instances globally"
       echo "ARGUMENTS:"
       echo "       region  : asia, europe, america"
       echo "       product : fwb, fad, fpx, fsw, fsa, sme, xa, appsec, test"
