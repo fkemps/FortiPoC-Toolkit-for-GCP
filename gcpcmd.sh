@@ -35,7 +35,8 @@
 # 2019112502 Ferry Kemps, Changed GCP instance labling to list owner
 # 2019112503 Ferry Kemps, Changed moment of conf and log dir creation
 # 2019112601 Ferry Kemps, Added global list based on owner label
-GCPCMDVERSION="2019112601"
+# 2019112801 Ferry Kemps, Empty license server fix
+GCPCMDVERSION="2019112801"
 
 # Zones where to deploy. You can adjust if needed to deploy closest to your location
 ASIA="asia-southeast1-b"
