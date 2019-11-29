@@ -117,7 +117,7 @@ function gcpaclupdate() {
    fi
 }
 
-# Function to list all gloval instances
+# Function to list all global instances
 function gcplistglobal {
   OWNER=$1
   gcloud compute instances list --filter="labels.owner:${OWNER}"
@@ -219,10 +219,10 @@ function gcpclone {
   --maintenance-policy=MIGRATE \
   --service-account=20168517356-compute@developer.gserviceaccount.com \
   --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
+  --min-cpu-platform=Intel\ Broadwell \
   --tags=fortipoc-http-https-redir,workshop-source-networks \
   --disk "name=${INSTANCENAME},device-name=${INSTANCENAME},mode=rw,boot=yes,auto-delete=yes" \
-  --min-cpu-platform=Intel\ Broadwell \
-  --tags=fortipoc-http-https-redir,workshop-source-networks
+  --labels=${LABELS}
 }
 
 # Function to start FortiPoC instance
