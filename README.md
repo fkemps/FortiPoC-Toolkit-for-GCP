@@ -120,7 +120,7 @@ OPTIONS:
         -lg   --list-global       List all your instances globally
 ARGUMENTS:
        region  : america, asia, europe
-       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa, <custome name>
+       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa, <custome-name>
        action  : build, clone, delete, list, listpubip, start, stop
 ```
 

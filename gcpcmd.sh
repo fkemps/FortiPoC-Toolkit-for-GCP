@@ -37,7 +37,7 @@
 # 2019112601 Ferry Kemps, Added global list based on owner label
 # 2019112801 Ferry Kemps, Empty license server fix
 # 2019112901 Ferry Kemps, Cloning now supports labeling
-# 2019120501 Ferry Kemps, Added <custom name> for product/solution, arguments sorted alphabetic
+# 2019120501 Ferry Kemps, Added <custom-name> for product/solution, arguments sorted alphabetic
 GCPCMDVERSION="2019112901"
 
 # Zones where to deploy. You can adjust if needed to deploy closest to your location
@@ -390,7 +390,7 @@ EOF
       echo "        -lg   --list-global       List all your instances globally"
       echo "ARGUMENTS:"
       echo "       region  : america, asia, europe"
-      echo "       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom name>"
+      echo "       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>"
       echo "       action  : build, clone, delete, list, listpubip, start, stop"
       echo ""
    fi
