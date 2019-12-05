@@ -9,7 +9,7 @@ This toolkit (scripts) allow you to manage the workload of creating, configuring
 
 The toolkit allows you to:
 
-* **Handle GCP instances**: Build, Clone, Start, Stop, Delete, list, ACL (gcpcmd.sh)
+* **Handle GCP instances**: Build, Clone, Delete, List, Listpubip, Start, Stop (gcpcmd.sh)
 * **Tweak FortiPoC's**: Make config changes on FortiPoC's (fpoc-to-all.sh)
 
 ![](img/FortiPoCflow.png)
@@ -119,9 +119,9 @@ OPTIONS:
         -ir   --ip-address-remove Remove current public IP-address from GCP ACL
         -lg   --list-global       List all your instances globally
 ARGUMENTS:
-       region  : asia, europe, america
-       product : fwb, fad, fpx, fsw, fsa, sme, xa, appsec, test
-       action  : build, clone, start, stop, delete, list, listpubip
+       region  : america, asia, europe
+       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa, <custome name>
+       action  : build, clone, delete, list, listpubip, start, stop
 ```
 
 

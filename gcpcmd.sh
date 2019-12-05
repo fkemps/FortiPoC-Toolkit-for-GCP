@@ -37,6 +37,7 @@
 # 2019112601 Ferry Kemps, Added global list based on owner label
 # 2019112801 Ferry Kemps, Empty license server fix
 # 2019112901 Ferry Kemps, Cloning now supports labeling
+# 2019120501 Ferry Kemps, Added <custom name> for product/solution, arguments sorted alphabetic
 GCPCMDVERSION="2019112901"
 
 # Zones where to deploy. You can adjust if needed to deploy closest to your location
@@ -388,9 +389,9 @@ EOF
       echo "        -ir   --ip-address-remove Remove current public IP-address from GCP ACL"
       echo "        -lg   --list-global       List all your instances globally"
       echo "ARGUMENTS:"
-      echo "       region  : asia, europe, america"
-      echo "       product : fwb, fad, fpx, fsw, fsa, sme, xa, appsec, test"
-      echo "       action  : build, clone, start, stop, delete, list, listpubip"
+      echo "       region  : america, asia, europe"
+      echo "       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom name>"
+      echo "       action  : build, clone, delete, list, listpubip, start, stop"
       echo ""
    fi
    ;;
@@ -403,12 +404,12 @@ ARGUMENT3=$3
 
 # Validate given arguments
 case ${ARGUMENT1} in
-  europe) ZONE=${EUROPE};;
-  asia) ZONE=${ASIA};;
   america) ZONE=${AMERICA};;
-  list) echo "Using default settings"; ARGUMENT2=${PRODUCT}; ARGUMENT3="list";;
-  listpubip) echo "Using default settings"; ARGUMENT2=${PRODUCT}; ARGUMENT3="listpubip";;
-  *) echo "[UNKNOWN REGION] Specify: asia, europe  or america"; echo ""; exit;;
+  asia) ZONE=${ASIA};;
+  europe) ZONE=${EUROPE};;
+  list) echo "Using your default settings"; ARGUMENT2=${PRODUCT}; ARGUMENT3="list";;
+  listpubip) echo "Using your default settings"; ARGUMENT2=${PRODUCT}; ARGUMENT3="listpubip";;
+  *) echo "[ERROR: REGION] Specify: america, asia or europe"; echo ""; exit;;
 esac
 
 case ${ARGUMENT2} in
@@ -421,9 +422,9 @@ case ${ARGUMENT2} in
   xa)  PRODUCT="xa"; FPTITLE="Xperts\ Academy\ Workshop";;
   appsec)  PRODUCT="appsec"; FPTITLE="Application\ Security\ Workshop";;
   test)  PRODUCT="test"; FPTITLE="Test\ Instance";;
-  list) echo "Using default settings"; ARGUMENT3="list";;
-  listpubip) echo "Using default settings"; ARGUMENT3="listpubip";;
-  *) echo "[UNKNOWN PRODUCT] Specify: fpx, fwb, fad, fsa, fsw, sme, xa, appsec, test"; exit;;
+  list) echo "Using your default settings"; ARGUMENT3="list";;
+  listpubip) echo "Using your default settings"; ARGUMENT3="listpubip";;
+  *) PRODUCT="${ARGUMENT2}";  FPTITLE="${PRODUCT}\ Workshop";;
 esac
 
 case ${ARGUMENT3} in
@@ -434,7 +435,7 @@ case ${ARGUMENT3} in
   delete) ACTION="delete";;
   list) ACTION="list";;
   listpubip) ACTION="listpubip";;
-  *) echo "[UNKNOWN ACTION] Specify: build, start, stop, delete, list or listpubip"; exit;;
+  *) echo "[ERROR: ACTION] Specify: build, clone, delete, list, listpubip, start or stop"; exit;;
 esac
 
 displayheader
