@@ -38,7 +38,8 @@
 # 2019112801 Ferry Kemps, Empty license server fix
 # 2019112901 Ferry Kemps, Cloning now supports labeling
 # 2019120501 Ferry Kemps, Added <custom-name> for product/solution, arguments sorted alphabetic
-GCPCMDVERSION="2019112901"
+# 2020011001 Ferry Kemps, Added [IP-address] option to --ip-address-add|remove
+GCPCMDVERSION="2020011001"
 
 # Zones where to deploy. You can adjust if needed to deploy closest to your location
 ASIA="asia-southeast1-b"
@@ -83,8 +84,11 @@ function validateIP() {
 # Function to add/remove workshop location Public IP-address to GCP ACL to allow access
 function gcpaclupdate() {
    CMD=$1
-# Obtain current public IP-address
-   PUBLICIP=`dig TXT -4 +short o-o.myaddr.l.google.com @ns1.google.com | sed -e 's/"//g'`
+   PUBLICIP=$2
+   if [ -z ${PUBLICIP} ]; then
+      # Obtain current public IP-address
+      PUBLICIP=`dig TXT -4 +short o-o.myaddr.l.google.com @ns1.google.com | sed -e 's/"//g'`
+   fi
    validateIP ${PUBLICIP}
    [ ! $? -eq 0 ] && (echo "Public IP not retreavable or not valid"; exit) 
    if [ ${CMD} == add ]; then
@@ -353,11 +357,11 @@ EOF
      exit
      ;;
   -ia | --ip-address-add)
-     gcpaclupdate add
+     gcpaclupdate add $2
      exit
      ;;
   -ir | --ip-address-remove)
-     gcpaclupdate remove
+     gcpaclupdate remove $2
      exit
      ;;
   -lg | --list-global)
@@ -384,10 +388,10 @@ EOF
       echo "       $0 [-c configfile] [region] [product] list"
       echo "       $0 [-c configfile] [region] [product] listpubip"
       echo "OPTIONS:"
-      echo "        -d    --delete-config     Delete default user config settings"
-      echo "        -ia   --ip-address-add    Add current public IP-address to GCP ACL"
-      echo "        -ir   --ip-address-remove Remove current public IP-address from GCP ACL"
-      echo "        -lg   --list-global       List all your instances globally"
+      echo "        -d    --delete-config                  Delete default user config settings"
+      echo "        -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL"
+      echo "        -ir   --ip-address-remove [IP-address] Remove current public IP-address from GCP ACL"
+      echo "        -lg   --list-global                    List all your instances globally"
       echo "ARGUMENTS:"
       echo "       region  : america, asia, europe"
       echo "       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>"
