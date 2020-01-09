@@ -114,10 +114,10 @@ Usage: ./gcpcmd.sh [-c configfile] <region> <product> <action>
        ./gcpcmd.sh [-c configfile] [region] [product] list
        ./gcpcmd.sh [-c configfile] [region] [product] listpubip
 OPTIONS:
-        -d    --delete-config     Delete default user config settings
-        -ia   --ip-address-add    Add current public IP-address to GCP ACL
-        -ir   --ip-address-remove Remove current public IP-address from GCP ACL
-        -lg   --list-global       List all your instances globally
+        -d    --delete-config                  Delete default user config settings
+        -ia   --ip-address-add [IP-ADDRESS]    Add current public IP-address to GCP ACL
+        -ir   --ip-address-remove [IP-ADDRESS] Remove current public IP-address from GCP ACL
+        -lg   --list-global                    List all your instances globally
 ARGUMENTS:
        region  : america, asia, europe
        product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa, <custome-name>
@@ -327,6 +327,10 @@ The FortiPoC's deployed are by default **not** reachable from the internet.
 You can allowed/denied access to the FortiPoC's by simply running `gcpcmd.sh -ip-address-add` or `gcpcmd.sh --ip-address-remove` respectively while you're connected onto the location network. It will automatically obtain your public IP-address and add/remove it to the GCP firewall rule-set.
 
 `./gcpcmd.sh --ip-address-add`
+
+By adding [IP-ADDRESS] argumnet you can specify which IP-address to add/remove.
+
+`./gcpcmd.sh --ip-address-add 10.1.1.1`
 
 ```
 Adding public-ip 10.1.1.1 to GCP ACL to allow access from this location
