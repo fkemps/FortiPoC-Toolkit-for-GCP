@@ -38,7 +38,7 @@
 # 2019112801 Ferry Kemps, Empty license server fix
 # 2019112901 Ferry Kemps, Cloning now supports labeling
 # 2019120501 Ferry Kemps, Added <custom-name> for product/solution, arguments sorted alphabetic
-# 2020011001 Ferry Kemps, Added [IP-address] option to --ip-address-add|remove
+# 2020011001 Ferry Kemps, Added [IP-address] option to --ip-address-add|remove and --ip-address-list
 GCPCMDVERSION="2020011001"
 
 # Zones where to deploy. You can adjust if needed to deploy closest to your location
@@ -106,7 +106,7 @@ function gcpaclupdate() {
       echo "Current GCP ACL list"
       gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]'
       echo ""
-   else
+   elif [ ${CMD} == remove ]; then
       echo "Removing public-ip ${PUBLICIP} to GCP ACL to remove access from this location"
       while read line
       do
@@ -118,6 +118,10 @@ function gcpaclupdate() {
       done < <(gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]')
       gcloud compute firewall-rules update workshop-source-networks --source-ranges=${SOURCERANGE}
       echo "Current GCP ACL list"
+      gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]'
+      echo ""
+    else
+      echo "Listing public-ip addresses on GCP ACL"
       gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]'
       echo ""
    fi
@@ -364,6 +368,10 @@ EOF
      gcpaclupdate remove $2
      exit
      ;;
+  -il | --ip-address-list)
+     gcpaclupdate list
+     exit
+     ;;
   -lg | --list-global)
      OWNER=`echo ${LABELS} | grep owner | cut -d "=" -f 3`
      if [ -z ${OWNER} ]; then
@@ -391,6 +399,7 @@ EOF
       echo "        -d    --delete-config                  Delete default user config settings"
       echo "        -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL"
       echo "        -ir   --ip-address-remove [IP-address] Remove current public IP-address from GCP ACL"
+      echo "        -il   --ip-address-list                List current public IP-address on GCP ACL"
       echo "        -lg   --list-global                    List all your instances globally"
       echo "ARGUMENTS:"
       echo "       region  : america, asia, europe"

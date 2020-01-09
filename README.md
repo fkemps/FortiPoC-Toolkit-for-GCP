@@ -117,6 +117,7 @@ OPTIONS:
         -d    --delete-config                  Delete default user config settings
         -ia   --ip-address-add [IP-ADDRESS]    Add current public IP-address to GCP ACL
         -ir   --ip-address-remove [IP-ADDRESS] Remove current public IP-address from GCP ACL
+        -il   --ip-address-list                List current public IP-address on GCP ACL
         -lg   --list-global                    List all your instances globally
 ARGUMENTS:
        region  : america, asia, europe
@@ -358,6 +359,41 @@ Current GCP ACL list
 188.37.53.177
 77.54.220.220
 62.28.181.26
+85.139.134.54
+118.201.61.6
+146.185.63.130
+85.251.147.205
+203.172.126.3
+10.1.1.1
+```
+
+To retrieve the public IP-addresses on the GCP ACL you can use
+
+`./gcpcmd.sh --ip-address-list`
+
+```
+Listing public-ip addresses on GCP ACL
+80.60.25.77/32
+121.7.171.108
+94.210.222.83
+87.69.50.141
+88.151.153.107
+109.144.211.50
+88.151.153.101
+195.228.28.243
+85.88.130.222
+193.126.247.194
+62.48.251.38
+195.76.37.24
+146.88.49.66
+91.126.136.150
+91.126.136.155
+219.74.227.60
+82.217.133.158
+85.88.152.134
+85.138.76.14
+188.37.53.177
+77.54.220.220
 85.139.134.54
 118.201.61.6
 146.185.63.130
