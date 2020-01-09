@@ -328,7 +328,7 @@ You can allowed/denied access to the FortiPoC's by simply running `gcpcmd.sh -ip
 
 `./gcpcmd.sh --ip-address-add`
 
-By adding [IP-ADDRESS] argumnet you can specify which IP-address to add/remove.
+By adding [IP-ADDRESS] argument you can specify which IP-address to add/remove.
 
 `./gcpcmd.sh --ip-address-add 10.1.1.1`
 
