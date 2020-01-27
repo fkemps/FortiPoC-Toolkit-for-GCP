@@ -41,8 +41,9 @@
 # 2020011001 Ferry Kemps, Added [IP-address] option to --ip-address-add|remove and --ip-address-list
 # 2020012701 Ferry Kemps, Use fortipoc-1.7.7 by default, add disclaimer, declare PoC-definitions, introduced group-management
 # 2020012703 Ferry Kemps, Corrected CONFFILE check
-# 2020012703 Ferry Kemps, Code clean-up, group management
-GCPCMDVERSION="2020012703"
+# 2020012704 Ferry Kemps, Code clean-up, group management
+# 2020012705 Ferry Kemps, Added --initials option for group management
+GCPCMDVERSION="2020012705"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -305,6 +306,7 @@ function displayhelp {
   echo "OPTIONS:"
   echo "        -d    --delete-config                  Delete default user config settings"
   echo "        -g    --group                          Group name for shared instances"
+  echo "        -i    --initials                       Specify intials on instance name for group management"
   echo "        -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL"
   echo "        -ir   --ip-address-remove [IP-address] Remove current public IP-address from GCP ACL"
   echo "        -il   --ip-address-list                List current public IP-address on GCP ACL"
@@ -409,7 +411,13 @@ case $1 in
   -g | --group)
      FPGROUP=$2
      SET_FPGROUP="true"
-     OVERRIDEFPGROUP=${FPGROUP}
+     OVERRIDE_FPGROUP=${FPGROUP}
+     shift
+     ;;
+  -i | --initials)
+     FPPREPEND=$2
+     SET_FPPREPEND="true"
+     OVERRIDE_FPPREPEND=${FPPREPEND}
      shift
      ;;
   -ia | --ip-address-add)
@@ -440,7 +448,7 @@ if [ "${RUN_CONFIGFILE}" == "true" ]; then
   if [ -n ${CONFIGFILE} ] && [ -e ${CONFIGFILE} ]; then
     source ${CONFIGFILE}
     if [ -n ${SET_FPGROUP} ] && [ ${SET_FPGROUP} == "true" ];then
-      FPGROUP=${OVERRIDEFPGROUP}
+      FPGROUP=${OVERRIDE_FPGROUP}
     fi
   else
     echo "Config file not found. Example file written as fpoc-example.conf"
@@ -471,6 +479,10 @@ POCDEFINITION1="poc/ferry/FortiWeb-Basic-solution-workshop-v2.2.fpoc"
 EOF
   exit
   fi
+fi
+
+if [ "${SET_FPPREPEND}" == "true" ]; then
+  FPPREPEND=${OVERRIDE_FPPREPEND}
 fi
 
 if [ "${RUN_LISTGLOBAL}" == "true" ]; then
