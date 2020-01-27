@@ -73,7 +73,7 @@ POCDEFINITION8=""
 # Functions
 ########################
 function displayheader() {
-#clear
+clear
 echo "---------------------------------------------------------------------"
 echo "             FortiPoC Toolkit for Google Cloud Platform             "
 echo "---------------------------------------------------------------------"
