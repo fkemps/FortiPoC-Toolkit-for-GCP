@@ -111,8 +111,8 @@ Personal instance identification: fk
 Default product: test
 
 Usage: ./gcpcmd.sh [-c configfile] <region> <product> <action>
-       ./gcpcmd.sh [-c configfile] [region] [product] list
-       ./gcpcmd.sh [-c configfile] [region] [product] listpubip
+       ./gcpcmd.sh [region] [product] list
+       ./gcpcmd.sh [region] [product] listpubip
 OPTIONS:
         -d    --delete-config                  Delete default user config settings
         -ia   --ip-address-add [IP-ADDRESS]    Add current public IP-address to GCP ACL
@@ -123,6 +123,7 @@ ARGUMENTS:
        region  : america, asia, europe
        product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa, <custome-name>
        action  : build, clone, delete, list, listpubip, start, stop
+                 action `build` needs `-c configfile`. Use `./gcpcmd.sh -c` to generate fpoc-example.conf
 ```
 
 
