@@ -40,7 +40,8 @@
 # 2019120501 Ferry Kemps, Added <custom-name> for product/solution, arguments sorted alphabetic
 # 2020011001 Ferry Kemps, Added [IP-address] option to --ip-address-add|remove and --ip-address-list
 # 2020012701 Ferry Kemps, Use fortipoc-1.7.7 by default, add disclaimer, declare PoC-definitions, introduced group-management
-GCPCMDVERSION="2020012701"
+# 2020012702 Ferry Kemps, Corrected CONFFILE check
+GCPCMDVERSION="2020012702"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -435,9 +436,9 @@ shift
 done
 
 if [ "${RUN_CONFIGFILE}" == "true" ]; then
-  if [ -e ${CONFIGFILE} ]; then
+  if [ ! -z ${CONFIGFILE} ] && [ -e ${CONFIGFILE} ]; then
     source ${CONFIGFILE}
-    if [ -z ${SET_FPGROUP} ] && [ ${SET_FPGROUP} == "true" ];then
+    if [ ! -z ${SET_FPGROUP} ] && [ ${SET_FPGROUP} == "true" ];then
       FPGROUP=${OVERRIDEFPGROUP}
     fi
   else
@@ -456,7 +457,7 @@ FPIMAGE="fortipoc-1-7-7-clear"
 #FPSIMPLEMENU="enable"
 FPTRAILKEY='ES-xamadrid-201907:765eb11f6523382c10513b66a8a4daf5'
 #GCPREPO="fkemps"
-FPGROUP=""
+#FPGROUP="${FPGROUP}"
 POCDEFINITION1="poc/ferry/FortiWeb-Basic-solution-workshop-v2.2.fpoc"
 #POCDEFINITION2="poc/ferry/FortiWeb-Advanced-Solutions-Workshop-v2.5.fpoc"
 #POCDEFINITION3=""

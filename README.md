@@ -58,6 +58,7 @@ Welcome to FortiPoC Toolkit for Google Cloud Platform
 Looks like your first run or no defaults available. Let's set them!
 Provide your initials : fl
 Provide GCP instance label F(irst)LASTNAME e.g. jdoe : flastname
+Provide GCP groupname for shared instances (optional) :
 Provide your region 1) Asia, 2) Europe, 3) America : 1
 Provide your GCP billing project ID : cse-projects-xxxxxx
 Provide GCP license server IP : 10.1.1.1
@@ -71,7 +72,7 @@ Copy fpoc-example.conf to conf directory with an descriptive name for your workl
 
 ```
 # Uncomment and speficy to override user defaults
-#GCPPROJECT="cse-projects-xxxxxx"
+#GCPPROJECT="cse-projects-xxxxxxx"
 #FPPREPEND="fl"
 #LABELS="fortipoc=,owner=flastname"
 #LICENSESERVER="10.1.1.1"
@@ -79,11 +80,12 @@ Copy fpoc-example.conf to conf directory with an descriptive name for your workl
 # --- edits below this line ---
 # Specify FortiPoC instance details.
 MACHINETYPE="n1-standard-4"
-FPIMAGE="fortipoc-1-7-2-clear"
+FPIMAGE="fortipoc-1-7-7-clear"
 #FPSIMPLEMENU="enable"
 FPTRAILKEY='ES-xamadrid-201907:765eb11f6523382c10513b66a8a4daf5'
-#GCPREPO="flastname"
-POCDEFINITION1="poc/ferry/FortiWeb-MachineLearning-v0.9.7.fpoc"
+#GCPREPO="fkemps"
+#FPGROUP=""
+POCDEFINITION1="poc/ferry/FortiWeb-Basic-solution-workshop-v2.2.fpoc"
 #POCDEFINITION2="poc/ferry/FortiWeb-Advanced-Solutions-Workshop-v2.5.fpoc"
 #POCDEFINITION3=""
 #POCDEFINITION4=""
@@ -104,28 +106,30 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 
 `./gcpcmd.sh`
 
-```
-(Version: 2019111502)
+```                
+(Version: 2020012701)
 Default deployment region: europe-west4-a
 Personal instance identification: fk
 Default product: test
 
-Usage: ./gcpcmd.sh [-c configfile] <region> <product> <action>
-       ./gcpcmd.sh [region] [product] list
-       ./gcpcmd.sh [region] [product] listpubip
+Usage: ./gcpcmd.sh [OPTIONS] [ARGUMENTS]
+       ./gcpcmd.sh [OPTIONS] <region> <product> <action>
+       ./gcpcmd.sh [-c configfile] <region> <product> build
+       ./gcpcmd.sh [OPTIONS] [region] [product] list
+       ./gcpcmd.sh [OPTIONS] [region] [product] listpubip
 OPTIONS:
         -d    --delete-config                  Delete default user config settings
-        -ia   --ip-address-add [IP-ADDRESS]    Add current public IP-address to GCP ACL
-        -ir   --ip-address-remove [IP-ADDRESS] Remove current public IP-address from GCP ACL
+        -g    --group                          Group name for shared instances
+        -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL
+        -ir   --ip-address-remove [IP-address] Remove current public IP-address from GCP ACL
         -il   --ip-address-list                List current public IP-address on GCP ACL
         -lg   --list-global                    List all your instances globally
 ARGUMENTS:
        region  : america, asia, europe
-       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa, <custome-name>
+       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>
        action  : build, clone, delete, list, listpubip, start, stop
-                 action `build` needs `-c configfile`. Use `./gcpcmd.sh -c` to generate fpoc-example.conf
+                 action build needs -c configfile. Use ./gcpcmd.sh -c to generate fpoc-example.conf
 ```
-
 
 ### Build
 Building will be fully automatic per specified config file. Each FortiPoC will be provisioned in parallel and download all needed VM-images and documentation. This will cause a high download on FortiPoC repository and the more you deploy in parallel the longer it will take. Advice is to not provision more then 10 simultaniously. Do it in batches or build just one and use the `clone` function to duplicate which will be much faster.
@@ -145,7 +149,7 @@ FortiPoC's will be running with e.g. PoC-definitions loaded, VM-images and docum
  Enter start of numbered range : 1
 
 Okay to build fpoc-fk-test-001 till fpoc-fk-test-003 in region europe-west4-a.   y/n? y
-==> Lets go...using Zone=europe-west4-a, Product=test, Action=build
+==> Lets go...using Owner=fkemps or Group=fkemps, Zone=europe-west4-a, Product=test, Action=build
 ==> Sleeping 1s seconds to avoid GCP DB locking
 ==> Creating instance fpoc-fk-test-003
 NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP  STATUS
@@ -199,7 +203,7 @@ Full overview of FortiPoC's can be obtained with **list** function. Specify *reg
              FortiPoC Toolkit for Google Cloud Platform
 ---------------------------------------------------------------------
 
-==> Lets go...using Zone=europe-west4-a, Product=test, Action=list
+==> Lets go...using Owner=fkemps or Group=fkemps, Zone=europe-west4-a, Product=test, Action=list
 
 NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
 fpoc-fk-test-001  europe-west4-a  n1-standard-4               10.164.0.66  34.90.107.239  RUNNING
@@ -216,7 +220,7 @@ FortiPoC IP-addresses can be obtained to use for `fpoc-to-all.sh` usage.
              FortiPoC Toolkit for Google Cloud Platform
 ---------------------------------------------------------------------
 
-==> Lets go...using Zone=europe-west4-a, Product=test, Action=listpubip
+==> Lets go...using Owner=fkemps or Group=fkemps, Zone=europe-west4-a, Product=test, Action=listpubip
 
 34.90.107.239 34.90.90.164 34.90.88.37
 ```
@@ -411,13 +415,17 @@ Listing public-ip addresses on GCP ACL
              FortiPoC Toolkit for Google Cloud Platform
 ---------------------------------------------------------------------
 
-Listing all global instances for fkemps
+Listing all global instances for owner:fkemps or group:fkemps
 
 NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
 fpoc-fk-test-001  europe-west4-a  n1-standard-4               10.164.0.60  34.90.228.152  RUNNING
 fpoc-fk-test-002  europe-west4-a  n1-standard-4               10.164.0.59  34.90.81.85    RUNNING
 ```
 
+#### Manage your instances with a group
+`./gcpcmd.sh --group <groupname>` allows you to view, control and build instances with a group label.   
+The `-g` ro `--group` option can be specified after gcpcmd.sh command in any order and will override the stored perferences and config-template group definition.
+Order of group preferences is personal, config-template and command-option.
 
 ---
 
