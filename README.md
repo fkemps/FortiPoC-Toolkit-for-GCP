@@ -107,7 +107,7 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 `./gcpcmd.sh`
 
 ```                
-(Version: 2020012701)
+(Version: 2020012705)
 Default deployment region: europe-west4-a
 Personal instance identification: fk
 Default product: test
@@ -120,6 +120,7 @@ Usage: ./gcpcmd.sh [OPTIONS] [ARGUMENTS]
 OPTIONS:
         -d    --delete-config                  Delete default user config settings
         -g    --group                          Group name for shared instances
+        -i    --initials                       Specify intials on instance name for group management
         -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL
         -ir   --ip-address-remove [IP-address] Remove current public IP-address from GCP ACL
         -il   --ip-address-list                List current public IP-address on GCP ACL
