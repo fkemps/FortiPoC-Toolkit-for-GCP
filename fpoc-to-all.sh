@@ -83,7 +83,7 @@ for HOST in ${IPADDRESS}; do
 ##########################################################################
 #echo "Adding SSK-keys"; sshfpoc 'set ssh authorize keys "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNJYNMdL9o1Xt3ADg1DCOBhp8Vvr6eX8KGOK9tpqYH8Q6yW6Y1ARzDwqytg2zacRqwwZdpelEQ2vc9Kd4xsYA2Ds/OvUhwxJ1mPr5AVaqy6UxmkSU4fIQaIwkBgfaVxxntND8WRQVbjvkvlfoVBel93yz4jYcUDG0wsBNawuMS2BYHXDWb+w5RtEtkWf1cGfzHVSQSrhmk1uFFXMhFY95t9b1mMgroZqYkYaYb1sxmOxnQTQwC1J5Hf8LajXAMPV9br523mCXpJ5aeD+1T1706XM8EikT9JHDhgnqyTLMf8FAdaetT2fju2FZ9WnmHM2V3wQnC0t0QIuoYgEnZlQND fkemps@Ferrys-MacBook-Pro.local"'
 #echo "Validating access"; sshfpoc 'exit'
-#echo "Changing admin pwd"; sshfpoc 'set passwd f0rt1n3t2019'
+#echo "Changing admin pwd"; sshfpoc 'set passwd fortinet2020'
 
 # ------------------ put your FortiPoC CLI commands to execute below this line ---------------------
 #
@@ -103,7 +103,7 @@ for HOST in ${IPADDRESS}; do
 # FortiPoC: set timezone
 # ----------------------
 # Obtain timezones with "get timezone"
-echo "Setting timezone"; sshfpoc 'set timezone Europe/Amsterdam'
+#echo "Setting timezone"; sshfpoc 'set timezone Europe/Amsterdam'
 #echo "Setting timezone"; sshfpoc 'set timezone Asia/Singapore'
 
 # FortiPoC: Launch a PoC-definition
@@ -133,6 +133,11 @@ echo "Setting timezone"; sshfpoc 'set timezone Europe/Amsterdam'
 # FortiPoC: Set FortiPoC GUI title
 # ----------------------
 #sshfpocset 'set gui title "Ultimate FortiADC Workshop"'
+
+#
+# FortiPoC: Set Simple Menu
+#
+#echo "Enable simple menu"; sshfpoc 'set gui simple enable'
 
 #
 # FortiPoC: random example collection delete, sync repo, load poc-definitions

@@ -43,7 +43,8 @@
 # 2020012703 Ferry Kemps, Corrected CONFFILE check
 # 2020012704 Ferry Kemps, Code clean-up, group management
 # 2020012705 Ferry Kemps, Added --initials option for group management
-GCPCMDVERSION="2020012705"
+# 2020013101 Ferry Kemps, Fixed -d option, added group function for cloning
+GCPCMDVERSION="2020013101"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -205,15 +206,15 @@ function gcpbuild {
   [ "${FPTITLE}" != "" ] && (echo "==> Setting title"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "set gui title \"${FPTITLE}\"")
   gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command 'set guest passwd guest'
   [ "${GCPREPO}" != "" ] && (echo "==> Adding repository"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "repo add gcp-${GCPREPO} https://gcp.repository.fortipoc.com/~#{GCPREPO}/ --unsigned")
-  [ -n ${LICENSESERVER} ] && (echo "==> Setting licenseserver"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "set license https://${LICENSESERVER}/")
-  [ -n ${POCDEFINITION1} ] && (echo "==> Loading poc-definition 1"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION1}\" refresh")
-  [ -n ${POCDEFINITION2} ] && (echo "==> Loading poc-definition 2"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION2}\" refresh")
-  [ -n ${POCDEFINITION3} ] && (echo "==> Loading poc-definition 3"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION3}\" refresh")
-  [ -n ${POCDEFINITION4} ] && (echo "==> Loading poc-definition 4"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION4}\" refresh")
-  [ -n ${POCDEFINITION5} ] && (echo "==> Loading poc-definition 5"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION5}\" refresh")
-  [ -n ${POCDEFINITION6} ] && (echo "==> Loading poc-definition 6"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION6}\" refresh")
-  [ -n ${POCDEFINITION7} ] && (echo "==> Loading poc-definition 7"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION7}\" refresh")
-  [ -n ${POCDEFINITION8} ] && (echo "==> Loading poc-definition 8"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION8}\" refresh")
+  [ ! -z ${LICENSESERVER} ] && (echo "==> Setting licenseserver"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "set license https://${LICENSESERVER}/")
+  [ ! -z ${POCDEFINITION1} ] && (echo "==> Loading poc-definition 1"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION1}\" refresh")
+  [ ! -z ${POCDEFINITION2} ] && (echo "==> Loading poc-definition 2"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION2}\" refresh")
+  [ ! -z ${POCDEFINITION3} ] && (echo "==> Loading poc-definition 3"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION3}\" refresh")
+  [ ! -z ${POCDEFINITION4} ] && (echo "==> Loading poc-definition 4"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION4}\" refresh")
+  [ ! -z ${POCDEFINITION5} ] && (echo "==> Loading poc-definition 5"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION5}\" refresh")
+  [ ! -z ${POCDEFINITION6} ] && (echo "==> Loading poc-definition 6"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION6}\" refresh")
+  [ ! -z ${POCDEFINITION7} ] && (echo "==> Loading poc-definition 7"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION7}\" refresh")
+  [ ! -z ${POCDEFINITION8} ] && (echo "==> Loading poc-definition 8"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION8}\" refresh")
   echo "==> Prefetching all images and documentation"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command 'poc prefetch all'
   [ "${POCLAUNCH}" != "" ] && (echo "==> Launching poc-definition"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc launch \"${POCLAUNCH}\"")
 #  [ "${FPSIMPLEMENU}" != "" ] && (echo "==> Setting GUI-mode to simple"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "set gui simple ${FPSIMPLEMENU}")
@@ -341,7 +342,7 @@ if [ ! -f ${GCPCMDCONF} ]; then
    read -p "Provide your initials : " CONFINITIALS
    read -p "Provide GCP instance label F(irst)LASTNAME e.g. jdoe : " CONFGCPLABEL
    read -p "Provide GCP groupname for shared instances (optional) : " CONFGCPGROUP
-   until [ -n ${CONFREGION} ]; do
+   until [ ! -z ${CONFREGION} ]; do
       read -p "Provide your region 1) Asia, 2) Europe, 3) America : " CONFREGIONANSWER
       case ${CONFREGIONANSWER} in
          1) CONFREGION="asia-southeast1-b";;
@@ -445,9 +446,9 @@ shift
 done
 
 if [ "${RUN_CONFIGFILE}" == "true" ]; then
-  if [ -n ${CONFIGFILE} ] && [ -e ${CONFIGFILE} ]; then
+  if [ ! -z ${CONFIGFILE} ] && [ -e ${CONFIGFILE} ]; then
     source ${CONFIGFILE}
-    if [ -n ${SET_FPGROUP} ] && [ ${SET_FPGROUP} == "true" ];then
+    if [ ! -z ${SET_FPGROUP} ] && [ ${SET_FPGROUP} == "true" ];then
       FPGROUP=${OVERRIDE_FPGROUP}
     fi
   else
@@ -568,6 +569,9 @@ then
   FPNUMBERTOCLONE=$(printf "%03d" ${FPNUMBERTOCLONE})
   CLONESOURCE="fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
   CLONESNAPSHOT="fpoc-${FPPREPEND}-${PRODUCT}"
+  if [ ! -z ${SET_FPGROUP} ] && [ ${SET_FPGROUP} == "true" ];then
+    FPGROUP=${OVERRIDE_FPGROUP}
+  fi
   echo ""
   read -p "Okay to ${ACTION} ${CLONESOURCE} to fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMSTART} till fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMEND} in region ${ZONE}.   y/n? " choice
   [ "${choice}" != "y" ] && exit
