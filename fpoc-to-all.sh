@@ -108,7 +108,7 @@ for HOST in ${IPADDRESS}; do
 
 # FortiPoC: Launch a PoC-definition
 # ----------------------
-#echo "Launching PoC-definition"; sshfpocparallel 'poc launch "FortiADC WAF"'
+echo "Launching PoC-definition"; sshfpocparallel 'poc launch "FortiProxy Workshop"'
 
 # FortiPoC: Eject a PoC-definition
 # ----------------------

@@ -44,7 +44,8 @@
 # 2020012704 Ferry Kemps, Code clean-up, group management
 # 2020012705 Ferry Kemps, Added --initials option for group management
 # 2020013101 Ferry Kemps, Fixed -d option, added group function for cloning
-GCPCMDVERSION="2020013101"
+# 2020022001 Ferry Kemps, Cleared GCPREPO example
+GCPCMDVERSION="2020022001"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -466,7 +467,7 @@ MACHINETYPE="n1-standard-4"
 FPIMAGE="fortipoc-1-7-7-clear"
 #FPSIMPLEMENU="enable"
 FPTRAILKEY='ES-xamadrid-201907:765eb11f6523382c10513b66a8a4daf5'
-#GCPREPO="fkemps"
+#GCPREPO=""
 #FPGROUP="${FPGROUP}"
 POCDEFINITION1="poc/ferry/FortiWeb-Basic-solution-workshop-v2.2.fpoc"
 #POCDEFINITION2="poc/ferry/FortiWeb-Advanced-Solutions-Workshop-v2.5.fpoc"
