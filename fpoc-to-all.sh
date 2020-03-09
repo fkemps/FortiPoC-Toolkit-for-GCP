@@ -108,7 +108,7 @@ for HOST in ${IPADDRESS}; do
 
 # FortiPoC: Launch a PoC-definition
 # ----------------------
-echo "Launching PoC-definition"; sshfpocparallel 'poc launch "FortiProxy Workshop"'
+#echo "Launching PoC-definition"; sshfpocparallel 'poc launch "FortiProxy Workshop"'
 
 # FortiPoC: Eject a PoC-definition
 # ----------------------
@@ -116,7 +116,7 @@ echo "Launching PoC-definition"; sshfpocparallel 'poc launch "FortiProxy Worksho
 
 # FortiPoC: Get FP task list
 # ----------------------
-#echo "Tasklist ";sshfpoc 'get task list'
+echo "Tasklist ";sshfpoc 'get task list'
 
 # FortiPoC: Purge files
 # ----------------------
@@ -132,7 +132,7 @@ echo "Launching PoC-definition"; sshfpocparallel 'poc launch "FortiProxy Worksho
 
 # FortiPoC: Set FortiPoC GUI title
 # ----------------------
-#sshfpocset 'set gui title "Ultimate FortiADC Workshop"'
+#sshfpoc 'set gui title "Ultimate FortiADC Workshop"'
 
 #
 # FortiPoC: Set Simple Menu
@@ -146,21 +146,21 @@ echo "Launching PoC-definition"; sshfpocparallel 'poc launch "FortiProxy Worksho
 #sshfpoc 'repo sync gcp-fkemps'
 #sshfpoc 'poc delete \"FortiADC Gbl App Deliv 5.3.1 Att\"'
 #sshfpoc 'poc delete \"FortiADC WAF\"'
-#sshfpoc 'poc repo define "poc/FortiADC-Global-App-Delivery-5.3.1-Attendee-PortugalQ32019.fpoc"'
+#sshfpoc 'poc repo define "poc/ferry/FortiWeb-Docker-v0.2.2.fpoc"'
 #sshfpoc 'poc repo define "poc/FortiADC-WAF-v0.1.2.fpoc"'
 #sshfpoc 'poc repo define "poc/FortiADC-WAF-v0.2.fpoc"'
 #sshfpoc 'poc delete "FortiWeb-Docker"'
 #sshfpoc 'poc delete "FortiWeb-SME-MachineLearning"'
 #sshfpoc 'poc delete "FAD-FWB-WCCP-v1.0"'
 #echo "y" | sshfpoc 'poc delete "FortiWeb Advanced Solutions v2.7"'
-#sshfpocpoc 'repo define "poc/FAD-FWB-WCCP-v1.0-SME.fpoc" refresh'
-#sshfpocpoc 'repo define "poc/ADC+WAF_SME_v0.1.fpoc" refresh'
-#sshfpocpoc 'repo define "poc/FADFWB-CM_SF-v0.3.13.fpoc" refresh'
-#sshfpocpoc 'launch "FADFWB-CM_SF"'
-#sshfpocpoc 'delete all'
-#sshfpocpoc 'repo define "poc/FortiWeb-Advanced-Solutions-Workshop-v2.7.fpoc" refresh'
-#sshfpocpoc 'repo define "poc/rvoong/FortiWeb-Basic-solution-workshop-v2.3.fpoc" refresh'
-#sshfpocpoc 'repo define "poc/FortiWeb-Docker-v0.1.0.fpoc" refresh'
+#sshfpoc 'repo define "poc/FAD-FWB-WCCP-v1.0-SME.fpoc" refresh'
+#sshfpoc 'repo define "poc/ADC+WAF_SME_v0.1.fpoc" refresh'
+#sshfpoc 'repo define "poc/FADFWB-CM_SF-v0.3.13.fpoc" refresh'
+#sshfpoc 'launch "FADFWB-CM_SF"'
+#sshfpoc 'delete all'
+#sshfpoc 'repo define "poc/FortiWeb-Advanced-Solutions-Workshop-v2.7.fpoc" refresh'
+#sshfpoc 'repo define "poc/rvoong/FortiWeb-Basic-solution-workshop-v2.3.fpoc" refresh'
+#sshfpoc 'repo define "poc/FortiWeb-Docker-v0.1.0.fpoc" refresh'
 
 ######################################
 # Managing FortiPoC VM configuration
