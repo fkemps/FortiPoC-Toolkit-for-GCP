@@ -5,7 +5,8 @@
 # 2019110802 : Ferry Kemps - Short and long option specification
 # 2019111101 : Ferry Kemps - Some clean-up and comments
 # 2019112501 : Ferry Kemps - Updated --address description
-FPOCSCRIPTVERSION="2019112501"
+# 2020052501 : Ferry Kemps - General clean up, added banner more examples
+FPOCSCRIPTVERSION="2020052501"
 #
 # This script is to manage running FortiPoCs by executing CLI commands on FortiPoC console.
 # Idea is to:
@@ -56,7 +57,14 @@ case $1 in
      echo "----------------------------------------------------------------------------"
      exit;;
 
-  *) echo "(Version: ${FPOCSCRIPTVERSION})"
+  *) echo '  __                       _                    _ _'
+     echo ' / _|_ __   ___   ___     | |_ ___         __ _| | |'
+     echo '| |_|  _ \ / _ \ / __|____| __/ _ \ _____ / _` | | |'
+     echo '|  _| |_) | (_) | (_|_____| || (_) |_____| (_| | | |'
+     echo '|_| | .__/ \___/ \___|     \__\___/       \__,_|_|_|'
+     echo '    |_|'
+     echo ""
+     echo "(Version: ${FPOCSCRIPTVERSION})"
      echo "Usage: $0 OPTION"
      echo ""
      echo "OPTION: -a    --address       Execute commands on IP-address FortiPoC 192.168.254.1 or \"192.168.254.2 192.168.254.3\" space delimitted"
@@ -89,8 +97,7 @@ for HOST in ${IPADDRESS}; do
 #
 # FortiPoC: Title settings
 #
-#echo "Setting tile"
-#sshfpoc 'set gui title "FortiProxy and FortiWeb Workshop - FPOC" '
+#echo "Setting GUI tile"; sshfpoc 'set gui title "FortiProxy and FortiWeb Workshop - FPOC" '
 
 # Remove admin pwd
 # ----------------------
@@ -98,7 +105,7 @@ for HOST in ${IPADDRESS}; do
 
 # Removing SSH keys
 # ----------------------
-#sshfpoc 'unset ssh authorized keys 1'
+# echo "Removing ssh-key"; sshfpoc 'unset ssh authorized keys 1'
 
 # FortiPoC: set timezone
 # ----------------------
@@ -116,23 +123,19 @@ for HOST in ${IPADDRESS}; do
 
 # FortiPoC: Get FP task list
 # ----------------------
-echo "Tasklist ";sshfpoc 'get task list'
+#echo "Tasklist "; sshfpoc 'get task list'
 
 # FortiPoC: Purge files
 # ----------------------
-#echo "Purge files ";sshfpoc 'execute purge files'
+#echo "Purge files "; sshfpoc 'execute purge files'
 
 # FortiPoC: Get loaded poc-definitions
 # ----------------------
-#echo "Loaded POC-definitions";sshfpoc 'poc list'
+#echo "Populated POC-definitions"; sshfpoc 'poc list'
 
 # FortiPoC: Prefetch all POC-definitions and documentation
 # ----------------------
-#sshfpoc "poc prefetch all"
-
-# FortiPoC: Set FortiPoC GUI title
-# ----------------------
-#sshfpoc 'set gui title "Ultimate FortiADC Workshop"'
+echo "Prefetching all POC-definitions"; sshfpoc "poc prefetch all"
 
 #
 # FortiPoC: Set Simple Menu
@@ -142,25 +145,18 @@ echo "Tasklist ";sshfpoc 'get task list'
 #
 # FortiPoC: random example collection delete, sync repo, load poc-definitions
 # ----------------------
-#sshfpoc 'repo sync'
-#sshfpoc 'repo sync gcp-fkemps'
-#sshfpoc 'poc delete \"FortiADC Gbl App Deliv 5.3.1 Att\"'
-#sshfpoc 'poc delete \"FortiADC WAF\"'
-#sshfpoc 'poc repo define "poc/ferry/FortiWeb-Docker-v0.2.2.fpoc"'
-#sshfpoc 'poc repo define "poc/FortiADC-WAF-v0.1.2.fpoc"'
-#sshfpoc 'poc repo define "poc/FortiADC-WAF-v0.2.fpoc"'
-#sshfpoc 'poc delete "FortiWeb-Docker"'
-#sshfpoc 'poc delete "FortiWeb-SME-MachineLearning"'
-#sshfpoc 'poc delete "FAD-FWB-WCCP-v1.0"'
-#echo "y" | sshfpoc 'poc delete "FortiWeb Advanced Solutions v2.7"'
-#sshfpoc 'repo define "poc/FAD-FWB-WCCP-v1.0-SME.fpoc" refresh'
-#sshfpoc 'repo define "poc/ADC+WAF_SME_v0.1.fpoc" refresh'
-#sshfpoc 'repo define "poc/FADFWB-CM_SF-v0.3.13.fpoc" refresh'
-#sshfpoc 'launch "FADFWB-CM_SF"'
-#sshfpoc 'delete all'
-#sshfpoc 'repo define "poc/FortiWeb-Advanced-Solutions-Workshop-v2.7.fpoc" refresh'
-#sshfpoc 'repo define "poc/rvoong/FortiWeb-Basic-solution-workshop-v2.3.fpoc" refresh'
-#sshfpoc 'repo define "poc/FortiWeb-Docker-v0.1.0.fpoc" refresh'
+#echo "Synchronising repositories" ; sshfpoc 'repo sync'
+#echo "Synchronising repository gcp-fkemps"; sshfpoc 'repo sync gcp-fkemps'
+#echo "Delete POC-definition"; echo "y" | sshfpoc 'poc delete "FortiWeb Basic Solutions"'
+#echo "Delete POC-definition"; echo "y" | sshfpoc 'poc delete "FortiADC WAF"'
+#echo "Delete POC-definition"; echo "y" | sshfpoc 'poc delete "FortiWeb Advanced Solutions v2.7"'
+#echo "Adding POC-definition"; sshfpoc 'poc repo define "poc/ferry/FortiWeb-Docker-v0.2.2.fpoc"'
+#echo "Adding POC-definition"; sshfpoc 'poc repo define "poc/FortiADC-WAF-v0.1.2.fpoc"'
+#echo "Adding POC-definition"; sshfpoc 'poc repo define "poc/FortiADC-WAF-v0.2.fpoc"'
+#echo "Adding POC-definition"; sshfpoc 'repo define "poc/FAD-FWB-WCCP-v1.0-SME.fpoc" refresh'
+#echo "Adding POC-definition"; sshfpoc 'poc repo define "poc/rgracioli/FAD-FWB-WCCP-v5.4.0.fpoc"'
+#echo "Adding POC-definition"; sshfpoc 'poc repo define ""poc/FortiWeb-MachineLearning-v0.9.9.fpoc'
+#echo "Launching POC-definition"; sshfpoc 'launch "FADFWB-CM_SF"'
 
 ######################################
 # Managing FortiPoC VM configuration

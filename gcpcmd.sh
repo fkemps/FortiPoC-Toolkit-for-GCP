@@ -45,7 +45,8 @@
 # 2020012705 Ferry Kemps, Added --initials option for group management
 # 2020013101 Ferry Kemps, Fixed -d option, added group function for cloning
 # 2020022001 Ferry Kemps, Cleared GCPREPO example
-GCPCMDVERSION="2020022001"
+# 2020052501 Ferry Kemps, Modified banner
+GCPCMDVERSION="2020052501"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -295,6 +296,12 @@ function gcpdelete {
 
 # Function to display the help
 function displayhelp {
+  echo ' _____          _   _ ____              _____           _ _    _ _      __               ____  ____ ____'
+  echo '|  ___|__  _ __| |_(_)  _ \ ___   ___  |_   _|__   ___ | | | _(_) |_   / _| ___  _ __   / ___|/ ___|  _ \'
+  echo '| |_ / _ \|  __| __| | |_) / _ \ / __|   | |/ _ \ / _ \| | |/ / | __| | |_ / _ \|  __| | |  _| |   | |_) |'
+  echo '|  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/'
+  echo '|_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|'
+  echo ""
   echo "(Version: ${GCPCMDVERSION})"
   echo "Default deployment region: ${ZONE}"
   echo "Personal instance identification: ${FPPREPEND}"
