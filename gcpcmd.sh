@@ -46,7 +46,8 @@
 # 2020013101 Ferry Kemps, Fixed -d option, added group function for cloning
 # 2020022001 Ferry Kemps, Cleared GCPREPO example
 # 2020052501 Ferry Kemps, Modified banner
-GCPCMDVERSION="2020052501"
+# 2020060201 Ferry Kemps, Added option to change machine-type
+GCPCMDVERSION="2020060201"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -294,6 +295,18 @@ function gcpdelete {
   echo yes | gcloud compute instances delete ${INSTANCENAME} --zone=${ZONE}
 }
 
+# Function to delete FortiPoC instance
+function gcpmachinetype {
+  FPPREPEND=$1
+  ZONE=$2
+  PRODUCT=$3
+  MACHINETYPE=$4
+  INSTANCE=$5
+  INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
+  echo "==> Changing machine-type of ${INSTANCENAME}"
+  gcloud compute instances set-machine-type ${INSTANCENAME} --machine-type=${MACHINETYPE} --zone=${ZONE} 
+}
+
 # Function to display the help
 function displayhelp {
   echo ' _____          _   _ ____              _____           _ _    _ _      __               ____  ____ ____'
@@ -323,7 +336,7 @@ function displayhelp {
   echo "ARGUMENTS:"
   echo "       region  : america, asia, europe"
   echo "       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>"
-  echo "       action  : build, clone, delete, list, listpubip, start, stop"
+  echo "       action  : build, clone, delete, list, machinetype, listpubip, start, stop"
   echo "                 action build needs -c configfile. Use ./gcpcmd.sh -c to generate fpoc-example.conf"
   echo ""
 }
@@ -544,16 +557,26 @@ case ${ARGUMENT3} in
   start) ACTION="start";;
   stop) ACTION="stop";;
   delete) ACTION="delete";;
+  machinetype) ACTION="machinetype";;
   list) ACTION="list";;
   listpubip) ACTION="listpubip";;
-  *) echo "[ERROR: ACTION] Specify: build, clone, delete, list, listpubip, start or stop"; exit;;
+  *) echo "[ERROR: ACTION] Specify: build, clone, delete, machinetype, list, listpubip, start or stop"; exit;;
 esac
 
 displayheader
-if  [[ ${ACTION} == build  ||  ${ACTION} == start || ${ACTION} == stop || ${ACTION} == delete ]]
+if  [[ ${ACTION} == build  ||  ${ACTION} == start || ${ACTION} == stop || ${ACTION} == delete || ${ACTION} == machinetype ]]
 then
   read -p " Enter amount of FortiPoC's : " FPCOUNT
   read -p " Enter start of numbered range : " FPNUMSTART
+  if [ ${ACTION} == "machinetype" ]; then
+    read -p " select machine-type : 1) n1-standard-4, 2) n1-standard-8, 3) n1-standard-16 : " NEWMACHINETYPE
+    case ${NEWMACHINETYPE} in
+      1) MACHINETYPE="n1-standard-4";;
+      2) MACHINETYPE="n1-standard-8";;
+      3) MACHINETYPE="n1-standard-16";;
+      *) echo "Wrong machine type given"; echo ""; exit;;
+    esac
+  fi
   let --FPCOUNT
   let FPNUMEND=FPNUMSTART+FPCOUNT
   FPNUMSTART=$(printf "%03d" ${FPNUMSTART})
@@ -592,8 +615,8 @@ fi
 
   echo "==> Lets go...using Owner=${OWNER} or Group=${FPGROUP}, Zone=${ZONE}, Product=${PRODUCT}, Action=${ACTION}"; echo 
 
-export -f gcpbuild gcpstart gcpstop gcpdelete gcpclone
-export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE LABELS FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH
+export -f gcpbuild gcpstart gcpstop gcpdelete gcpclone gcpmachinetype
+export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE LABELS FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH NEWMACHINETYPE
 
 case ${ACTION} in
   build)  parallel ${PARALLELOPT} gcpbuild  ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPTITLE}" ::: `seq -f%03g ${FPNUMSTART} ${FPNUMEND}`;;
@@ -601,6 +624,7 @@ case ${ACTION} in
   start)  parallel ${PARALLELOPT} gcpstart  ${FPPREPEND} ${ZONE} ${PRODUCT} ::: `seq -f%03g  ${FPNUMSTART} ${FPNUMEND}`;;
   stop)   parallel ${PARALLELOPT} gcpstop   ${FPPREPEND} ${ZONE} ${PRODUCT} ::: `seq -f%03g  ${FPNUMSTART} ${FPNUMEND}`;;
   delete) parallel ${PARALLELOPT} gcpdelete ${FPPREPEND} ${ZONE} ${PRODUCT} ::: `seq -f%03g  ${FPNUMSTART} ${FPNUMEND}`;;
+  machinetype) parallel ${PARALLELOPT} gcpmachinetype ${FPPREPEND} ${ZONE} ${PRODUCT} ${MACHINETYPE} ::: `seq -f%03g  ${FPNUMSTART} ${FPNUMEND}`;;
   list) gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND zone~${ZONE}" | grep -e "NAME" -e ${PRODUCT};;
 # list) gcloud compute instances list --filter="name~fpoc-${FPPREPEND}-${PRODUCT}"| grep -e "NAME" -e "${ZONE}";;
   listpubip) gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND zone~${ZONE}"  | grep -e ${PRODUCT}  | awk '{ printf $5 " " }';;
