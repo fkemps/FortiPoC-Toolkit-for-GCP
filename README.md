@@ -9,7 +9,7 @@ This toolkit (scripts) allow you to manage the workload of creating, configuring
 
 The toolkit allows you to:
 
-* **Handle GCP instances**: Build, Clone, Delete, List, Listpubip, Start, Stop (gcpcmd.sh)
+* **Handle GCP instances**: Build, Clone, Delete, Change Machine-type, List, Listpubip, Start, Stop (gcpcmd.sh)
 * **Tweak FortiPoC's**: Make config changes on FortiPoC's (fpoc-to-all.sh)
 
 ![](img/FortiPoCflow.png)
