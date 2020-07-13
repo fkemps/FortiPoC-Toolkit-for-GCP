@@ -6,38 +6,39 @@
 # 2019111101 : Ferry Kemps - Some clean-up and comments
 # 2019112501 : Ferry Kemps - Updated --address description
 # 2020052501 : Ferry Kemps - General clean up, added banner more examples
-# 2020052901 : Ferry Kemps - Echo modification and more examples for switching POC-definitions
-FPOCSCRIPTVERSION="2020052901"
-#
-# This script is to manage running FortiPoCs by executing CLI commands on FortiPoC console.
-# Idea is to:
-#   Step 1) upload your ssh-key and validate SSH access via pub-key
-#   Step 2) lock admin account (set pwd). From that point onwards management via SSH-only per CLI. Attendees use guest/guest for FP access.
-#
-# See steps below and uncommand & run in that order.
-# Uncomment/add "sshfpoc" or "sshfpocparallel" to execute commands sequential on FPoCs or in parallel.
-# Command need to be located inbetween "---- Start -----" and "----- End -----" section.
-# Use provided examples for guidance.
-#
+# 2020070901 : Ferry Kemps - added STARTDELAY to relax parallel starting
+FPOCSCRIPTVERSION="2020070901"
+
+###############################################################################################################################################
+# This script is to manage running FortiPoCs by executing CLI commands on FortiPoC console.                                                   #
+# Idea is to:                                                                                                                                 #
+#   Step 1) upload your ssh-key and validate SSH access via pub-key                                                                           #
+#   Step 2) lock admin account (set pwd). From that point onwards management via SSH-only per CLI. Attendees use guest/guest for FP access.   #
+#                                                                                                                                             #
+# See steps below and uncommand & run in that order.                                                                                          #
+# Uncomment/add "sshfpoc" or "sshfpocparallel" to execute commands sequential on FPoCs or in parallel.                                        #
+# Command need to be located inbetween "---- Start -----" and "----- End -----" section.                                                      #
+# Use provided examples for guidance.                                                                                                         #
+#i#############################################################################################################################################
+
 # List of FortiPoC IP-addresses e.g. "1.1.1.1" or use "1.1.1.1 2.2.2.2 3.3.3.3" space delimited format for multiple FPs.
 # Use this script embedded method in case you don't want to use -a / --address command line option
 #
-# Single-IP
+# Single-IP or FQDN
 #IPADDRESS="a.b.c.d"
-#
-# Multiple-IP's
-#IPADDRESS="x.x.x.x y.y.y.y z.z.z.z"
-#IPADDRESS="host.domainname.ext
-#IPADDRESS="host1.domain.ext host2.domain.ext"
 
-# Parameters
+# Multiple-IP's or FQDN's
+#IPADDRESS="x.x.x.x y.y.y.y z.z.z.z host.domain.ext"
+
+# Global Parameters
 USER="admin"
-PWD="F0rt1n3t2019"
+PWD="password"
 export USER PWD
 COUNT=1
+STARTDELAY=5
 
 #######################
-# Functions
+# Functions           #
 #######################
 function sshfpoc {
    CMD=$1
@@ -50,7 +51,7 @@ function sshfpocparallel {
 }
 
 #######################
-# Option handling
+# Option handling     #
 #######################
 case $1 in
   -a | --address) echo "Using CLI provided IP-address(es)"
@@ -81,27 +82,32 @@ esac
 
 
 #######################
-# FortiPoC management
+# FortiPoC management #
 #######################
 STARTTIME=`date`
 clear;echo -n "---------------- Start of actions on FortiPoC - ${STARTTIME}  ---------------------"; echo ""
 echo "Executing on targets ${IPADDRESS}"; echo ""
 for HOST in ${IPADDRESS}; do
-  echo "======== FortiPoC on IP : ${HOST} ========= FPOC: ${COUNT}"
+sleep ${STARTDELAY}
+echo "======== FortiPoC on IP : ${HOST} ========= FPOC: ${COUNT}"
 
 # Uncomment the "echo" rules for step 1, 2 and 3. Comment them again once done.
-##########################################################################
-# Step 1) Install SSH keys 2) Validate ssh access 3) Change admin password
-##########################################################################
+#############################################################################
+# Step 1) Install SSH keys 2) Validate ssh access 3) Change admin password  #
+#############################################################################
 #echo "[*] Adding SSK-keys"; sshfpoc 'set ssh authorize keys "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNJYNMdL9o1Xt3ADg1DCOBhp8Vvr6eX8KGOK9tpqYH8Q6yW6Y1ARzDwqytg2zacRqwwZdpelEQ2vc9Kd4xsYA2Ds/OvUhwxJ1mPr5AVaqy6UxmkSU4fIQaIwkBgfaVxxntND8WRQVbjvkvlfoVBel93yz4jYcUDG0wsBNawuMS2BYHXDWb+w5RtEtkWf1cGfzHVSQSrhmk1uFFXMhFY95t9b1mMgroZqYkYaYb1sxmOxnQTQwC1J5Hf8LajXAMPV9br523mCXpJ5aeD+1T1706XM8EikT9JHDhgnqyTLMf8FAdaetT2fju2FZ9WnmHM2V3wQnC0t0QIuoYgEnZlQND fkemps@Ferrys-MacBook-Pro.local"'
 #echo "[*] Validating access"; sshfpoc 'exit'
-#echo "[*] Changing admin pwd"; sshfpoc 'set passwd bettertoghter'
+#echo "[*] Changing admin pwd"; sshfpoc 'set passwd bettertogether'
+
+
+
+
 
 # ------------------ put your FortiPoC CLI commands to execute below this line ---------------------
 #
 # FortiPoC: Title settings
 #
-#echo "[*] Setting GUI tile"; sshfpoc 'set gui title "FortiProxy and FortiWeb Workshop - FPOC" '
+#echo "[*] Setting GUI tile"; sshfpoc 'set gui title "Xperts Summit 2020 - FPOC#" '
 
 # Remove admin pwd
 # ----------------------
@@ -163,51 +169,66 @@ for HOST in ${IPADDRESS}; do
 #echo "[*] Launching POC-definition"; sshfpoc 'launch "FADFWB-CM_SF"'
 
 #-------------------------------------
-# APAC vSE-meeting 2020Q2
+# Some examples used for summit 2020
 #-------------------------------------
 
-# FAD
-#echo "[*] Changing guest password to secureadc"; sshfpoc 'set guest passwd xxxxxxx'
+# Monday - FPX Ultimate Playground
+#echo "[*] Changing guest password to replace"; sshfpoc 'set guest passwd replace'
 #echo "[*] Ejecting PoC-definition"; sshfpoc 'poc eject'
 #echo "[*] Synchronise repositories"; sshfpoc 'repo sync'
 #echo "[*] Removing all previous POC-definitions"; echo "y" | sshfpoc 'poc delete all'; echo ""
-#echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/secops/FortiADC-Database-v0.2.4.fpoc"'
+#echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/xpertsummit2020/FortiProxy-Ultimate-Playground-X.fpoc"'
+#echo "[*] Prefetching all POC-definitions"; sshfpocparallel "poc prefetch all"
+
+# Tuesday - FAD
+#echo "[*] Changing guest password to secureadc"; sshfpoc 'set guest passwd SecureADC'
+#echo "[*] Ejecting PoC-definition"; sshfpoc 'poc eject'
+#echo "[*] Synchronise repositories"; sshfpoc 'repo sync'
+#echo "[*] Removing all previous POC-definitions"; echo "y" | sshfpoc 'poc delete all'; echo ""
+#echo "[*] Removing previous Database POC-definition"; echo "y"| sshfpoc 'poc delete "FortiADC Database"'
+#echo "[*] Removing previous Database POC-definition"; echo "y"| sshfpoc 'poc delete "FortiADC WAF"'
+#echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/FortiADC-Database-v0.3.0.fpoc"'
+#echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/FortiADC-Database-v0.3.1.fpoc"'
 #echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/secops/FortiADC-Global-App-Delivery-5.4.1-Attendee.fpoc"'
 #echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/secops/FortiADC-DataCenter-v5.4.1.fpoc"'
-#echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/secops/FortiADC Cert Verification v0.1.fpoc"'
+#echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/FortiADC-Cert-Verification-v0.2.fpoc"'
+#echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/rgracioli/FortiADC-WAF-v1.5.fpoc"'
+#echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/FortiADC-WAF-v0.1.6.fpoc"'
 #echo "[*] Prefetching all POC-definitions"; sshfpocparallel "poc prefetch all"
 
-# FWB
-#echo "[*] Changing guest password to bestwaf"; sshfpoc 'set guest passwd xxxxxxx'
+# Wednesday - FIS
+#echo "[*] Changing guest password to airgap"; sshfpoc 'set guest passwd AirGAP'
 #echo "[*] Ejecting PoC-definition"; sshfpoc 'poc eject'
 #echo "[*] Synchronise repositories"; sshfpoc 'repo sync'
 #echo "[*] Removing all previous POC-definitions"; echo "y" | sshfpoc 'poc delete all'; echo ""
-#echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/rvoong/FortiWeb-MachineLearning-v1.0.0.fpoc"'
-#echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/secops/FortiWeb-Cert-Auth-v0.1.1.fpoc"'
+#echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/xpertsummit2020/FortiIsolator-Workshop-Xperts.fpoc"'
 #echo "[*] Prefetching all POC-definitions"; sshfpocparallel "poc prefetch all"
+#echo "[*] Launching POC-definition"; sshfpocparallel 'poc launch "FortiIsolator Workshop Xperts"'
 
-# FPX
-#echo "[*] Changing guest password to replace"; sshfpoc 'set guest passwd xxxxxxx'
-#echo "[*] Ejecting PoC-definition"; sshfpoc 'poc eject'
+# Thursday - FWB
+#echo "[*] Changing guest password to bestwaf"; sshfpoc 'set guest passwd BestWAF'
+#echo "[*] Ejecting PoC-definition"; sshfpocparallel 'poc eject'
 #echo "[*] Synchronise repositories"; sshfpoc 'repo sync'
 #echo "[*] Removing all previous POC-definitions"; echo "y" | sshfpoc 'poc delete all'; echo ""
-#echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/secops/FortiProxy-Workshop-v0.7.8.fpoc"'
-#echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/FortiProxy-Ultimate-Playground-v0.1.8.fpoc"'
-#echo "[*] Prefetching all POC-definitions"; sshfpocparallel "poc prefetch all"
-
-# FIS
-#echo "[*] Changing guest password to airgap"; sshfpoc 'set guest passwd xxxxxxx'
-#echo "[*] Ejecting PoC-definition"; sshfpoc 'poc eject'
-#echo "[*] Synchronise repositories"; sshfpoc 'repo sync'
-#echo "[*] Removing all previous POC-definitions"; echo "y" | sshfpoc 'poc delete all'; echo ""
-#echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/FortiIsolator-Workshop-v0.2.1.fpoc"'
+#echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/xpertsummit2020/FortiWeb-Machine-Learning-Xperts.fpoc"'
 #echo "[*] Prefetching all POC-definitions"; sshfpoc "poc prefetch all"
-#echo "[*] Prefetching all POC-definitions"; sshfpocparallel "poc prefetch all"
+#echo "[*] Launching POC-definition"; sshfpoc 'poc launch "FortiWeb Machine Learning Xperts"'
+#echo "[*] Launching POC-definition"; sshfpocparallel 'poc launch "FortiWeb Machine Learning Xperts"'
+
+# Friday - FPX
+#echo "[*] Changing guest password to replace"; sshfpoc 'set guest passwd REPLACE'
+#echo "[*] Ejecting PoC-definition"; sshfpoc 'poc eject'
+#echo "[*] Ejecting PoC-definition"; sshfpocparallel 'poc eject'
+#echo "[*] Synchronise repositories"; sshfpoc 'repo sync'
+#echo "[*] Removing all previous POC-definitions"; echo "y" | sshfpoc 'poc delete all'; echo ""
+#echo "[*] Adding POC-definition"; sshfpoc 'poc repo define "poc/xpertsummit2020/FortiProxy-Workshop-Xperts.fpoc"'
+#echo "[*] Prefetching all POC-definitions"; sshfpoc "poc prefetch all"
+#echo "[*] Launching POC-definition"; sshfpocparallel 'poc launch "FortiProxy Workshop Xperts"'
 
 
 
 ######################################
-# Managing FortiPoC VM configuration
+# Managing FortiPoC VM configuration #
 ######################################
 #
 # FWB: set port MTU 1460
