@@ -106,8 +106,14 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 
 `./gcpcmd.sh`
 
-```                
-(Version: 2020012705)
+``` 
+ _____          _   _ ____              _____           _ _    _ _      __               ____  ____ ____
+|  ___|__  _ __| |_(_)  _ \ ___   ___  |_   _|__   ___ | | | _(_) |_   / _| ___  _ __   / ___|/ ___|  _ \
+| |_ / _ \|  __| __| | |_) / _ \ / __|   | |/ _ \ / _ \| | |/ / | __| | |_ / _ \|  __| | |  _| |   | |_) |
+|  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/
+|_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|
+
+(Version: 2020060201)
 Default deployment region: europe-west4-a
 Personal instance identification: fk
 Default product: test
@@ -128,7 +134,7 @@ OPTIONS:
 ARGUMENTS:
        region  : america, asia, europe
        product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>
-       action  : build, clone, delete, list, listpubip, start, stop
+       action  : build, clone, delete, list, machinetype, listpubip, start, stop
                  action build needs -c configfile. Use ./gcpcmd.sh -c to generate fpoc-example.conf
 ```
 
@@ -327,6 +333,24 @@ other instances or the `--keep-disks` flag is given and specifies them
 
 Do you want to continue (Y/n)?
 Deleted [https://www.googleapis.com/compute/v1/projects/cse-projects-202906/zones/europe-west4-a/instances/fpoc-fk-test-003].
+```
+
+#### Machinetype
+
+You can change the machine-type to adjust CPU/Memory of the instance on GCP.
+
+`./gcpcmd.sh europe test machinetype`
+
+```
+---------------------------------------------------------------------
+             FortiPoC Toolkit for Google Cloud Platform
+---------------------------------------------------------------------
+
+ Enter amount of FortiPoC's : 20
+ Enter start of numbered range : 1
+ select machine-type : 1) n1-standard-4, 2) n1-standard-8, 3) n1-standard-16 : 2
+
+Okay to machinetype fpoc-fk-test-001 till fpoc-fk-test-020 in region europe-west4-a.   y/n?
 ```
 
 #### Allow / Deny access to FortiPoC
