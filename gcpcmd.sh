@@ -47,7 +47,8 @@
 # 2020022001 Ferry Kemps, Cleared GCPREPO example
 # 2020052501 Ferry Kemps, Modified banner
 # 2020060201 Ferry Kemps, Added option to change machine-type
-GCPCMDVERSION="2020060201"
+# 2020072201 Ferry Kemps, Improved WARNING message on missing software packages.
+GCPCMDVERSION="2020072201"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -344,10 +345,13 @@ function displayhelp {
 #########################
 # start of program
 #########################
-# First check if required software is available
-type gcloud > /dev/null 2>&1 || (echo "gcloud SDK not installed"; exit)
-type parallel > /dev/null 2>&1 || (echo "parallel command not installed"; exit)
-type jq > /dev/null 2>&1 || (echo "jq command not installed"; exit)
+# Check if required software is available and exit if missing
+type gcloud > /dev/null 2>&1 || (echo ""; echo "WARNING: gcloud SDK not installed"; exit 1)
+[ $? -eq 1 ] && exit
+type parallel > /dev/null 2>&1 || (echo ""; echo "WARNING: parallel software not installed"; exit 1)
+[ $? -eq 1 ] && exit
+type jq > /dev/null 2>&1 || (echo""; echo "WARNING: jq software not installed"; exit 1)
+[ $? -eq 1 ] && exit
 echo ""
 
 # Check on first run and user specific defaults
