@@ -48,6 +48,23 @@ The directory structure and files explained
 ```
 
 ### Google Cloud Plaftorm preparation
+**FortiPoC VM image**   
+If you need to deploy your FortiPoC in a GCP project where the FortiPoC image is not available yet, you need to type the commands below because GCP only accepts tar.gz of a raw disk.
+
+```
+qemu-img dd -f vmdk -O raw bs=4M count=1K if=fortipoc.vmdk of=disk.raw
+tar -cvzf fortipoc-VER.tar.gz disk.raw
+gsutil cp fortipoc-VER.tar.gz gs://YOUR_BUCKET/
+gcloud compute images create fortipoc-VER \
+  --project=YOUR_PROJECT \
+  --source-uri gs://YOUR_BUCKET/fortipoc-VER.tar.gz \
+  --licenses "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx" \
+  --family fortipoc
+```
+
+To start FortiPoC in GCP you need either to add an extra disk or to tell GCP that you want to extend the 4GB base image to the size you need (64GB is a minimum). The second solution is easier if you plan to build golden images of your PoCs.
+
+**Security**   
 To allow controlled access to the FortiPoC instances we protect it with firewall-rules. Make sure default access (HTTP, HTTPS) to your instances is disabled. Only source IP-addressess listed on `workshop-source-networks` are allowed.
    
 * Create a VPC Network > Firewall object called "workshop-source-networks” and allow tcp:22,80,443,514,8000,8080,8888,10000-20000,22222
