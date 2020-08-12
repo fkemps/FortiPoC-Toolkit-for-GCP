@@ -48,7 +48,7 @@ The directory structure and files explained
 ```
 
 ### Google Cloud Plaftorm preparation
-To allow controlled access to the FortiPoC instances we protect it with firewall-rules. Make sure default HTTP, HTTPS access to your instances is disabled. Only source IP-addressess listed on `workshop-source-networks` are allowed.
+To allow controlled access to the FortiPoC instances we protect it with firewall-rules. Make sure default access (HTTP, HTTPS) to your instances is disabled. Only source IP-addressess listed on `workshop-source-networks` are allowed.
    
 * Create a VPC Network > Firewall object called "workshop-source-networks” and allow tcp:22,80,443,514,8000,8080,8888,10000-20000,22222
 
