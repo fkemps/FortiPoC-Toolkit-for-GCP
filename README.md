@@ -25,11 +25,11 @@ You will need access to GCP and prepare your local environment
 * Locally installed program `jq` ([Install jq on Mac OSX](https://brewinstall.org/install-jq-on-mac-with-brew/)) (Linux: apt install jq)
 
 ## Obtaining Scripts
-You can obtain the latest scripts versions from Gitbub.
+You can obtain the latest releases of the scripts from Gitbub.
 
 ## Install
 No package installation is needed besides those listed in prerequisites section.
-Pull the environment from git or unzip in your prefered working directory.
+Pull the environment with `git clone https://github.com/fkemps/FortiPoC-Toolkit-for-GCP.git` or download and unzip in your prefered working directory.
 
 Make sure you properly install the needed programs and do basis setup:
 
@@ -46,6 +46,11 @@ The directory structure and files explained
 32 -rwxr-xr-x   1 fkemps  staff    12K Nov  1 16:40 gcpcmd.sh              << Handling instances on GCP
  0 drwxr-xr-x  30 fkemps  staff   960B Nov  1 21:29 logs                   << Directory holding build log files
 ```
+
+### Google Cloud Plaftorm preparation
+To allow controlled access to the FortiPoC instances we protect it with firewall-rules. Make sure default HTTP, HTTPS access to your instances is disabled. Only source IP-addressess listed on `workshop-source-networks` are allowed.
+   
+* Create a VPC Network > Firewall object called "workshop-source-networks” and allow tcp:22,80,443,514,8000,8080,8888,10000-20000,22222
 
 # Handle GCP Instanced (*gcpcmd.sh*)
 
