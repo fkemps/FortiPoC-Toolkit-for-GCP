@@ -49,7 +49,8 @@
 # 2020060201 Ferry Kemps, Added option to change machine-type
 # 2020072201 Ferry Kemps, Improved WARNING message on missing software packages.
 # 2020081301 Ferry Kemps, Replaced gcloud beta command
-GCPCMDVERSION="2020081201"
+# 2020081302 Ferry Kemps, Changed GCP license server input request
+GCPCMDVERSION="2020081202"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -378,7 +379,7 @@ if [ ! -f ${GCPCMDCONF} ]; then
    done
    read -p "Provide your GCP billing project ID : " CONFPROJECTNAME
    until [[ ${VALIDIP} -eq 1 ]]; do
-      read -p "Provide GCP license server IP (Optional) : " CONFLICENSESERVER
+      read -p "GCP license server IP (if available) : " CONFLICENSESERVER
       if [ -z ${CONFLICENSESERVER} ];then
          VALIDIP=1
       else
