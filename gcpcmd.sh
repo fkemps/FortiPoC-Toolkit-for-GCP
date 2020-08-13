@@ -48,7 +48,8 @@
 # 2020052501 Ferry Kemps, Modified banner
 # 2020060201 Ferry Kemps, Added option to change machine-type
 # 2020072201 Ferry Kemps, Improved WARNING message on missing software packages.
-GCPCMDVERSION="2020072201"
+# 2020081301 Ferry Kemps, Replaced gcloud beta command
+GCPCMDVERSION="2020081201"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -200,7 +201,7 @@ function gcpbuild {
 
   # Give Google 60 seconds to start the instance
   echo ""; echo "==> Sleeping 90 seconds to allow FortiPoC booting up"; sleep 90
-  INSTANCEIP=`gcloud beta compute instances describe ${INSTANCENAME} --zone=${ZONE} | grep natIP | awk '{ print $2 }'`
+  INSTANCEIP=`gcloud compute instances describe ${INSTANCENAME} --zone=${ZONE} | grep natIP | awk '{ print $2 }'`
   echo ${INSTANCENAME} "=" ${INSTANCEIP}
   curl -k -q --retry 1 --connect-timeout 10 https://${INSTANCEIP}/ && echo "FortiPoC ${INSTANCENAME} on ${INSTANCEIP} reachable"
   [ $? != 0 ] && echo "==> Something went wrong. The new instance is not reachable"
