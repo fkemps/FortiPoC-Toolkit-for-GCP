@@ -64,6 +64,16 @@ gcloud compute images create fortipoc-VER \
 
 To start FortiPoC in GCP you need either to add an extra disk or to tell GCP that you want to extend the 4GB base image to the size you need (64GB is a minimum). The second solution is easier if you plan to build golden images of your PoCs.
 
+Alternatively you could ask me for an image to upload to GCP.
+
+Create a compute image per:
+
+```
+gcloud compute images create "fortipoc-1714-test" --project=project-name \
+--source-uri gs://fortipoc_bucket/fortipoc-1.7.14-clear.tar.gz \
+--licenses "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx" --family fortipoc
+```
+
 **Security**   
 To allow controlled access to the FortiPoC instances we protect it with firewall-rules. Make sure default access (HTTP, HTTPS) to your instances is disabled. Only source IP-addressess listed on `workshop-source-networks` are allowed.
    
@@ -75,17 +85,18 @@ To allow controlled access to the FortiPoC instances we protect it with firewall
 Configuration is embeded in gcpcmd.sh and will happen on first execution, or after `gcpcmd.sh -d | --delete-config`.   
 User default settings will be stored in `~/.fpoc/gcpcmd.conf`
 
+* Your **GCP Project ID** can obtain via `gcloud project list` and listed as PROJECT_ID.
+
 ```
-Welcome to FortiPoC Toolkit for Google Cloud Platform
+Welcome to FortiPoc Toolkit for Google Cloud Platform
 Looks like your first run or no defaults available. Let's set them!
 Provide your initials : fl
 Provide GCP instance label F(irst)LASTNAME e.g. jdoe : flastname
 Provide GCP groupname for shared instances (optional) :
-Provide your region 1) Asia, 2) Europe, 3) America : 1
-Provide your GCP billing project ID : cse-projects-xxxxxx
-Provide GCP license server IP : 10.1.1.1
+Provide your region 1) Asia, 2) Europe, 3) America : 2
+Provide your GCP billing project ID : Your-GCP-Project-ID
+GCP license server IP (if available) :
 ```
-* Your GCP billing project ID can obtain via `gcloud project list` and listed as PROJECT_ID.
 
 ### Build Config Template
 To create an example config file you can issue `./gcpcmd.sh -c`. This will create a fpoc-example.conf template file which can be use to create workload specific config files.
@@ -94,15 +105,15 @@ Copy fpoc-example.conf to conf directory with an descriptive name for your workl
 
 ```
 # Uncomment and speficy to override user defaults
-#GCPPROJECT="cse-projects-xxxxxxx"
+#GCPPROJECT="Your-GCP-Project-ID"
 #FPPREPEND="fl"
 #LABELS="fortipoc=,owner=flastname"
-#LICENSESERVER="10.1.1.1"
+#LICENSESERVER=""
 
 # --- edits below this line ---
 # Specify FortiPoC instance details.
 MACHINETYPE="n1-standard-4"
-FPIMAGE="fortipoc-1-7-7-clear"
+FPIMAGE="fortipoc-1-7-14-clear"
 #FPSIMPLEMENU="enable"
 FPTRAILKEY='ES-xamadrid-201907:765eb11f6523382c10513b66a8a4daf5'
 #GCPREPO="fkemps"
@@ -135,9 +146,9 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 |  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/
 |_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|
 
-(Version: 2020060201)
+(Version: 2020081202)
 Default deployment region: europe-west4-a
-Personal instance identification: fk
+Personal instance identification: fl
 Default product: test
 
 Usage: ./gcpcmd.sh [OPTIONS] [ARGUMENTS]
