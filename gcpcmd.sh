@@ -50,7 +50,8 @@
 # 2020072201 Ferry Kemps, Improved WARNING message on missing software packages.
 # 2020081301 Ferry Kemps, Replaced gcloud beta command
 # 2020081302 Ferry Kemps, Changed GCP license server input request
-GCPCMDVERSION="2020081202"
+# 2020082601 Ferry Kemps, Pre-populated ProjectId and Service Account preferences
+GCPCMDVERSION="2020082601"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -184,12 +185,12 @@ function gcpbuild {
   gcloud compute \
   instances create ${INSTANCENAME} \
   --project=${GCPPROJECT} \
+  --service-account=${GCPSERVICEACCOUNT} \
   --verbosity=info \
   --zone=${ZONE} \
   --machine-type=${MACHINETYPE} \
   --subnet=default --network-tier=PREMIUM \
   --maintenance-policy=MIGRATE \
-  --service-account=20168517356-compute@developer.gserviceaccount.com \
   --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
   --min-cpu-platform=Intel\ Broadwell\
   --tags=fortipoc-http-https-redir,workshop-source-networks \
@@ -251,12 +252,12 @@ function gcpclone {
   echo "==> Create instance ${INSTANCENAME}"
   gcloud compute instances create ${INSTANCENAME} \
   --project=${GCPPROJECT} \
+  --service-account=${GCPSERVICEACCOUNT} \
   --verbosity=info \
   --zone=${ZONE} \
   --machine-type=n1-standard-4 \
   --subnet=default --network-tier=PREMIUM \
   --maintenance-policy=MIGRATE \
-  --service-account=20168517356-compute@developer.gserviceaccount.com \
   --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
   --min-cpu-platform=Intel\ Broadwell \
   --tags=fortipoc-http-https-redir,workshop-source-networks \
@@ -377,7 +378,17 @@ if [ ! -f ${GCPCMDCONF} ]; then
          3) CONFREGION="us-central1-c";;
       esac
    done
-   read -p "Provide your GCP billing project ID : " CONFPROJECTNAME
+
+# Request ProjectId from GCP and use that if no projectId is entered
+   GCPPROJECTID=`gcloud projects list --format json | jq -r '.[] .projectId'`
+   read -p "Provide your GCP billing project ID [${GCPPROJECTID}] : " CONFPROJECTNAME
+   [ -z ${CONFPROJECTNAME} ] &&  CONFPROJECTNAME=${GCPPROJECTID}
+
+# Request default Compute Service Account and use that if no Service Account is entered
+   GCPSRVACCOUNT=`gcloud iam service-accounts list --filter=Compute --format=json| jq -r '.[] .email'`
+   read -p "Provide your GCP service account [${GCPSRVACCOUNT}] : " CONFSERVICEACCOUNT
+   [ -z ${CONFSERVICEACCOUNT} ] && CONFSERVICEACCOUNT=${GCPSRVACCOUNT}
+   
    until [[ ${VALIDIP} -eq 1 ]]; do
       read -p "GCP license server IP (if available) : " CONFLICENSESERVER
       if [ -z ${CONFLICENSESERVER} ];then
@@ -389,6 +400,7 @@ if [ ! -f ${GCPCMDCONF} ]; then
    done
    cat << EOF > ${GCPCMDCONF}
 GCPPROJECT="${CONFPROJECTNAME}"
+GCPSERVICEACCOUNT="${CONFSERVICEACCOUNT}"
 LICENSESERVER="${CONFLICENSESERVER}"
 FPPREPEND="${CONFINITIALS}"
 ZONE="${CONFREGION}"
@@ -421,6 +433,13 @@ if [ -z ${FPGROUP} ] && [ ! `grep FPGROUP ${GCPCMDCONF}` ]; then
    exit
 elif [ -z ${FPGROUP} ]; then
      FPGROUP=${OWNER}
+fi
+
+# Verify if Service Account preference is set, else append to personal preference file
+if [ ! `grep GCPSERVICEACCOUNT ${GCPCMDCONF}` ]; then
+   GCPSRVACCOUNT=`gcloud iam service-accounts list --filter=Compute --format=json| jq -r '.[] .email'`
+   echo "Adding default Service Account to your personal preference file"
+   echo "GCPSERVICEACCOUNT=\"${GCPSRVACCOUNT}\"" >> ${GCPCMDCONF}
 fi
 
 # Handling options given
@@ -483,6 +502,7 @@ if [ "${RUN_CONFIGFILE}" == "true" ]; then
     cat << EOF > fpoc-example.conf
 # Uncomment and speficy to override user defaults
 #GCPPROJECT="${GCPPROJECT}"
+#GCPSERVICEACCOUNT="${GCPSERVICEACCOUNT}"
 #FPPREPEND="${FPPREPEND}"
 #LABELS="${LABELS}"
 #LICENSESERVER="${LICENSESERVER}"
@@ -622,7 +642,7 @@ fi
   echo "==> Lets go...using Owner=${OWNER} or Group=${FPGROUP}, Zone=${ZONE}, Product=${PRODUCT}, Action=${ACTION}"; echo 
 
 export -f gcpbuild gcpstart gcpstop gcpdelete gcpclone gcpmachinetype
-export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE LABELS FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH NEWMACHINETYPE
+export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE LABELS FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH NEWMACHINETYPE GCPSERVICEACCOUNT
 
 case ${ACTION} in
   build)  parallel ${PARALLELOPT} gcpbuild  ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPTITLE}" ::: `seq -f%03g ${FPNUMSTART} ${FPNUMEND}`;;
