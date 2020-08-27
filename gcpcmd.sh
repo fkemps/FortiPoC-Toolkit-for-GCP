@@ -51,7 +51,8 @@
 # 2020081301 Ferry Kemps, Replaced gcloud beta command
 # 2020081302 Ferry Kemps, Changed GCP license server input request
 # 2020082601 Ferry Kemps, Pre-populated ProjectId and Service Account preferences
-GCPCMDVERSION="2020082601"
+# 2020082701 Ferry Kemps, Added -p|--preferences option, renamed -c|--config file to -b|--build-file, improved preference questions.
+GCPCMDVERSION="2020082701"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -64,9 +65,9 @@ EUROPE="europe-west4-a"
 #EUROPE="europe-west1-b"
 AMERICA="us-central1-c"
 
-# -----------------------------------------------
-# ------ No editing needed below this line ------
-# -----------------------------------------------
+# ------------------------------------------------
+# ------ No editing needed beyond this point -----
+# ------------------------------------------------
 
 # Let's create uniq logfiles with date-time stamp
 PARALLELOPT="--joblog logs/logfile-`date +%Y%m%d%H%M%S` -j 100 "
@@ -79,15 +80,23 @@ POCDEFINITION6=""
 POCDEFINITION7=""
 POCDEFINITION8=""
 
-########################
-# Functions
-########################
+###############################
+#   Functions
+###############################
 function displayheader() {
 clear
 echo "---------------------------------------------------------------------"
 echo "             FortiPoC Toolkit for Google Cloud Platform             "
 echo "---------------------------------------------------------------------"
 echo ""
+}
+
+# Function to display personal config preferences
+function displaypreferences() {
+  local CONFFILE=$1
+  echo "Your persenal configuration preferences"
+  echo ""
+  cat ${CONFFILE}
 }
 
 # Function to validate IP-address format
@@ -167,7 +176,7 @@ function gcplistglobal {
 function gcpbuild {
 
   if [ "${CONFIGFILE}" == "" ]; then
-     echo "Config file missing. Use -c option to specify or to generate fpoc-example.conf file"
+     echo "Build file missing. Use -b option to specify or to generate fpoc-example.conf file"
      exit
   fi
 
@@ -326,28 +335,30 @@ function displayhelp {
   echo ""
   echo "Usage: $0 [OPTIONS] [ARGUMENTS]" 
   echo "       $0 [OPTIONS] <region> <product> <action>"
-  echo "       $0 [-c configfile] <region> <product> build"
+  echo "       $0 [-b configfile] <region> <product> build"
   echo "       $0 [OPTIONS] [region] [product] list"
   echo "       $0 [OPTIONS] [region] [product] listpubip"
   echo "OPTIONS:"
+  echo "        -b    --build-file                     File for building instances. Leave blank to generate example"
   echo "        -d    --delete-config                  Delete default user config settings"
   echo "        -g    --group                          Group name for shared instances"
   echo "        -i    --initials                       Specify intials on instance name for group management"
   echo "        -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL"
   echo "        -ir   --ip-address-remove [IP-address] Remove current public IP-address from GCP ACL"
   echo "        -il   --ip-address-list                List current public IP-address on GCP ACL"
+  echo "        -p    --preferences                    Show personal config preferences"
   echo "        -lg   --list-global                    List all your instances globally"
   echo "ARGUMENTS:"
   echo "       region  : america, asia, europe"
   echo "       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>"
   echo "       action  : build, clone, delete, list, machinetype, listpubip, start, stop"
-  echo "                 action build needs -c configfile. Use ./gcpcmd.sh -c to generate fpoc-example.conf"
+  echo "                 action build needs -b configfile. Use ./gcpcmd.sh -b to generate fpoc-example.conf"
   echo ""
 }
 
-#########################
-# start of program
-#########################
+###############################
+#   start of program
+###############################
 # Check if required software is available and exit if missing
 type gcloud > /dev/null 2>&1 || (echo ""; echo "WARNING: gcloud SDK not installed"; exit 1)
 [ $? -eq 1 ] && exit
@@ -366,10 +377,10 @@ echo ""
 eval GCPCMDCONF="~/.fpoc/gcpcmd.conf"
 if [ ! -f ${GCPCMDCONF} ]; then
    echo "Welcome to FortiPoc Toolkit for Google Cloud Platform"
-   echo "Looks like your first run or no defaults available. Let's set them!" 
-   read -p "Provide your initials : " CONFINITIALS
-   read -p "Provide GCP instance label F(irst)LASTNAME e.g. jdoe : " CONFGCPLABEL
-   read -p "Provide GCP groupname for shared instances (optional) : " CONFGCPGROUP
+   echo "This is your first time use of gcpcmd.sh and no preferences are set. Let's set them!" 
+   read -p "Provide your initials e.g. fl : " CONFINITIALS
+   read -p "Provide your name to lable instanced e.g. flastname : " CONFGCPLABEL
+   read -p "Provide a groupname for shared instances (optional) : " CONFGCPGROUP
    until [ ! -z ${CONFREGION} ]; do
       read -p "Provide your region 1) Asia, 2) Europe, 3) America : " CONFREGIONANSWER
       case ${CONFREGIONANSWER} in
@@ -390,7 +401,7 @@ if [ ! -f ${GCPCMDCONF} ]; then
    [ -z ${CONFSERVICEACCOUNT} ] && CONFSERVICEACCOUNT=${GCPSRVACCOUNT}
    
    until [[ ${VALIDIP} -eq 1 ]]; do
-      read -p "GCP license server IP (if available) : " CONFLICENSESERVER
+      read -p "IP-address of FortiPoC license server (if available) : " CONFLICENSESERVER
       if [ -z ${CONFLICENSESERVER} ];then
          VALIDIP=1
       else
@@ -412,24 +423,18 @@ EOF
 fi
 source ${GCPCMDCONF}
 
-# Verify if label "ower" is used, else gcpcmd.sh was updated.
+# Verify if label "owner" is populated in prefences file. If not than gcpcmd.sh was updated.
 OWNER=`echo ${LABELS} | grep owner | cut -d "=" -f 3`
-if [ -z ${OWNER} ]; then
-   echo "Run ./gcpcmd.sh -d to set new preferences for upgraded gcpcmd.sh"
-   if [ -f ${GCPCMDCONF} ]; then
-     echo "Current preferences:"
-     cat ${GCPCMDCONF}
-   fi
+if [ -z ${OWNER} ]  && [ ! "$1" == "-d" ]; then
+   echo "Run ./gcpcmd.sh -d because your configured preferences are from older gcpcmd.sh version."
+   [ -f ${GCPCMDCONF} ] && displaypreferences ${GCPCMDCONF}
    exit
 fi
 
-# Verify is group variable preference is set, else gcpcmd.sh was update
-if [ -z ${FPGROUP} ] && [ ! `grep FPGROUP ${GCPCMDCONF}` ]; then
-   echo "Run ./gcpcmd.sh -d to set new preferences for upgraded gcpcmd.sh"
-   if [ -f ${GCPCMDCONF} ]; then
-     echo "Current preferences:"
-     cat ${GCPCMDCONF}
-   fi
+# Verify if group variable preference is set, else gcpcmd.sh was update
+if [ -z ${FPGROUP} ] && [ ! `grep FPGROUP ${GCPCMDCONF}` ] && [ ! "$1" == "-d" ]; then
+   echo "Run ./gcpcmd.sh -d because your configured preferences are from older gcpcmd.sh version."
+   [ -f ${GCPCMDCONF} ] && displaypreferences ${GCPCMDCONF}
    exit
 elif [ -z ${FPGROUP} ]; then
      FPGROUP=${OWNER}
@@ -445,7 +450,7 @@ fi
 # Handling options given
 while [[ "$1" =~ ^-.* ]]; do
 case $1 in
-  -c)
+  -b | --build-file)
 #   Check if a build config file is provided
     CONFIGFILE=$2
     RUN_CONFIGFILE="true"
@@ -477,6 +482,11 @@ case $1 in
      ;;
   -il | --ip-address-list)
      gcpaclupdate list
+     exit
+     ;;
+  -p | --preferences)
+     displayheader
+     displaypreferences ${GCPCMDCONF}
      exit
      ;;
   -lg | --list-global)
