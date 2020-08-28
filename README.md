@@ -1,5 +1,4 @@
 # FortiPoC Toolkit for Google Cloud Platform
-Ferry
 
 <p align="center">
   <img width="314" height="375" src="img/FortiPoConGCP.png">
