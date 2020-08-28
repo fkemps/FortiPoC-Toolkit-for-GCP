@@ -41,7 +41,7 @@ The directory structure and files explained
 
 ```
  0 drwxr-xr-x  15 fkemps  staff   480B Nov  1 16:22 conf                   << Directory holding fpoc-xxxxx.conf files
- 8 -rw-r--r--   1 fkemps  staff   587B Nov  1 16:41 fpoc-example.conf      << Config example created by -c option
+ 8 -rw-r--r--   1 fkemps  staff   587B Nov  1 16:41 fpoc-example.conf      << Config example created by -b option
 16 -rwxr-xr-x   1 fkemps  staff   5.2K Nov  1 16:10 fpoc-to-all.sh         << FortiPoC config tweaking script
 32 -rwxr-xr-x   1 fkemps  staff    12K Nov  1 16:40 gcpcmd.sh              << Handling instances on GCP
  0 drwxr-xr-x  30 fkemps  staff   960B Nov  1 21:29 logs                   << Directory holding build log files
@@ -89,23 +89,25 @@ User default settings will be stored in `~/.fpoc/gcpcmd.conf`
 
 ```
 Welcome to FortiPoc Toolkit for Google Cloud Platform
-Looks like your first run or no defaults available. Let's set them!
-Provide your initials : fl
-Provide GCP instance label F(irst)LASTNAME e.g. jdoe : flastname
-Provide GCP groupname for shared instances (optional) :
+This is your first time use of gcpcmd.sh and no preferences are set. Let's set them!
+Provide your initials e.g. fl : fl
+Provide your name to lable instanced e.g. flastname : flastname.    <<===firstname letter + lastname
+Provide a groupname for shared instances (optional) :
 Provide your region 1) Asia, 2) Europe, 3) America : 2
-Provide your GCP billing project ID : Your-GCP-Project-ID
-GCP license server IP (if available) :
+Provide your GCP billing project ID [cse-projects-000000] :
+Provide your GCP service account [00000000-compute@developer.gserviceaccount.com] :
+IP-address of FortiPoC license server (if available) :
 ```
 
 ### Build Config Template
-To create an example config file you can issue `./gcpcmd.sh -c`. This will create a fpoc-example.conf template file which can be use to create workload specific config files.
+To create an example config file you can issue `./gcpcmd.sh -b`. This will create a fpoc-example.conf template file which can be use to create workload specific config files.
 
-Copy fpoc-example.conf to conf directory with an descriptive name for your workload. You will need this file for the Build option via -c conf/fpoc-fwb-workshop.conf as an example.
+Copy fpoc-example.conf to conf directory with an descriptive name for your workload. You will need this file for the Build option via -b conf/fpoc-fwb-workshop.conf as an example.
 
 ```
 # Uncomment and speficy to override user defaults
-#GCPPROJECT="Your-GCP-Project-ID"
+#GCPPROJECT="cse-projects-000000"
+#GCPSERVICEACCOUNT="000000000-compute@developer.gserviceaccount.com"
 #FPPREPEND="fl"
 #LABELS="fortipoc=,owner=flastname"
 #LICENSESERVER=""
@@ -116,8 +118,8 @@ MACHINETYPE="n1-standard-4"
 FPIMAGE="fortipoc-1-7-14-clear"
 #FPSIMPLEMENU="enable"
 FPTRAILKEY='ES-xamadrid-201907:765eb11f6523382c10513b66a8a4daf5'
-#GCPREPO="fkemps"
-#FPGROUP=""
+#GCPREPO=""
+#FPGROUP="flastname"
 POCDEFINITION1="poc/ferry/FortiWeb-Basic-solution-workshop-v2.2.fpoc"
 #POCDEFINITION2="poc/ferry/FortiWeb-Advanced-Solutions-Workshop-v2.5.fpoc"
 #POCDEFINITION3=""
@@ -146,29 +148,31 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 |  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/
 |_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|
 
-(Version: 2020081202)
+(Version: 2020082701)
 Default deployment region: europe-west4-a
-Personal instance identification: fl
+Personal instance identification: fk
 Default product: test
 
 Usage: ./gcpcmd.sh [OPTIONS] [ARGUMENTS]
        ./gcpcmd.sh [OPTIONS] <region> <product> <action>
-       ./gcpcmd.sh [-c configfile] <region> <product> build
+       ./gcpcmd.sh [-b configfile] <region> <product> build
        ./gcpcmd.sh [OPTIONS] [region] [product] list
        ./gcpcmd.sh [OPTIONS] [region] [product] listpubip
 OPTIONS:
+        -b    --build-file                     File for building instances. Leave blank to generate example
         -d    --delete-config                  Delete default user config settings
         -g    --group                          Group name for shared instances
         -i    --initials                       Specify intials on instance name for group management
         -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL
         -ir   --ip-address-remove [IP-address] Remove current public IP-address from GCP ACL
         -il   --ip-address-list                List current public IP-address on GCP ACL
+        -p    --preferences                    Show personal config preferences
         -lg   --list-global                    List all your instances globally
 ARGUMENTS:
        region  : america, asia, europe
        product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>
        action  : build, clone, delete, list, machinetype, listpubip, start, stop
-                 action build needs -c configfile. Use ./gcpcmd.sh -c to generate fpoc-example.conf
+                 action build needs -b configfile. Use ./gcpcmd.sh -b to generate fpoc-example.conf
 ```
 
 ### Build
@@ -178,7 +182,7 @@ Good practice is to have a config file per environment e.g. testing, workshop, s
    
 FortiPoC's will be running with e.g. PoC-definitions loaded, VM-images and documentation prefetched, guest/guest account enabled, GUI title set and optionally a PoC-definition launched.
 
-`./gcpcmd.sh -c conf/fpoc-test.conf europe test build`
+`./gcpcmd.sh -b conf/fpoc-test.conf europe test build`
 
 ```
 ---------------------------------------------------------------------

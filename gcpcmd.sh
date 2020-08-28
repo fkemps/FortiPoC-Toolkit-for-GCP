@@ -520,7 +520,7 @@ if [ "${RUN_CONFIGFILE}" == "true" ]; then
 # --- edits below this line ---
 # Specify FortiPoC instance details.
 MACHINETYPE="n1-standard-4"
-FPIMAGE="fortipoc-1-7-7-clear"
+FPIMAGE="fortipoc-1-7-14-clear"
 #FPSIMPLEMENU="enable"
 FPTRAILKEY='ES-xamadrid-201907:765eb11f6523382c10513b66a8a4daf5'
 #GCPREPO=""
