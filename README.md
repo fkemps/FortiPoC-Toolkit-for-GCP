@@ -76,7 +76,7 @@ gcloud compute images create "fortipoc-1714-test" --project=project-name \
 
 **Security**   
 To allow controlled access to the FortiPoC instances we protect it with firewall-rules. Make sure default access (HTTP, HTTPS) to your instances is disabled. Only source IP-addressess listed on `workshop-source-networks` are allowed.
-   
+
 * Create a VPC Network > Firewall object called "workshop-source-networks” and allow tcp:22,80,443,514,8000,8080,8888,10000-20000,22222
 
 # Handle GCP Instanced (*gcpcmd.sh*)
@@ -97,6 +97,7 @@ Provide your region 1) Asia, 2) Europe, 3) America : 2
 Provide your GCP billing project ID [cse-projects-000000] :
 Provide your GCP service account [00000000-compute@developer.gserviceaccount.com] :
 IP-address of FortiPoC license server (if available) :
+Provide your SSH public key for FortiPoC access [ssh-rsa <value>] :
 ```
 
 ### Build Config Template
@@ -141,45 +142,45 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 
 `./gcpcmd.sh`
 
-``` 
+```
  _____          _   _ ____              _____           _ _    _ _      __               ____  ____ ____
 |  ___|__  _ __| |_(_)  _ \ ___   ___  |_   _|__   ___ | | | _(_) |_   / _| ___  _ __   / ___|/ ___|  _ \
 | |_ / _ \|  __| __| | |_) / _ \ / __|   | |/ _ \ / _ \| | |/ / | __| | |_ / _ \|  __| | |  _| |   | |_) |
 |  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/
 |_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|
 
-(Version: 2020082701)
+(Version: 2020110301)
 Default deployment region: europe-west4-a
 Personal instance identification: fk
 Default product: test
 
 Usage: ./gcpcmd.sh [OPTIONS] [ARGUMENTS]
-       ./gcpcmd.sh [OPTIONS] <region> <product> <action>
-       ./gcpcmd.sh [-b configfile] <region> <product> build
-       ./gcpcmd.sh [OPTIONS] [region] [product] list
-       ./gcpcmd.sh [OPTIONS] [region] [product] listpubip
+      ./gcpcmd.sh [OPTIONS] <region> <product> <action>
+      ./gcpcmd.sh [-b configfile] <region> <product> build
+      ./gcpcmd.sh [OPTIONS] [region] [product] list
+      ./gcpcmd.sh [OPTIONS] [region] [product] listpubip
 OPTIONS:
-        -b    --build-file                     File for building instances. Leave blank to generate example
-        -d    --delete-config                  Delete default user config settings
-        -g    --group                          Group name for shared instances
-        -i    --initials                       Specify intials on instance name for group management
-        -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL
-        -ir   --ip-address-remove [IP-address] Remove current public IP-address from GCP ACL
-        -il   --ip-address-list                List current public IP-address on GCP ACL
-        -p    --preferences                    Show personal config preferences
-        -lg   --list-global                    List all your instances globally
+       -b    --build-file                     File for building instances. Leave blank to generate example
+       -d    --delete-config                  Delete default user config settings
+       -g    --group                          Group name for shared instances
+       -i    --initials                       Specify intials on instance name for group management
+       -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL
+       -ir   --ip-address-remove [IP-address] Remove current public IP-address from GCP ACL
+       -il   --ip-address-list                List current public IP-address on GCP ACL
+       -p    --preferences                    Show personal config preferences
+       -lg   --list-global                    List all your instances globally
 ARGUMENTS:
-       region  : america, asia, europe
-       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>
-       action  : build, clone, delete, list, machinetype, listpubip, start, stop
-                 action build needs -b configfile. Use ./gcpcmd.sh -b to generate fpoc-example.conf
+      region  : america, asia, europe
+      product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>
+      action  : build, clone, delete, list, machinetype, listpubip, start, stop
+                action build needs -b configfile. Use ./gcpcmd.sh -b to generate fpoc-example.conf
 ```
 
 ### Build
 Building will be fully automatic per specified config file. Each FortiPoC will be provisioned in parallel and download all needed VM-images and documentation. This will cause a high download on FortiPoC repository and the more you deploy in parallel the longer it will take. Advice is to not provision more then 10 simultaniously. Do it in batches or build just one and use the `clone` function to duplicate which will be much faster.
 
 Good practice is to have a config file per environment e.g. testing, workshop, seminars, products or solutions. For example `conf/fpoc-apac-se-fwb-ws.conf`, `conf/fpoc-emea-xa-fad-ws.conf`, `conf/fpoc-appsecc-demo.conf`.
-   
+
 FortiPoC's will be running with e.g. PoC-definitions loaded, VM-images and documentation prefetched, guest/guest account enabled, GUI title set and optionally a PoC-definition launched.
 
 `./gcpcmd.sh -b conf/fpoc-test.conf europe test build`
@@ -287,6 +288,7 @@ You can use first the `build` function to provision a FortiPoC, tweak as wanted 
  Enter start of numbered range : 2
 
 Okay to clone fpoc-fk-test-001 to fpoc-fk-test-002 till fpoc-fk-test-016 in region europe-west4-a.   y/n?
+Do you want to create a fresh snapshot? (If no, latest snapshot will be used if available) y/n:
 Creating snapshot(s) fpoc-fk-test...done.
 ==> Lets go...using Zone=europe-west4-a, Product=test, Action=clone
 
@@ -385,7 +387,7 @@ You can change the machine-type to adjust CPU/Memory of the instance on GCP.
 
  Enter amount of FortiPoC's : 20
  Enter start of numbered range : 1
- select machine-type : 1) n1-standard-4, 2) n1-standard-8, 3) n1-standard-16 : 2
+ select machine-type : 1) n1-standard-1, 2) n1-standard-2, 3) n1-standard-4, 4) n1-standard-8, 5) n1-standard-16 : 2
 
 Okay to machinetype fpoc-fk-test-001 till fpoc-fk-test-020 in region europe-west4-a.   y/n?
 ```

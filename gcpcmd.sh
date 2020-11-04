@@ -52,7 +52,8 @@
 # 2020081302 Ferry Kemps, Changed GCP license server input request
 # 2020082601 Ferry Kemps, Pre-populated ProjectId and Service Account preferences
 # 2020082701 Ferry Kemps, Added -p|--preferences option, renamed -c|--config file to -b|--build-file, improved preference questions.
-GCPCMDVERSION="2020082701"
+# 2020110301 Ferry Kemps, Addec online version check, Changed standard machine-types to 5 options, added SSH-key option, choice for snapshot on cloning
+GCPCMDVERSION="2020110301"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -124,7 +125,7 @@ function gcpaclupdate() {
       PUBLICIP=`dig TXT -4 +short o-o.myaddr.l.google.com @ns1.google.com | sed -e 's/"//g'`
    fi
    validateIP ${PUBLICIP}
-   [ ! $? -eq 0 ] && (echo "Public IP not retreavable or not valid"; exit) 
+   [ ! $? -eq 0 ] && (echo "Public IP not retreavable or not valid"; exit)
    if [ ${CMD} == add ]; then
       echo "Adding public-ip ${PUBLICIP} to GCP ACL to allow access from this location"
       while read line
@@ -233,6 +234,7 @@ function gcpbuild {
   [ ! -z ${POCDEFINITION8} ] && (echo "==> Loading poc-definition 8"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc repo define \"${POCDEFINITION8}\" refresh")
   echo "==> Prefetching all images and documentation"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command 'poc prefetch all'
   [ "${POCLAUNCH}" != "" ] && (echo "==> Launching poc-definition"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "poc launch \"${POCLAUNCH}\"")
+  [ "${SSHKEYPERSONAL}" != "" ] && (echo "==> Adding personal SSH key"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "set ssh authorized keys \"${SSHKEYPERSONAL}\"")
 #  [ "${FPSIMPLEMENU}" != "" ] && (echo "==> Setting GUI-mode to simple"; gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "set gui simple ${FPSIMPLEMENU}")
   echo "==> End of Build phase <=="; echo ""
 }
@@ -317,7 +319,7 @@ function gcpmachinetype {
   INSTANCE=$5
   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
   echo "==> Changing machine-type of ${INSTANCENAME}"
-  gcloud compute instances set-machine-type ${INSTANCENAME} --machine-type=${MACHINETYPE} --zone=${ZONE} 
+  gcloud compute instances set-machine-type ${INSTANCENAME} --machine-type=${MACHINETYPE} --zone=${ZONE}
 }
 
 # Function to display the help
@@ -333,7 +335,7 @@ function displayhelp {
   echo "Personal instance identification: ${FPPREPEND}"
   echo "Default product: ${PRODUCT}"
   echo ""
-  echo "Usage: $0 [OPTIONS] [ARGUMENTS]" 
+  echo "Usage: $0 [OPTIONS] [ARGUMENTS]"
   echo "       $0 [OPTIONS] <region> <product> <action>"
   echo "       $0 [-b configfile] <region> <product> build"
   echo "       $0 [OPTIONS] [region] [product] list"
@@ -354,6 +356,7 @@ function displayhelp {
   echo "       action  : build, clone, delete, list, machinetype, listpubip, start, stop"
   echo "                 action build needs -b configfile. Use ./gcpcmd.sh -b to generate fpoc-example.conf"
   echo ""
+  [ "${NEWVERSION}" = "true" ] && echo "*** Newer version ${ONLINEVERSION} is available online on GitHub ***"; echo ""
 }
 
 ###############################
@@ -374,19 +377,24 @@ echo ""
 [ ! -d logs ] && mkdir logs
 [ ! -d conf ] && mkdir conf
 
+# Check online if there is a newer Version
+ONLINEVERSION=`curl --fail --silent --retry-max-time 2 https://github.com/fkemps/FortiPoC-Toolkit-for-GCP/blob/master/version.txt`
+
+[ ! -z ${ONLINEVERSION} ] && [ ${ONLINEVERSION} -gt ${GCPCMDVERSION} ] && NEWVERSION="true"
+
 eval GCPCMDCONF="~/.fpoc/gcpcmd.conf"
 if [ ! -f ${GCPCMDCONF} ]; then
    echo "Welcome to FortiPoc Toolkit for Google Cloud Platform"
-   echo "This is your first time use of gcpcmd.sh and no preferences are set. Let's set them!" 
+   echo "This is your first time use of gcpcmd.sh and no preferences are set. Let's set them!"
    read -p "Provide your initials e.g. fl : " CONFINITIALS
    read -p "Provide your name to lable instanced e.g. flastname : " CONFGCPLABEL
    read -p "Provide a groupname for shared instances (optional) : " CONFGCPGROUP
    until [ ! -z ${CONFREGION} ]; do
       read -p "Provide your region 1) Asia, 2) Europe, 3) America : " CONFREGIONANSWER
       case ${CONFREGIONANSWER} in
-         1) CONFREGION="asia-southeast1-b";;
-         2) CONFREGION="europe-west4-a";;
-         3) CONFREGION="us-central1-c";;
+         1) CONFREGION="${ASIA}";;
+         2) CONFREGION="${EUROPE}";;
+         3) CONFREGION="${AMERICA}";;
       esac
    done
 
@@ -399,7 +407,7 @@ if [ ! -f ${GCPCMDCONF} ]; then
    GCPSRVACCOUNT=`gcloud iam service-accounts list --filter=Compute --format=json| jq -r '.[] .email'`
    read -p "Provide your GCP service account [${GCPSRVACCOUNT}] : " CONFSERVICEACCOUNT
    [ -z ${CONFSERVICEACCOUNT} ] && CONFSERVICEACCOUNT=${GCPSRVACCOUNT}
-   
+
    until [[ ${VALIDIP} -eq 1 ]]; do
       read -p "IP-address of FortiPoC license server (if available) : " CONFLICENSESERVER
       if [ -z ${CONFLICENSESERVER} ];then
@@ -409,6 +417,14 @@ if [ ! -f ${GCPCMDCONF} ]; then
          VALIDIP=!$?
       fi
    done
+
+# Obtain pesonal SSH-key for FortiPoC access
+   if [ -f ~/.ssh/id_rsa.pub ]; then
+     SSHKEYPERSONAL=`head -1 ~/.ssh/id_rsa.pub`
+     read -p "Provide your SSH public key for FortiPoC access [${SSHKEYPERSONAL}] : " CONFSSHKEYPERSONAL
+     [ -z ${CONFSSHKEYPERSONAL} ] && CONFSSHKEYPERSONAL="${SSHKEYPERSONAL}"
+   fi
+
    cat << EOF > ${GCPCMDCONF}
 GCPPROJECT="${CONFPROJECTNAME}"
 GCPSERVICEACCOUNT="${CONFSERVICEACCOUNT}"
@@ -418,6 +434,7 @@ ZONE="${CONFREGION}"
 LABELS="fortipoc=,owner=${CONFGCPLABEL}"
 FPGROUP="${CONFGCPGROUP}"
 PRODUCT="test"
+SSHKEYPERSONAL="${CONFSSHKEYPERSONAL}"
 EOF
    echo ""
 fi
@@ -426,6 +443,13 @@ source ${GCPCMDCONF}
 # Verify if label "owner" is populated in prefences file. If not than gcpcmd.sh was updated.
 OWNER=`echo ${LABELS} | grep owner | cut -d "=" -f 3`
 if [ -z ${OWNER} ]  && [ ! "$1" == "-d" ]; then
+   echo "Run ./gcpcmd.sh -d because your configured preferences are from older gcpcmd.sh version."
+   [ -f ${GCPCMDCONF} ] && displaypreferences ${GCPCMDCONF}
+   exit
+fi
+
+# Verify if SSHKEY was populated from prefences file. If not than gcpcmd.sh was updated.
+if [ -z "${SSHKEYPERSONAL}" ]  && [ ! "$1" == "-d" ]; then
    echo "Run ./gcpcmd.sh -d because your configured preferences are from older gcpcmd.sh version."
    [ -f ${GCPCMDCONF} ] && displaypreferences ${GCPCMDCONF}
    exit
@@ -550,7 +574,7 @@ if [ "${RUN_LISTGLOBAL}" == "true" ]; then
   gcplistglobal ${OWNER} ${FPGROUP}
   exit
 fi
-  
+
 if [ $# -lt 1 ]; then
   displayhelp
   exit
@@ -605,11 +629,13 @@ then
   read -p " Enter amount of FortiPoC's : " FPCOUNT
   read -p " Enter start of numbered range : " FPNUMSTART
   if [ ${ACTION} == "machinetype" ]; then
-    read -p " select machine-type : 1) n1-standard-4, 2) n1-standard-8, 3) n1-standard-16 : " NEWMACHINETYPE
+    read -p " select machine-type : 1) n1-standard-1, 2) n1-standard-2, 3) n1-standard-4, 4) n1-standard-8, 5) n1-standard-16 : " NEWMACHINETYPE
     case ${NEWMACHINETYPE} in
-      1) MACHINETYPE="n1-standard-4";;
-      2) MACHINETYPE="n1-standard-8";;
-      3) MACHINETYPE="n1-standard-16";;
+      1) MACHINETYPE="n1-standard-1";;
+      2) MACHINETYPE="n1-standard-2";;
+      3) MACHINETYPE="n1-standard-4";;
+      4) MACHINETYPE="n1-standard-8";;
+      5) MACHINETYPE="n1-standard-16";;
       *) echo "Wrong machine type given"; echo ""; exit;;
     esac
   fi
@@ -642,17 +668,21 @@ then
   echo ""
   read -p "Okay to ${ACTION} ${CLONESOURCE} to fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMSTART} till fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMEND} in region ${ZONE}.   y/n? " choice
   [ "${choice}" != "y" ] && exit
-# Delete any existing snapshots before creating new.There's no overwrite AFAIK and will allow fresh snapshot
-  echo "y" |  gcloud compute snapshots delete ${CLONESNAPSHOT} > /dev/null 2>&1
-  gcloud compute disks snapshot ${CLONESOURCE} \
-  --zone=${ZONE} \
-  --snapshot-names=${CLONESNAPSHOT}
+  # Safest is to use fresh snapshot as there is no check if there is an actual snapshot
+  read -p "Do you want to create a fresh snapshot? (If no, latest snapshot will be used if available) y/n: " choice
+  if [ ${choice} == "y" ]; then
+    # Delete any existing snapshots before creating new.There's no overwrite AFAIK and will allow fresh snapshot
+    echo "y" |  gcloud compute snapshots delete ${CLONESNAPSHOT} > /dev/null 2>&1
+    gcloud compute disks snapshot ${CLONESOURCE} \
+    --zone=${ZONE} \
+    --snapshot-names=${CLONESNAPSHOT}
+  fi
 fi
 
-  echo "==> Lets go...using Owner=${OWNER} or Group=${FPGROUP}, Zone=${ZONE}, Product=${PRODUCT}, Action=${ACTION}"; echo 
+  echo "==> Lets go...using Owner=${OWNER} or Group=${FPGROUP}, Zone=${ZONE}, Product=${PRODUCT}, Action=${ACTION}"; echo
 
 export -f gcpbuild gcpstart gcpstop gcpdelete gcpclone gcpmachinetype
-export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE LABELS FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH NEWMACHINETYPE GCPSERVICEACCOUNT
+export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE LABELS FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH NEWMACHINETYPE GCPSERVICEACCOUNT SSHKEYPERSONAL
 
 case ${ACTION} in
   build)  parallel ${PARALLELOPT} gcpbuild  ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPTITLE}" ::: `seq -f%03g ${FPNUMSTART} ${FPNUMEND}`;;
