@@ -53,7 +53,8 @@
 # 2020082601 Ferry Kemps, Pre-populated ProjectId and Service Account preferences
 # 2020082701 Ferry Kemps, Added -p|--preferences option, renamed -c|--config file to -b|--build-file, improved preference questions.
 # 2020110301 Ferry Kemps, Changed standard machine-types to 5 options, added SSH-key option, choice for snapshot on cloning
-GCPCMDVERSION="2020110301"
+# 2020110401 Ferry Kemps, Added online new version checking
+GCPCMDVERSION="2020110401"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -356,7 +357,7 @@ function displayhelp {
   echo "       action  : build, clone, delete, list, machinetype, listpubip, start, stop"
   echo "                 action build needs -b configfile. Use ./gcpcmd.sh -b to generate fpoc-example.conf"
   echo ""
-#  [ "${NEWVERSION}" = "true" ] && echo "*** Newer version ${ONLINEVERSION} is available online on GitHub ***"; echo ""
+  [ "${NEWVERSION}" = "true" ] && echo "*** Newer version ${ONLINEVERSION} is available online on GitHub ***"; echo ""
 }
 
 ###############################
@@ -378,8 +379,8 @@ echo ""
 [ ! -d conf ] && mkdir conf
 
 # Check online if there is a newer Version
-#ONLINEVERSION=`curl --fail --silent --retry-max-time 2 https://github.com/fkemps/FortiPoC-Toolkit-for-GCP/blob/master/version.txt`
-#[ ! -z "${ONLINEVERSION}" ] && [ ${ONLINEVERSION} -gt ${GCPCMDVERSION} ] && NEWVERSION="true"
+ONLINEVERSION=`curl --fail --silent --retry-max-time 2 http://www.4xion.com/gcpcmdversion.txt`
+[ ! -z "${ONLINEVERSION}" ] && [ ${ONLINEVERSION} -gt ${GCPCMDVERSION} ] && NEWVERSION="true"
 
 eval GCPCMDCONF="~/.fpoc/gcpcmd.conf"
 if [ ! -f ${GCPCMDCONF} ]; then
