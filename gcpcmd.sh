@@ -53,7 +53,7 @@
 # 2020082601 Ferry Kemps, Pre-populated ProjectId and Service Account preferences
 # 2020082701 Ferry Kemps, Added -p|--preferences option, renamed -c|--config file to -b|--build-file, improved preference questions.
 # 2020110301 Ferry Kemps, Changed standard machine-types to 5 options, added SSH-key option, choice for snapshot on cloning
-GCPCMDVERSION="2020110302"
+GCPCMDVERSION="2020110301"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
