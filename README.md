@@ -25,7 +25,7 @@ You will need access to GCP and prepare your local environment
 * Locally installed program `jq` ([Install jq on Mac OSX](https://brewinstall.org/install-jq-on-mac-with-brew/)) (Linux: apt install jq)
 
 ## Obtaining Scripts
-You can obtain the latest releases of the scripts from Gitbub.
+You can obtain the latest releases of the scripts from GitHub.
 
 ## Install
 No package installation is needed besides those listed in prerequisites section.
