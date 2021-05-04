@@ -54,7 +54,9 @@
 # 2020082701 Ferry Kemps, Added -p|--preferences option, renamed -c|--config file to -b|--build-file, improved preference questions.
 # 2020110301 Ferry Kemps, Changed standard machine-types to 5 options, added SSH-key option, choice for snapshot on cloning
 # 2020110401 Ferry Kemps, Added online new version checking
-GCPCMDVERSION="2020110401"
+# 2021040601 Ferry Kemps, Rewrite of cloning from snapshot to machine-image to avoid clone limits
+# 2021050401 Ferry Kemps, Added fortipoc-deny-default tag to close default GCP open ports
+GCPCMDVERSION="2021050401"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -204,7 +206,7 @@ function gcpbuild {
   --maintenance-policy=MIGRATE \
   --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
   --min-cpu-platform=Intel\ Broadwell\
-  --tags=fortipoc-http-https-redir,workshop-source-networks \
+  --tags=fortipoc-http-https-redir,fortipoc-deny-default,workshop-source-networks \
   --image=${FPIMAGE} \
   --image-project=${GCPPROJECT} \
   --boot-disk-size=200GB \
@@ -249,32 +251,29 @@ function gcpclone {
   FPNUMBERTOCLONE=$4
   INSTANCE=$5
   CLONESOURCE="fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
-  CLONESNAPSHOT="fpoc-${FPPREPEND}-${PRODUCT}"
+  CLONEMACHINEIMAGE="fpoc-${FPPREPEND}-${PRODUCT}"
   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
 
   echo "==> Sleeping ${RANDOMSLEEP} seconds to avoid GCP DB locking"
   sleep ${RANDOMSLEEP}
-  echo "==> Cloning instance ${CLONESOURCE} to ${INSTANCENAME}"
-  echo "==> Creating disk for ${INSTANCENAME}"
-  gcloud compute disks create ${INSTANCENAME} \
-  --zone=${ZONE} \
-  --source-snapshot ${CLONESNAPSHOT} \
-  --type "pd-standard" \
-  --size=200
   echo "==> Create instance ${INSTANCENAME}"
-  gcloud compute instances create ${INSTANCENAME} \
-  --project=${GCPPROJECT} \
-  --service-account=${GCPSERVICEACCOUNT} \
-  --verbosity=info \
-  --zone=${ZONE} \
-  --machine-type=n1-standard-4 \
-  --subnet=default --network-tier=PREMIUM \
-  --maintenance-policy=MIGRATE \
-  --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
-  --min-cpu-platform=Intel\ Broadwell \
-  --tags=fortipoc-http-https-redir,workshop-source-networks \
-  --disk "name=${INSTANCENAME},device-name=${INSTANCENAME},mode=rw,boot=yes,auto-delete=yes" \
-  --labels=${LABELS}
+#  gcloud compute instances create ${INSTANCENAME} \
+#  --project=${GCPPROJECT} \
+#  --service-account=${GCPSERVICEACCOUNT} \
+#  --verbosity=info \
+#  --zone=${ZONE} \
+#  --machine-type=n1-standard-4 \
+#  --subnet=default --network-tier=PREMIUM \
+#  --maintenance-policy=MIGRATE \
+#  --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
+#  --min-cpu-platform=Intel\ Broadwell \
+#  --tags=fortipoc-http-https-redir,workshop-source-networks \
+#  --disk "name=${INSTANCENAME},device-name=${INSTANCENAME},mode=rw,boot=yes,auto-delete=yes" \
+#  --labels=${LABELS}
+   gcloud beta compute instances create ${INSTANCENAME} \
+   --project=${GCPPROJECT} \
+   --zone=${ZONE} \
+   --source-machine-image ${CLONEMACHINEIMAGE}
 }
 
 # Function to start FortiPoC instance
@@ -661,21 +660,23 @@ then
   FPNUMEND=$(printf "%03d" ${FPNUMEND})
   FPNUMBERTOCLONE=$(printf "%03d" ${FPNUMBERTOCLONE})
   CLONESOURCE="fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
-  CLONESNAPSHOT="fpoc-${FPPREPEND}-${PRODUCT}"
+  CLONEMACHINEIMAGE="fpoc-${FPPREPEND}-${PRODUCT}"
   if [ ! -z ${SET_FPGROUP} ] && [ ${SET_FPGROUP} == "true" ];then
     FPGROUP=${OVERRIDE_FPGROUP}
   fi
   echo ""
   read -p "Okay to ${ACTION} ${CLONESOURCE} to fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMSTART} till fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMEND} in region ${ZONE}.   y/n? " choice
   [ "${choice}" != "y" ] && exit
-  # Safest is to use fresh snapshot as there is no check if there is an actual snapshot
-  read -p "Do you want to create a fresh snapshot? (If no, latest snapshot will be used if available) y/n: " choice
+  # Safest is to use fresh machine-image because it includes latest changes and there is not check if a machine-image exists
+  # To speed up cloning you could skip machine-image creation and assume there's an machine-image available.
+  read -p "Do you want to create a fresh machine-image? (No means the latest machine-image will be used, if available) y/n: " choice
   if [ ${choice} == "y" ]; then
-    # Delete any existing snapshots before creating new.There's no overwrite AFAIK and will allow fresh snapshot
-    echo "y" |  gcloud compute snapshots delete ${CLONESNAPSHOT} > /dev/null 2>&1
-    gcloud compute disks snapshot ${CLONESOURCE} \
-    --zone=${ZONE} \
-    --snapshot-names=${CLONESNAPSHOT}
+    # Delete any existing machine-image before creating new.There's no overwrite AFAIK and will allow fresh snapshot
+    echo "==> Preparing machine-image....be patienced, enjoy a quick espresso"
+    echo "y" |  gcloud beta compute machine-images delete ${CLONEMACHINEIMAGE} > /dev/null 2>&1
+    gcloud beta compute machine-images create ${CLONEMACHINEIMAGE} \
+    --source-instance ${CLONESOURCE} \
+    --source-instance-zone=${ZONE} > /dev/null 2>&1
   fi
 fi
 
