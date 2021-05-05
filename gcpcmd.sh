@@ -56,7 +56,8 @@
 # 2020110401 Ferry Kemps, Added online new version checking
 # 2021040601 Ferry Kemps, Rewrite of cloning from snapshot to machine-image to avoid clone limits
 # 2021050401 Ferry Kemps, Added fortipoc-deny-default tag to close default GCP open ports
-GCPCMDVERSION="2021050401"
+# 2021050501 Ferry Kemps, Little typo fixes
+GCPCMDVERSION="2021050501"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -98,7 +99,7 @@ echo ""
 # Function to display personal config preferences
 function displaypreferences() {
   local CONFFILE=$1
-  echo "Your persenal configuration preferences"
+  echo "Your personal configuration preferences"
   echo ""
   cat ${CONFFILE}
 }
