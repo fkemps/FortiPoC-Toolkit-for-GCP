@@ -422,9 +422,9 @@ if [ ! -f ${GCPCMDCONF} ]; then
    SSHKEYPERSONAL="_no_key_found"
    if [ -f ~/.ssh/id_rsa.pub ]; then
      SSHKEYPERSONAL=`head -1 ~/.ssh/id_rsa.pub`
-     read -p "Provide your SSH public key for FortiPoC access [${SSHKEYPERSONAL}] : " CONFSSHKEYPERSONAL
-     CONFSSHKEYPERSONAL="${SSHKEYPERSONAL}"
    fi
+     read -p "Provide your SSH public key for FortiPoC access (optional) [${SSHKEYPERSONAL}] : " CONFSSHKEYPERSONAL
+     CONFSSHKEYPERSONAL="${SSHKEYPERSONAL}"
 
    cat << EOF > ${GCPCMDCONF}
 GCPPROJECT="${CONFPROJECTNAME}"
