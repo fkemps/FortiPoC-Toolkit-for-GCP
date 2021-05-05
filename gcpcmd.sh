@@ -419,10 +419,11 @@ if [ ! -f ${GCPCMDCONF} ]; then
    done
 
 # Obtain pesonal SSH-key for FortiPoC access
+   SSHKEYPERSONAL="_no_key_found"
    if [ -f ~/.ssh/id_rsa.pub ]; then
      SSHKEYPERSONAL=`head -1 ~/.ssh/id_rsa.pub`
      read -p "Provide your SSH public key for FortiPoC access [${SSHKEYPERSONAL}] : " CONFSSHKEYPERSONAL
-     [ -z ${CONFSSHKEYPERSONAL} ] && CONFSSHKEYPERSONAL="${SSHKEYPERSONAL}"
+     CONFSSHKEYPERSONAL="${SSHKEYPERSONAL}"
    fi
 
    cat << EOF > ${GCPCMDCONF}
