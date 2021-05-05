@@ -57,7 +57,8 @@
 # 2021040601 Ferry Kemps, Rewrite of cloning from snapshot to machine-image to avoid clone limits
 # 2021050401 Ferry Kemps, Added fortipoc-deny-default tag to close default GCP open ports
 # 2021050501 Ferry Kemps, Little typo fixes
-GCPCMDVERSION="2021050501"
+# 2021050502 Ferry Kemps, Fixed SSHKEY check, added dig command tool check
+GCPCMDVERSION="2021050502"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -369,6 +370,8 @@ type gcloud > /dev/null 2>&1 || (echo ""; echo "WARNING: gcloud SDK not installe
 type parallel > /dev/null 2>&1 || (echo ""; echo "WARNING: parallel software not installed"; exit 1)
 [ $? -eq 1 ] && exit
 type jq > /dev/null 2>&1 || (echo""; echo "WARNING: jq software not installed"; exit 1)
+[ $? -eq 1 ] && exit
+type dig > /dev/null 2>&1 || (echo ""; echo "WARNING: dig software not installed (bind-tools)"; exit 1)
 [ $? -eq 1 ] && exit
 echo ""
 
