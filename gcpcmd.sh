@@ -58,7 +58,8 @@
 # 2021050401 Ferry Kemps, Added fortipoc-deny-default tag to close default GCP open ports
 # 2021050501 Ferry Kemps, Little typo fixes
 # 2021050502 Ferry Kemps, Fixed SSHKEY check, added dig command tool check
-GCPCMDVERSION="2021050502"
+# 2021061601 Ferry Kemps, Sanity check on multiple retrieved Service Accounts.
+GCPCMDVERSION="2021061601"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -408,8 +409,11 @@ if [ ! -f ${GCPCMDCONF} ]; then
 
 # Request default Compute Service Account and use that if no Service Account is entered
    GCPSRVACCOUNT=`gcloud iam service-accounts list --filter=Compute --format=json| jq -r '.[] .email'`
-   read -p "Provide your GCP service account [${GCPSRVACCOUNT}] : " CONFSERVICEACCOUNT
-   [ -z ${CONFSERVICEACCOUNT} ] && CONFSERVICEACCOUNT=${GCPSRVACCOUNT}
+   until [[ ${ONEACCOUNT} -eq 1 ]]; do
+    read -p "Provide your GCP service account (only one if multiple shown) [${GCPSRVACCOUNT}] : " CONFSERVICEACCOUNT
+    [ -z "${CONFSERVICEACCOUNT}" ] && CONFSERVICEACCOUNT="${GCPSRVACCOUNT}"
+    [[ ! ${CONFSERVICEACCOUNT} =~ \  ]] && ONEACCOUNT=1
+    done
 
    until [[ ${VALIDIP} -eq 1 ]]; do
       read -p "IP-address of FortiPoC license server (if available) : " CONFLICENSESERVER

@@ -29,7 +29,7 @@ You can obtain the latest releases of the scripts from GitHub.
 
 ## Install
 No package installation is needed besides those listed in prerequisites section.
-Pull the environment with `git clone https://github.com/fkemps/FortiPoC-Toolkit-for-GCP.git` or download and unzip in your prefered working directory.
+Pull the environment with `git clone https://github.com/fkemps/FortiPoC-Toolkit-for-GCP.git` in your prefered working directory.
 
 Make sure you properly install the needed programs and do basis setup:
 
@@ -85,7 +85,7 @@ To allow controlled access to the FortiPoC instances we protect it with firewall
 Configuration is embeded in gcpcmd.sh and will happen on first execution, or after `gcpcmd.sh -d | --delete-config`.   
 User default settings will be stored in `~/.fpoc/gcpcmd.conf`
 
-* Your **GCP Project ID** can obtain via `gcloud project list` and listed as PROJECT_ID.
+* Your **GCP Project ID** can obtain via `gcloud projects list` and listed as PROJECT_ID.
 
 ```
 Welcome to FortiPoc Toolkit for Google Cloud Platform
@@ -95,7 +95,7 @@ Provide your name to lable instanced e.g. flastname : flastname.    <<===firstna
 Provide a groupname for shared instances (optional) :
 Provide your region 1) Asia, 2) Europe, 3) America : 2
 Provide your GCP billing project ID [cse-projects-000000] :
-Provide your GCP service account [00000000-compute@developer.gserviceaccount.com] :
+Provide your GCP service account (only one if multiple shown) [00000000-compute@developer.gserviceaccount.com] :
 IP-address of FortiPoC license server (if available) :
 Provide your SSH public key for FortiPoC access [ssh-rsa <value>] :
 ```
@@ -149,7 +149,7 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 |  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/
 |_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|
 
-(Version: 2020110301)
+(Version: 2021061601)
 Default deployment region: europe-west4-a
 Personal instance identification: fk
 Default product: test
