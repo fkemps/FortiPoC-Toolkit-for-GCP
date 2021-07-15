@@ -59,7 +59,8 @@
 # 2021050501 Ferry Kemps, Little typo fixes
 # 2021050502 Ferry Kemps, Fixed SSHKEY check, added dig command tool check
 # 2021061601 Ferry Kemps, Sanity check on multiple retrieved Service Accounts.
-GCPCMDVERSION="2021061601"
+# 2021071501 Ferry Kemps, Added automatic firewall-rules creation, updated instance tagging and option to toggle tags for controlling access.
+GCPCMDVERSION="2021071501"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -78,6 +79,12 @@ AMERICA="us-central1-c"
 
 # Let's create uniq logfiles with date-time stamp
 PARALLELOPT="--joblog logs/logfile-`date +%Y%m%d%H%M%S` -j 100 "
+# Firewall-rules for instance tagging
+WORKSHOPSOURCENETWORKS="workshop-source-networks"
+WORKSHOPSOURCEANY="workshop-source-any"
+DSTTCPPORTS="tcp:22,tcp:80,tcp:443,tcp:8000,tcp:8080,tcp:8888,tcp:10000-20000,tcp:20808,tcp:20909,tcp:22222"
+DSTUDPPORTS="udp:53,udp:514,udp:1812,udp:1813"
+# Clear POC-definitions
 POCDEFINITION1=""
 POCDEFINITION2=""
 POCDEFINITION3=""
@@ -90,6 +97,66 @@ POCDEFINITION8=""
 ###############################
 #   Functions
 ###############################
+function checkfirewallrules() {
+  #check if firewall-rules exist else create them
+  if (! gcloud compute firewall-rules describe ${WORKSHOPSOURCENETWORKS} --format=none > /dev/null 2>&1 ); then
+     echo "Firewall-rule ${WORKSHOPSOURCENETWORKS} not found, creating it"
+     gcloud compute firewall-rules create ${WORKSHOPSOURCENETWORKS} \
+     --allow=${DSTTCPPORTS},${DSTUDPPORTS} \
+     --description="Allow access from temporary workshop networks" \
+     --direction=INGRESS \
+     --priority=300 \
+     --source-ranges=10.10.10.10 \
+     --target-tags=${WORKSHOPSOURCENETWORKS} \
+     --no-user-output-enabled
+  fi
+  if ( ! gcloud compute firewall-rules describe ${WORKSHOPSOURCEANY} --format=none > /dev/null 2>&1)
+  then
+     echo "Firewall-rule ${WORKSHOPSOURCEANY} not found, creating it (disabled by default)"
+     gcloud compute firewall-rules create ${WORKSHOPSOURCEANY} \
+     --allow=${DSTTCPPORTS},${DSTUDPPORTS} \
+     --description="Allow access from temporary workshop networks" \
+     --direction=INGRESS \
+     --priority=300 \
+     --source-ranges=0.0.0.0/0 \
+     --target-tags=${WORKSHOPSOURCEANY} \
+     --disabled \
+     --no-user-output-enabled
+  fi
+}
+
+function togglefirewallruleany() {
+  if [ $1 = "enable" ]; then
+     gcloud compute firewall-rules update ${WORKSHOPSOURCEANY} --disabled --no-user-output-enabled
+     echo "Global access enabled to instances"
+  elif [ $1 = "disable" ]; then
+     gcloud compute firewall-rules update ${WORKSHOPSOURCEANY} --no-disabled --no-user-output-enabled
+     echo "Global access enabled to instances"
+  elif [ $1 = "status" ]; then
+     GLOBALACCESSSTATUS=`gcloud compute firewall-rules describe ${WORKSHOPSOURCEANY} --format=json|jq -r '.disabled'`
+     [ ${GLOBALACCESSSTATUS} = "true" ] && GLOBALACCESSSTATUS="Enabled" || GLOBALACCESSSTATUS="Disabled"
+     echo "Global access status: ${GLOBALACCESSSTATUS}"
+  else
+     echo "Unknown global access request"
+     exit
+  fi
+  echo ""
+}
+
+function instancefirewallrules() {
+  echo "Listing firewall rules of all instances"; echo ""
+  echo "Instancename    : firewall-rules attached"
+  echo "---------------------------------------------------------------------------------"
+  # Get all instance-names from default zone
+  #set -x
+  instancearray=(`gcloud compute instances list --filter="labels.owner:${OWNER}" --zones=${ZONE} | cut -d ' ' -f1 | grep -v NAME`)
+  for fpinstance in ${instancearray[@]}
+  do
+     tags=(`gcloud compute instances describe $fpinstance --zone=${ZONE} --format=json | jq -r '.tags .items[]'`)
+     echo "$fpinstance : ${tags[@]}"
+done
+}
+
 function displayheader() {
 clear
 echo "---------------------------------------------------------------------"
@@ -141,11 +208,11 @@ function gcpaclupdate() {
          else
             SOURCERANGE="${SOURCERANGE},$line"
          fi
-      done < <(gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]')
+      done < <(gcloud compute firewall-rules list --filter="name=${WORKSHOPSOURCENETWORKS}" --format=json|jq -r '.[] .sourceRanges[]')
       SOURCERANGE="${SOURCERANGE},${PUBLICIP}"
-      gcloud compute firewall-rules update workshop-source-networks --source-ranges=${SOURCERANGE}
+      gcloud compute firewall-rules update ${WORKSHOPSOURCENETWORKS} --source-ranges=${SOURCERANGE}
       echo "Current GCP ACL list"
-      gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]'
+      gcloud compute firewall-rules list --filter="name=${WORKSHOPSOURCENETWORKS}" --format=json|jq -r '.[] .sourceRanges[]'
       echo ""
    elif [ ${CMD} == remove ]; then
       echo "Removing public-ip ${PUBLICIP} to GCP ACL to remove access from this location"
@@ -156,14 +223,14 @@ function gcpaclupdate() {
          else
             [ ! $line == ${PUBLICIP} ] && SOURCERANGE="${SOURCERANGE},$line"
          fi
-      done < <(gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]')
-      gcloud compute firewall-rules update workshop-source-networks --source-ranges=${SOURCERANGE}
+      done < <(gcloud compute firewall-rules list --filter="name=${WORKSHOPSOURCENETWORKS}" --format=json|jq -r '.[] .sourceRanges[]')
+      gcloud compute firewall-rules update ${WORKSHOPSOURCENETWORKS} --source-ranges=${SOURCERANGE}
       echo "Current GCP ACL list"
-      gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]'
+      gcloud compute firewall-rules list --filter="name=${WORKSHOPSOURCENETWORKS}" --format=json|jq -r '.[] .sourceRanges[]'
       echo ""
     else
       echo "Listing public-ip addresses on GCP ACL"
-      gcloud compute firewall-rules list --filter="name=workshop-source-networks" --format=json|jq -r '.[] .sourceRanges[]'
+      gcloud compute firewall-rules list --filter="name=${WORKSHOPSOURCENETWORKS}" --format=json|jq -r '.[] .sourceRanges[]'
       echo ""
    fi
 }
@@ -209,7 +276,7 @@ function gcpbuild {
   --maintenance-policy=MIGRATE \
   --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
   --min-cpu-platform=Intel\ Broadwell\
-  --tags=fortipoc-http-https-redir,fortipoc-deny-default,workshop-source-networks \
+  --tags=fortipoc-http-https-redir,fortipoc-deny-default,${WORKSHOPSOURCENETWORKS},${WORKSHOPSOURCEANY} \
   --image=${FPIMAGE} \
   --image-project=${GCPPROJECT} \
   --boot-disk-size=200GB \
@@ -270,7 +337,7 @@ function gcpclone {
 #  --maintenance-policy=MIGRATE \
 #  --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
 #  --min-cpu-platform=Intel\ Broadwell \
-#  --tags=fortipoc-http-https-redir,workshop-source-networks \
+#  --tags=fortipoc-http-https-redir,${WORKSHOPSOURCENETWORKS},${WORKSHOPSOURCEANY} \
 #  --disk "name=${INSTANCENAME},device-name=${INSTANCENAME},mode=rw,boot=yes,auto-delete=yes" \
 #  --labels=${LABELS}
    gcloud beta compute instances create ${INSTANCENAME} \
@@ -313,7 +380,7 @@ function gcpdelete {
   echo yes | gcloud compute instances delete ${INSTANCENAME} --zone=${ZONE}
 }
 
-# Function to delete FortiPoC instance
+# Function to change FortiPoC instance machinetype
 function gcpmachinetype {
   FPPREPEND=$1
   ZONE=$2
@@ -324,6 +391,25 @@ function gcpmachinetype {
   echo "==> Changing machine-type of ${INSTANCENAME}"
   gcloud compute instances set-machine-type ${INSTANCENAME} --machine-type=${MACHINETYPE} --zone=${ZONE}
 }
+
+# Function to change FortiPoC instance firewall-rules
+function gcpglobalaccess {
+  #set -x
+  FPPREPEND=$1
+  ZONE=$2
+  PRODUCT=$3
+  GLOBALACCESS=$4
+  INSTANCE=$5
+  INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
+  if [ ${GLOBALACCESS} = "enable" ]; then
+     echo "==> Enabling global access firewall-rule of ${INSTANCENAME}"
+     gcloud compute instances add-tags ${INSTANCENAME} --tags=${WORKSHOPSOURCEANY} --zone=${ZONE}
+  else
+     echo "==> Disabling global access firewall-rule of ${INSTANCENAME}"
+     gcloud compute instances remove-tags ${INSTANCENAME} --tags=${WORKSHOPSOURCEANY} --zone=${ZONE}
+  fi
+}
+
 
 # Function to display the help
 function displayhelp {
@@ -347,6 +433,10 @@ function displayhelp {
   echo "        -b    --build-file                     File for building instances. Leave blank to generate example"
   echo "        -d    --delete-config                  Delete default user config settings"
   echo "        -g    --group                          Group name for shared instances"
+  echo "        -ge   --global-access-enable           Enable glocal access to instances"
+  echo "        -gd   --global-access-disable          Disable glocal access to instances"
+  echo "        -gl   --global-access-list             List global access to instances"
+  echo "        -gs   --global-access-status           Status glocal access to instances"
   echo "        -i    --initials                       Specify intials on instance name for group management"
   echo "        -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL"
   echo "        -ir   --ip-address-remove [IP-address] Remove current public IP-address from GCP ACL"
@@ -356,7 +446,7 @@ function displayhelp {
   echo "ARGUMENTS:"
   echo "       region  : america, asia, europe"
   echo "       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>"
-  echo "       action  : build, clone, delete, list, machinetype, listpubip, start, stop"
+  echo "       action  : build, clone, delete, global, list, listpubip, machinetype, start, stop"
   echo "                 action build needs -b configfile. Use ./gcpcmd.sh -b to generate fpoc-example.conf"
   echo ""
   [ "${NEWVERSION}" = "true" ] && echo "*** Newer version ${ONLINEVERSION} is available online on GitHub ***"; echo ""
@@ -479,6 +569,9 @@ if [ ! `grep GCPSERVICEACCOUNT ${GCPCMDCONF}` ]; then
    echo "GCPSERVICEACCOUNT=\"${GCPSRVACCOUNT}\"" >> ${GCPCMDCONF}
 fi
 
+# Check if GCP firewall-rules exist
+checkfirewallrules
+
 # Handling options given
 while [[ "$1" =~ ^-.* ]]; do
 case $1 in
@@ -497,6 +590,22 @@ case $1 in
      SET_FPGROUP="true"
      OVERRIDE_FPGROUP=${FPGROUP}
      shift
+     ;;
+  -ge | --global-access-enable)
+     togglefirewallruleany enable
+     exit
+     ;;
+  -gd | --global-access-disable)
+     togglefirewallruleany disable
+     exit
+     ;;
+  -gl | --global-access-list)
+     instancefirewallrules
+     exit
+     ;;
+  -gs | --global-access-status)
+     togglefirewallruleany status
+     exit
      ;;
   -i | --initials)
      FPPREPEND=$2
@@ -628,11 +737,12 @@ case ${ARGUMENT3} in
   machinetype) ACTION="machinetype";;
   list) ACTION="list";;
   listpubip) ACTION="listpubip";;
-  *) echo "[ERROR: ACTION] Specify: build, clone, delete, machinetype, list, listpubip, start or stop"; exit;;
+  global) ACTION="global";;
+  *) echo "[ERROR: ACTION] Specify: build, clone, delete, global, list, listpubip, machinetype, start or stop"; exit;;
 esac
 
 displayheader
-if  [[ ${ACTION} == build  ||  ${ACTION} == start || ${ACTION} == stop || ${ACTION} == delete || ${ACTION} == machinetype ]]
+if  [[ ${ACTION} == build  ||  ${ACTION} == start || ${ACTION} == stop || ${ACTION} == delete || ${ACTION} == machinetype || ${ACTION} == global ]]
 then
   read -p " Enter amount of FortiPoC's : " FPCOUNT
   read -p " Enter start of numbered range : " FPNUMSTART
@@ -645,6 +755,13 @@ then
       4) MACHINETYPE="n1-standard-8";;
       5) MACHINETYPE="n1-standard-16";;
       *) echo "Wrong machine type given"; echo ""; exit;;
+    esac
+  elif [ ${ACTION} == "global" ]; then
+    read -p " select world wide access : 1) Enable, 2) Disable : " NEWGLOBALACCESS
+    case ${NEWGLOBALACCESS} in 
+      1) GLOBALACCESS="enable";;
+      2) GLOBALACCESS="disable";;
+      *) echo "Wrong input given"; echo ""; exit;;
     esac
   fi
   let --FPCOUNT
@@ -691,8 +808,8 @@ fi
 
   echo "==> Lets go...using Owner=${OWNER} or Group=${FPGROUP}, Zone=${ZONE}, Product=${PRODUCT}, Action=${ACTION}"; echo
 
-export -f gcpbuild gcpstart gcpstop gcpdelete gcpclone gcpmachinetype
-export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE LABELS FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH NEWMACHINETYPE GCPSERVICEACCOUNT SSHKEYPERSONAL
+export -f gcpbuild gcpstart gcpstop gcpdelete gcpclone gcpmachinetype gcpglobalaccess
+export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE WORKSHOPSOURCEANY LABELS FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH NEWMACHINETYPE GCPSERVICEACCOUNT SSHKEYPERSONAL
 
 case ${ACTION} in
   build)  parallel ${PARALLELOPT} gcpbuild  ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPTITLE}" ::: `seq -f%03g ${FPNUMSTART} ${FPNUMEND}`;;
@@ -701,6 +818,7 @@ case ${ACTION} in
   stop)   parallel ${PARALLELOPT} gcpstop   ${FPPREPEND} ${ZONE} ${PRODUCT} ::: `seq -f%03g  ${FPNUMSTART} ${FPNUMEND}`;;
   delete) parallel ${PARALLELOPT} gcpdelete ${FPPREPEND} ${ZONE} ${PRODUCT} ::: `seq -f%03g  ${FPNUMSTART} ${FPNUMEND}`;;
   machinetype) parallel ${PARALLELOPT} gcpmachinetype ${FPPREPEND} ${ZONE} ${PRODUCT} ${MACHINETYPE} ::: `seq -f%03g  ${FPNUMSTART} ${FPNUMEND}`;;
+  global) parallel ${PARALLELOPT} gcpglobalaccess ${FPPREPEND} ${ZONE} ${PRODUCT} ${GLOBALACCESS} ::: `seq -f%03g  ${FPNUMSTART} ${FPNUMEND}`;;
   list) gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND zone~${ZONE}" | grep -e "NAME" -e ${PRODUCT};;
 # list) gcloud compute instances list --filter="name~fpoc-${FPPREPEND}-${PRODUCT}"| grep -e "NAME" -e "${ZONE}";;
   listpubip) gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND zone~${ZONE}"  | grep -e ${PRODUCT}  | awk '{ printf $5 " " }';;
