@@ -132,7 +132,7 @@ function togglefirewallruleany() {
      echo "Global access enabled to instances"
   elif [ $1 = "disable" ]; then
      gcloud compute firewall-rules update ${WORKSHOPSOURCEANY} --no-disabled --no-user-output-enabled
-     echo "Global access enabled to instances"
+     echo "Global access disabled to instances"
   elif [ $1 = "status" ]; then
      GLOBALACCESSSTATUS=`gcloud compute firewall-rules describe ${WORKSHOPSOURCEANY} --format=json|jq -r '.disabled'`
      [ ${GLOBALACCESSSTATUS} = "true" ] && GLOBALACCESSSTATUS="Enabled" || GLOBALACCESSSTATUS="Disabled"
