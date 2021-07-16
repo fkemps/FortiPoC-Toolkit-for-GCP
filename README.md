@@ -4,13 +4,13 @@
   <img width="314" height="375" src="img/FortiPoConGCP.png">
 </p>
 
-Manage and configure FortiPoC instances on Google Cloud Platform (GCP).
-This toolkit (scripts) allow you to manage the workload of creating, configuring and deleting FortiPoc's in a consitent and easy way.
+Manage and configure FortiPoC instances on Google Cloud Platform (GCP).   
+This toolkit (scripts) allow you to manage the workload of creating, configuring, publishing and deleting FortiPoC instances in a consitent and easy way.
 
 The toolkit allows you to:
 
-* **Handle GCP instances**: Build, Clone, Delete, Change Machine-type, List, Listpubip, Start, Stop (gcpcmd.sh)
-* **Tweak FortiPoC's**: Make config changes on FortiPoC's (fpoc-to-all.sh)
+* **Handle GCP instances**: Build, Clone, Delete, Global publish, Machine-type change, List, Listpubip, Start, Stop (gcpcmd.sh)
+* **Tweak FortiPoC's**: Make config changes on running FortiPoC instances (fpoc-to-all.sh)
 
 ![](img/FortiPoCflow.png)
 
@@ -25,13 +25,17 @@ You will need access to GCP and prepare your local environment
 * Locally installed program `jq` ([Install jq on Mac OSX](https://brewinstall.org/install-jq-on-mac-with-brew/)) (Linux: apt install jq)
 
 ## Obtaining Scripts
-You can obtain the latest releases of the scripts from GitHub.
+You can obtain the latest releases of the scripts from GitHub [https://github.com/fkemps/FortiPoC-Toolkit-for-GCP.git](https://github.com/fkemps/FortiPoC-Toolkit-for-GCP.git)
 
 ## Install
-No package installation is needed besides those listed in prerequisites section.
-Pull the environment with `git clone https://github.com/fkemps/FortiPoC-Toolkit-for-GCP.git` in your prefered working directory.
+No package installation is needed besides those listed in the prerequisites section.   
+Preferred installation method is per git clone. That allows easy installation of updates afterwards with `git pull` while in the FortiPoC-Toolkit-for-GCP directory. (There is a new version indication)
 
-Make sure you properly install the needed programs and do basis setup:
+Go to your preferred working directory and pull the environment.
+
+`git clone https://github.com/fkemps/FortiPoC-Toolkit-for-GCP.git`
+
+Make sure you installed the prerequisite programs and start basis setup:
 
 * `gcloud init`, and logout/login
 * `parallel --citation`, and enter `will cite`
@@ -75,17 +79,23 @@ gcloud compute images create "fortipoc-1714-test" --project=project-name \
 ```
 
 **Security**   
-To allow controlled access to the FortiPoC instances we protect it with firewall-rules. Make sure default access (HTTP, HTTPS) to your instances is disabled. Only source IP-addressess listed on `workshop-source-networks` are allowed.
+To allow controlled access to the FortiPoC instances we protect it with firewall-rules.   
+Two INGRESS firewall-rules are automatically created and used to control access from specific IP/subnets (workshop-source-networks) and global access (workshop-source-any) to the following ports:
 
-* Create a VPC Network > Firewall object called "workshop-source-networks” and allow tcp:22,80,443,514,8000,8080,8888,10000-20000,22222
+* TCP: 22, 80, 443, 8000, 8080, 8888, :10000-20000, 20808, 20909, 22222
+* UDP: 53, 514, 1812, 1813
+
+By default access to FortiPoC instances is disabled and need to be enabled manually. This can be done by either adding IP/subnets (--ip-address-add) or enabling global access (--global-access-enable) plus configuring instances for global access.
+
 
 # Handle GCP Instanced (*gcpcmd.sh*)
 
 ### Configure
-Configuration is embeded in gcpcmd.sh and will happen on first execution, or after `gcpcmd.sh -d | --delete-config`.   
-User default settings will be stored in `~/.fpoc/gcpcmd.conf`
+Configuration will start automatically on first usage of gcpcmd.sh, or after using `gcpcmd.sh -d | --delete-config`.   
 
-* Your **GCP Project ID** can obtain via `gcloud projects list` and listed as PROJECT_ID.
+The user default settings are stored in `~/.fpoc/gcpcmd.conf`
+
+As part of the configuration you need to have your **GCP Project ID**. This can be obtain via `gcloud projects list` and is listed as PROJECT_ID.
 
 ```
 Welcome to FortiPoc Toolkit for Google Cloud Platform
@@ -143,37 +153,43 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 `./gcpcmd.sh`
 
 ```
+
  _____          _   _ ____              _____           _ _    _ _      __               ____  ____ ____
 |  ___|__  _ __| |_(_)  _ \ ___   ___  |_   _|__   ___ | | | _(_) |_   / _| ___  _ __   / ___|/ ___|  _ \
 | |_ / _ \|  __| __| | |_) / _ \ / __|   | |/ _ \ / _ \| | |/ / | __| | |_ / _ \|  __| | |  _| |   | |_) |
 |  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/
 |_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|
 
-(Version: 2021061601)
+(Version: 2021071601)
 Default deployment region: europe-west4-a
 Personal instance identification: fk
 Default product: test
 
 Usage: ./gcpcmd.sh [OPTIONS] [ARGUMENTS]
-      ./gcpcmd.sh [OPTIONS] <region> <product> <action>
-      ./gcpcmd.sh [-b configfile] <region> <product> build
-      ./gcpcmd.sh [OPTIONS] [region] [product] list
-      ./gcpcmd.sh [OPTIONS] [region] [product] listpubip
+       ./gcpcmd.sh [OPTIONS] <region> <product> <action>
+       ./gcpcmd.sh [-b configfile] <region> <product> build
+       ./gcpcmd.sh [OPTIONS] [region] [product] list
+       ./gcpcmd.sh [OPTIONS] [region] [product] listpubip
 OPTIONS:
-       -b    --build-file                     File for building instances. Leave blank to generate example
-       -d    --delete-config                  Delete default user config settings
-       -g    --group                          Group name for shared instances
-       -i    --initials                       Specify intials on instance name for group management
-       -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL
-       -ir   --ip-address-remove [IP-address] Remove current public IP-address from GCP ACL
-       -il   --ip-address-list                List current public IP-address on GCP ACL
-       -p    --preferences                    Show personal config preferences
-       -lg   --list-global                    List all your instances globally
+        -b    --build-file                     File for building instances. Leave blank to generate example
+        -d    --delete-config                  Delete default user config settings
+        -g    --group                          Group name for shared instances
+        -ge   --global-access-enable           Enable glocal access to instances
+        -gd   --global-access-disable          Disable glocal access to instances
+        -gl   --global-access-list             List global access to instances
+        -gs   --global-access-status           Status glocal access to instances
+        -i    --initials                       Specify intials on instance name for group management
+        -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL
+        -ir   --ip-address-remove [IP-address] Remove current public IP-address from GCP ACL
+        -il   --ip-address-list                List current public IP-address on GCP ACL
+        -p    --preferences                    Show personal config preferences
+        -lg   --list-global                    List all your instances globally
 ARGUMENTS:
-      region  : america, asia, europe
-      product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>
-      action  : build, clone, delete, list, machinetype, listpubip, start, stop
-                action build needs -b configfile. Use ./gcpcmd.sh -b to generate fpoc-example.conf
+       region  : america, asia, europe
+       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>
+       action  : build, clone, delete, global, list, listpubip, machinetype, start, stop
+                 action build needs -b configfile. Use ./gcpcmd.sh -b to generate fpoc-example.conf
+
 ```
 
 ### Build
@@ -238,39 +254,6 @@ registered
 
 Output for all FortiPoC builds will by provided once finished build phase.
 
-### List
-Full overview of FortiPoC's can be obtained with **list** function. Specify *region*, *product* and *list*.
-
-`/gcpcmd.sh europe test list`
-
-```
----------------------------------------------------------------------
-             FortiPoC Toolkit for Google Cloud Platform
----------------------------------------------------------------------
-
-==> Lets go...using Owner=fkemps or Group=fkemps, Zone=europe-west4-a, Product=test, Action=list
-
-NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
-fpoc-fk-test-001  europe-west4-a  n1-standard-4               10.164.0.66  34.90.107.239  RUNNING
-fpoc-fk-test-002  europe-west4-a  n1-standard-4               10.164.0.65  34.90.90.164   RUNNING
-fpoc-fk-test-003  europe-west4-a  n1-standard-4               10.164.0.64  34.90.88.37    RUNNING
-```
-
-FortiPoC IP-addresses can be obtained to use for `fpoc-to-all.sh` usage.
-
-`./gcpcmd.sh europe test listpubip`
-
-```
----------------------------------------------------------------------
-             FortiPoC Toolkit for Google Cloud Platform
----------------------------------------------------------------------
-
-==> Lets go...using Owner=fkemps or Group=fkemps, Zone=europe-west4-a, Product=test, Action=listpubip
-
-34.90.107.239 34.90.90.164 34.90.88.37
-```
-
-
 ### Clone
 The clone function allows you to clone a FortiPoC (GCP instance) one or multiple times in parallel. The operational state of FortiPoC doesn't matter, it can be `Terminated` or `Running` for example. If you're *"better safe than sorry"* then first stop the FortiPoC instance you whish to clone.
 
@@ -300,31 +283,6 @@ fpoc-fk-test-002  europe-west4-a  200      pd-standard  READY
 ==> Create instance fpoc-fk-test-002
 NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP   STATUS
 fpoc-fk-test-002  europe-west4-a  n1-standard-4               10.164.0.38  34.90.151.94  RUNNING
-```
-
-### Start / Stop
-
-`./gcpcmd.sh europe test start` or `./gcpcmd.sh europe test stop`
-
-```
----------------------------------------------------------------------
-             FortiPoC Toolkit for Google Cloud Platform
----------------------------------------------------------------------
-
- Enter amount of FortiPoC's : 2
- Enter start of numbered range : 1
-
-Okay to stop fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west4-a.   y/n? y
-==> Lets go...using Zone=europe-west4-a, Product=test, Action=stop
-
-==> Stopping instance fpoc-fk-test-001
-Stopping instance(s) fpoc-fk-test-001...
-..............................................................................................................................................................................................................................done.
-Updated [https://compute.googleapis.com/compute/v1/projects/cse-projects-202906/zones/europe-west4-a/instances/fpoc-fk-test-001].
-==> Stopping instance fpoc-fk-test-002
-Stopping instance(s) fpoc-fk-test-002...
-..........................................................................................................................................................................................................................................done.
-Updated [https://compute.googleapis.com/compute/v1/projects/cse-projects-202906/zones/europe-west4-a/instances/fpoc-fk-test-002].
 ```
 
 ### Delete
@@ -374,7 +332,63 @@ Do you want to continue (Y/n)?
 Deleted [https://www.googleapis.com/compute/v1/projects/cse-projects-202906/zones/europe-west4-a/instances/fpoc-fk-test-003].
 ```
 
-#### Machinetype
+### Global
+You can use the global action to enable/disable FortiPoC instances for glolbal access. This will add the firewall-rule to allow/deny INGRESS traffic from any IP-address.
+
+`./gcpcmd.sh europe test global`
+
+```
+---------------------------------------------------------------------
+             FortiPoC Toolkit for Google Cloud Platform
+---------------------------------------------------------------------
+
+ Enter amount of FortiPoC's : 10
+ Enter start of numbered range : 1
+ select world wide access : 1) Enable, 2) Disable : 1
+
+Okay to global fpoc-fk-test-001 till fpoc-fk-test-010 in region europe-west4-a.   y/n?
+```
+
+You can use following options to enable/disable the global firewall-rule, obtain current status and show configured firewall-rules per instance.
+
+`-ge  | --global-access-enable`           Enable glocal access to instances
+`-gd  | --global-access-disable`          Disable glocal access to instances
+`-gl  | --global-access-list`             List global access to instances
+`-gs  | --global-access-status`           Status glocal access to instances
+
+### List
+Full overview of FortiPoC's can be obtained with **list** function. Specify *region*, *product* and *list*.
+
+`/gcpcmd.sh europe test list`
+
+```
+---------------------------------------------------------------------
+             FortiPoC Toolkit for Google Cloud Platform
+---------------------------------------------------------------------
+
+==> Lets go...using Owner=fkemps or Group=fkemps, Zone=europe-west4-a, Product=test, Action=list
+
+NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
+fpoc-fk-test-001  europe-west4-a  n1-standard-4               10.164.0.66  34.90.107.239  RUNNING
+fpoc-fk-test-002  europe-west4-a  n1-standard-4               10.164.0.65  34.90.90.164   RUNNING
+fpoc-fk-test-003  europe-west4-a  n1-standard-4               10.164.0.64  34.90.88.37    RUNNING
+```
+
+FortiPoC IP-addresses can be obtained to use for `fpoc-to-all.sh` usage.
+
+`./gcpcmd.sh europe test listpubip`
+
+```
+---------------------------------------------------------------------
+             FortiPoC Toolkit for Google Cloud Platform
+---------------------------------------------------------------------
+
+==> Lets go...using Owner=fkemps or Group=fkemps, Zone=europe-west4-a, Product=test, Action=listpubip
+
+34.90.107.239 34.90.90.164 34.90.88.37
+```
+
+### Machinetype
 
 You can change the machine-type to adjust CPU/Memory of the instance on GCP.
 
@@ -391,6 +405,33 @@ You can change the machine-type to adjust CPU/Memory of the instance on GCP.
 
 Okay to machinetype fpoc-fk-test-001 till fpoc-fk-test-020 in region europe-west4-a.   y/n?
 ```
+
+### Start / Stop
+
+`./gcpcmd.sh europe test start` or `./gcpcmd.sh europe test stop`
+
+```
+---------------------------------------------------------------------
+             FortiPoC Toolkit for Google Cloud Platform
+---------------------------------------------------------------------
+
+ Enter amount of FortiPoC's : 2
+ Enter start of numbered range : 1
+
+Okay to stop fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west4-a.   y/n? y
+==> Lets go...using Zone=europe-west4-a, Product=test, Action=stop
+
+==> Stopping instance fpoc-fk-test-001
+Stopping instance(s) fpoc-fk-test-001...
+..............................................................................................................................................................................................................................done.
+Updated [https://compute.googleapis.com/compute/v1/projects/cse-projects-202906/zones/europe-west4-a/instances/fpoc-fk-test-001].
+==> Stopping instance fpoc-fk-test-002
+Stopping instance(s) fpoc-fk-test-002...
+..........................................................................................................................................................................................................................................done.
+Updated [https://compute.googleapis.com/compute/v1/projects/cse-projects-202906/zones/europe-west4-a/instances/fpoc-fk-test-002].
+```
+
+
 
 #### Allow / Deny access to FortiPoC
 The FortiPoC's deployed are by default **not** reachable from the internet.   
