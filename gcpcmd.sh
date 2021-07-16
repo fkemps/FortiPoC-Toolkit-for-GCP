@@ -60,7 +60,8 @@
 # 2021050502 Ferry Kemps, Fixed SSHKEY check, added dig command tool check
 # 2021061601 Ferry Kemps, Sanity check on multiple retrieved Service Accounts.
 # 2021071501 Ferry Kemps, Added automatic firewall-rules creation, updated instance tagging and option to toggle tags for controlling access.
-GCPCMDVERSION="2021071501"
+# 2021071501 Ferry Kemps, Expanded global access listing, by default global access disabled on instance create/clone
+GCPCMDVERSION="2021071601"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -149,11 +150,13 @@ function instancefirewallrules() {
   echo "---------------------------------------------------------------------------------"
   # Get all instance-names from default zone
   #set -x
-  instancearray=(`gcloud compute instances list --filter="labels.owner:${OWNER}" --zones=${ZONE} | cut -d ' ' -f1 | grep -v NAME`)
-  for fpinstance in ${instancearray[@]}
+  INSTANCEARRAY=(`gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP})" | awk  '{ print $1"_"$2 }' | grep -v NAME`)
+  for FPINSTANCE in ${INSTANCEARRAY[@]}
   do
-     tags=(`gcloud compute instances describe $fpinstance --zone=${ZONE} --format=json | jq -r '.tags .items[]'`)
-     echo "$fpinstance : ${tags[@]}"
+     FPINSTANCENAME="`echo ${FPINSTANCE} | awk -F "_" '{ print $1 }'`"
+     FPINSTANCEZONE="`echo ${FPINSTANCE} | awk -F "_" '{ print $2 }'`"
+     TAGS=(`gcloud compute instances describe ${FPINSTANCENAME} --zone=${FPINSTANCEZONE} --format=json | jq -r '.tags .items[]'`)
+     echo "${FPINSTANCENAME} : ${TAGS[@]}"
 done
 }
 
@@ -276,7 +279,7 @@ function gcpbuild {
   --maintenance-policy=MIGRATE \
   --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
   --min-cpu-platform=Intel\ Broadwell\
-  --tags=fortipoc-http-https-redir,fortipoc-deny-default,${WORKSHOPSOURCENETWORKS},${WORKSHOPSOURCEANY} \
+  --tags=fortipoc-http-https-redir,fortipoc-deny-default,${WORKSHOPSOURCENETWORKS} \
   --image=${FPIMAGE} \
   --image-project=${GCPPROJECT} \
   --boot-disk-size=200GB \
@@ -337,7 +340,7 @@ function gcpclone {
 #  --maintenance-policy=MIGRATE \
 #  --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
 #  --min-cpu-platform=Intel\ Broadwell \
-#  --tags=fortipoc-http-https-redir,${WORKSHOPSOURCENETWORKS},${WORKSHOPSOURCEANY} \
+#  --tags=fortipoc-http-https-redir,${WORKSHOPSOURCENETWORKS} \
 #  --disk "name=${INSTANCENAME},device-name=${INSTANCENAME},mode=rw,boot=yes,auto-delete=yes" \
 #  --labels=${LABELS}
    gcloud beta compute instances create ${INSTANCENAME} \
@@ -403,10 +406,10 @@ function gcpglobalaccess {
   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
   if [ ${GLOBALACCESS} = "enable" ]; then
      echo "==> Enabling global access firewall-rule of ${INSTANCENAME}"
-     gcloud compute instances add-tags ${INSTANCENAME} --tags=${WORKSHOPSOURCEANY} --zone=${ZONE}
+     gcloud compute instances add-tags ${INSTANCENAME} --tags=${WORKSHOPSOURCEANY} --zone=${ZONE} --no-user-output-enabled
   else
      echo "==> Disabling global access firewall-rule of ${INSTANCENAME}"
-     gcloud compute instances remove-tags ${INSTANCENAME} --tags=${WORKSHOPSOURCEANY} --zone=${ZONE}
+     gcloud compute instances remove-tags ${INSTANCENAME} --tags=${WORKSHOPSOURCEANY} --zone=${ZONE} --no-user-output-enabled
   fi
 }
 
