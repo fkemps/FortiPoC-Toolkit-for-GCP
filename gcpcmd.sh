@@ -62,7 +62,8 @@
 # 2021071501 Ferry Kemps, Added automatic firewall-rules creation, updated instance tagging and option to toggle tags for controlling access.
 # 2021071501 Ferry Kemps, Expanded global access listing, by default global access disabled on instance create/clone
 # 2021071901 Ferry Kemps, Added globallist action to list ACL per user selection
-GCPCMDVERSION="2021071901"
+# 2021071902 Ferry Kemps, Added -z|--zone override option
+GCPCMDVERSION="2021071902"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -462,12 +463,13 @@ function displayhelp {
   echo "        -gd   --global-access-disable          Disable glocal access to instances"
   echo "        -gl   --global-access-list             List global access to instances"
   echo "        -gs   --global-access-status           Status glocal access to instances"
-  echo "        -i    --initials                       Specify intials on instance name for group management"
+  echo "        -i    --initials                       Override intials on instance name for group management"
   echo "        -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL"
   echo "        -ir   --ip-address-remove [IP-address] Remove current public IP-address from GCP ACL"
   echo "        -il   --ip-address-list                List current public IP-address on GCP ACL"
-  echo "        -p    --preferences                    Show personal config preferences"
   echo "        -lg   --list-global                    List all your instances globally"
+  echo "        -p    --preferences                    Show personal config preferences"
+  echo "        -z    --zone                           Override default region zone"
   echo "ARGUMENTS:"
   echo "       region  : america, asia, europe"
   echo "       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>"
@@ -658,6 +660,12 @@ case $1 in
   -lg | --list-global)
      RUN_LISTGLOBAL=true
      ;;
+  -z | --zone)
+     ZONE=$2
+     SET_ZONE="true"
+     OVERRIDE_ZONE=${ZONE}
+     shift
+     ;;
   -*)
    # Report invalid option
      echo "[ERROR] Invalid option ${1}"
@@ -737,6 +745,10 @@ case ${ARGUMENT1} in
   listpubip) echo "Using your default settings"; ARGUMENT2=${PRODUCT}; ARGUMENT3="listpubip";;
   *) echo "[ERROR: REGION] Specify: america, asia or europe"; echo ""; exit;;
 esac
+
+if [ "${SET_ZONE}" == "true" ]; then
+  ZONE=${OVERRIDE_ZONE}
+fi
 
 case ${ARGUMENT2} in
   fpx) PRODUCT="fpx"; FPTITLE="FortiProxy\ Workshop";;
