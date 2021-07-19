@@ -182,8 +182,9 @@ OPTIONS:
         -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL
         -ir   --ip-address-remove [IP-address] Remove current public IP-address from GCP ACL
         -il   --ip-address-list                List current public IP-address on GCP ACL
-        -p    --preferences                    Show personal config preferences
         -lg   --list-global                    List all your instances globally
+        -p    --preferences                    Show personal config preferences
+        -z    --zone.                          Override default region zone
 ARGUMENTS:
        region  : america, asia, europe
        product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>
