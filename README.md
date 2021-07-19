@@ -187,7 +187,7 @@ OPTIONS:
 ARGUMENTS:
        region  : america, asia, europe
        product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>
-       action  : build, clone, delete, global, list, listpubip, machinetype, start, stop
+       action  : build, clone, delete, global, globallist, list, listpubip, machinetype, start, stop
                  action build needs -b configfile. Use ./gcpcmd.sh -b to generate fpoc-example.conf
 
 ```
@@ -355,6 +355,36 @@ You can use following options to enable/disable the global firewall-rule, obtain
 `-gd  | --global-access-disable`          Disable glocal access to instances
 `-gl  | --global-access-list`             List global access to instances
 `-gs  | --global-access-status`           Status glocal access to instances
+
+#### Globallist
+The globallist action can be used to list the firewall-rules applied to the selected FortiPoC instances.
+
+`./gcpcmd-new.sh europe test globallist`
+
+```
+---------------------------------------------------------------------
+             FortiPoC Toolkit for Google Cloud Platform
+---------------------------------------------------------------------
+
+ Enter amount of FortiPoC's : 8
+ Enter start of numbered range : 8
+
+Okay to globallist fpoc-fk-test-008 till fpoc-fk-test-015 in region europe-west4-a.   y/n? y
+==> Lets go...using Owner=fkemps or Group=appsec, Zone=europe-west4-a, Product=test, Action=globallist
+
+Listing firewall rules of all instances
+
+Instancename    : firewall-rules attached
+---------------------------------------------------------------------------------
+fpoc-fk-test-008 : fortipoc-deny-default fortipoc-http-https-redir workshop-source-any workshop-source-networks
+fpoc-fk-test-009 : fortipoc-deny-default fortipoc-http-https-redir workshop-source-any workshop-source-networks
+fpoc-fk-test-010 : fortipoc-deny-default fortipoc-http-https-redir workshop-source-any workshop-source-networks
+fpoc-fk-test-011 : fortipoc-deny-default fortipoc-http-https-redir workshop-source-any workshop-source-networks
+fpoc-fk-test-012 : fortipoc-deny-default fortipoc-http-https-redir workshop-source-any workshop-source-networks
+fpoc-fk-test-013 : fortipoc-deny-default fortipoc-http-https-redir workshop-source-any workshop-source-networks
+fpoc-fk-test-014 : fortipoc-deny-default fortipoc-http-https-redir workshop-source-any workshop-source-networks
+fpoc-fk-test-015 : fortipoc-deny-default fortipoc-http-https-redir workshop-source-any workshop-source-networks
+```
 
 ### List
 Full overview of FortiPoC's can be obtained with **list** function. Specify *region*, *product* and *list*.
