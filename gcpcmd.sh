@@ -61,7 +61,8 @@
 # 2021061601 Ferry Kemps, Sanity check on multiple retrieved Service Accounts.
 # 2021071501 Ferry Kemps, Added automatic firewall-rules creation, updated instance tagging and option to toggle tags for controlling access.
 # 2021071501 Ferry Kemps, Expanded global access listing, by default global access disabled on instance create/clone
-GCPCMDVERSION="2021071601"
+# 2021071901 Ferry Kemps, Added globallist action to list ACL per user selection
+GCPCMDVERSION="2021071901"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -413,6 +414,27 @@ function gcpglobalaccess {
   fi
 }
 
+# Function to list FortiPoC instance firewall-rules
+function gcpglobalaccesslist {
+  #set -x
+  FPPREPEND=$1
+  ZONE=$2
+  PRODUCT=$3
+  INSTANCESTART=`expr $4`
+  INSTANCEEND=`expr $5`
+  echo "Listing firewall rules of selected instances"; echo ""
+  echo "Instancename    : firewall-rules attached"
+  echo "---------------------------------------------------------------------------------"
+  for (( COUNT=$INSTANCESTART; $COUNT <= $INSTANCEEND; COUNT++ ))
+  do
+     INSTANCENUMBER=$(printf "%03d" $COUNT)
+     FPINSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCENUMBER}"
+     #gcloud compute instances describe ${INSTANCENAME} --zone=${ZONE} | jq -r '.tags .items[]'
+     TAGS=(`gcloud compute instances describe ${FPINSTANCENAME} --zone=${ZONE} --format=json | jq -r '.tags .items[]'`)
+     echo "${FPINSTANCENAME} : ${TAGS[@]}"
+  done
+}
+
 
 # Function to display the help
 function displayhelp {
@@ -449,7 +471,7 @@ function displayhelp {
   echo "ARGUMENTS:"
   echo "       region  : america, asia, europe"
   echo "       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>"
-  echo "       action  : build, clone, delete, global, list, listpubip, machinetype, start, stop"
+  echo "       action  : build, clone, delete, global, globallist, list, listpubip, machinetype, start, stop"
   echo "                 action build needs -b configfile. Use ./gcpcmd.sh -b to generate fpoc-example.conf"
   echo ""
   [ "${NEWVERSION}" = "true" ] && echo "*** Newer version ${ONLINEVERSION} is available online on GitHub ***"; echo ""
@@ -741,11 +763,12 @@ case ${ARGUMENT3} in
   list) ACTION="list";;
   listpubip) ACTION="listpubip";;
   global) ACTION="global";;
-  *) echo "[ERROR: ACTION] Specify: build, clone, delete, global, list, listpubip, machinetype, start or stop"; exit;;
+  globallist) ACTION="globallist";;
+  *) echo "[ERROR: ACTION] Specify: build, clone, delete, global, globallist, list, listpubip, machinetype, start or stop"; exit;;
 esac
 
 displayheader
-if  [[ ${ACTION} == build  ||  ${ACTION} == start || ${ACTION} == stop || ${ACTION} == delete || ${ACTION} == machinetype || ${ACTION} == global ]]
+if  [[ ${ACTION} == build  ||  ${ACTION} == start || ${ACTION} == stop || ${ACTION} == delete || ${ACTION} == machinetype || ${ACTION} == global || ${ACTION} == globallist ]]
 then
   read -p " Enter amount of FortiPoC's : " FPCOUNT
   read -p " Enter start of numbered range : " FPNUMSTART
@@ -822,8 +845,7 @@ case ${ACTION} in
   delete) parallel ${PARALLELOPT} gcpdelete ${FPPREPEND} ${ZONE} ${PRODUCT} ::: `seq -f%03g  ${FPNUMSTART} ${FPNUMEND}`;;
   machinetype) parallel ${PARALLELOPT} gcpmachinetype ${FPPREPEND} ${ZONE} ${PRODUCT} ${MACHINETYPE} ::: `seq -f%03g  ${FPNUMSTART} ${FPNUMEND}`;;
   global) parallel ${PARALLELOPT} gcpglobalaccess ${FPPREPEND} ${ZONE} ${PRODUCT} ${GLOBALACCESS} ::: `seq -f%03g  ${FPNUMSTART} ${FPNUMEND}`;;
+  globallist) gcpglobalaccesslist ${FPPREPEND} ${ZONE} ${PRODUCT} ${FPNUMSTART} ${FPNUMEND};;
   list) gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND zone~${ZONE}" | grep -e "NAME" -e ${PRODUCT};;
-# list) gcloud compute instances list --filter="name~fpoc-${FPPREPEND}-${PRODUCT}"| grep -e "NAME" -e "${ZONE}";;
   listpubip) gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND zone~${ZONE}"  | grep -e ${PRODUCT}  | awk '{ printf $5 " " }';;
-# listpubip) gcloud compute instances list --filter="name~fpoc-${FPPREPEND}-${PRODUCT}"| grep -e "${ZONE}" | awk '{ printf $5 " " }';;
 esac
