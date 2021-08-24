@@ -63,7 +63,8 @@
 # 2021071501 Ferry Kemps, Expanded global access listing, by default global access disabled on instance create/clone
 # 2021071901 Ferry Kemps, Added globallist action to list ACL per user selection
 # 2021071902 Ferry Kemps, Added -z|--zone override option
-GCPCMDVERSION="2021071902"
+# 2021082401 Ferry Kemps, Fixed global access list reversed issue
+GCPCMDVERSION="2021082401"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy,, group-management
@@ -129,15 +130,15 @@ function checkfirewallrules() {
 }
 
 function togglefirewallruleany() {
-  if [ $1 = "enable" ]; then
+  if [ $1 = "disable" ]; then
      gcloud compute firewall-rules update ${WORKSHOPSOURCEANY} --disabled --no-user-output-enabled
-     echo "Global access enabled to instances"
-  elif [ $1 = "disable" ]; then
-     gcloud compute firewall-rules update ${WORKSHOPSOURCEANY} --no-disabled --no-user-output-enabled
      echo "Global access disabled to instances"
+  elif [ $1 = "enable" ]; then
+     gcloud compute firewall-rules update ${WORKSHOPSOURCEANY} --no-disabled --no-user-output-enabled
+     echo "Global access enabled to instances"
   elif [ $1 = "status" ]; then
      GLOBALACCESSSTATUS=`gcloud compute firewall-rules describe ${WORKSHOPSOURCEANY} --format=json|jq -r '.disabled'`
-     [ ${GLOBALACCESSSTATUS} = "true" ] && GLOBALACCESSSTATUS="Enabled" || GLOBALACCESSSTATUS="Disabled"
+     [ ${GLOBALACCESSSTATUS} = "false" ] && GLOBALACCESSSTATUS="Enabled" || GLOBALACCESSSTATUS="Disabled"
      echo "Global access status: ${GLOBALACCESSSTATUS}"
   else
      echo "Unknown global access request"
