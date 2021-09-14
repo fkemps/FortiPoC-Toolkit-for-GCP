@@ -65,7 +65,8 @@
 # 2021071902 Ferry Kemps, Added -z|--zone override option
 # 2021082401 Ferry Kemps, Fixed global access list reversed issue
 # 2021090701 Ferry Kemps, Code restructed, improved formatting, better Global Access messaging, firewall-rule fix on build
-GCPCMDVERSION="2021090701"
+# 2021091401 Ferry Kemps, Added update command
+GCPCMDVERSION="2021091401"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -522,7 +523,7 @@ function displayhelp {
    echo "       action  : build, clone, delete, global, globallist, list, listpubip, machinetype, start, stop"
    echo "                 action build needs -b configfile. Use ./gcpcmd.sh -b to generate fpoc-example.conf"
    echo ""
-   [ "${NEWVERSION}" = "true" ] && echo "*** Newer version ${ONLINEVERSION} is available online on GitHub ***"
+   [ "${NEWVERSION}" = "true" ] && echo "*** Newer version ${ONLINEVERSION} is available online on GitHub ("git pull" to update) ***"
    echo ""
 }
 
