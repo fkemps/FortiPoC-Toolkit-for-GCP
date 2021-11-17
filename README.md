@@ -188,7 +188,7 @@ OPTIONS:
 ARGUMENTS:
        region  : america, asia, europe
        product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>
-       action  : build, clone, delete, global, globallist, list, listpubip, machinetype, start, stop
+       action  : build, clone, delete, globalaccess, globalaccesslist, list, listpubip, machinetype, start, stop
                  action build needs -b configfile. Use ./gcpcmd.sh -b to generate fpoc-example.conf
 
 ```
@@ -334,9 +334,9 @@ Deleted [https://www.googleapis.com/compute/v1/projects/cse-projects-202906/zone
 ```
 
 ### Global
-You can use the global action to enable/disable FortiPoC instances for glolbal access. This will add the firewall-rule to allow/deny INGRESS traffic from any IP-address.
+You can use the globalaccess action to enable/disable FortiPoC instances for glolbal access. This will add the firewall-rule to allow/deny INGRESS traffic from any IP-address.
 
-`./gcpcmd.sh europe test global`
+`./gcpcmd.sh europe test globalaccess`
 
 ```
 ---------------------------------------------------------------------
@@ -347,7 +347,7 @@ You can use the global action to enable/disable FortiPoC instances for glolbal a
  Enter start of numbered range : 1
  select world wide access : 1) Enable, 2) Disable : 1
 
-Okay to global fpoc-fk-test-001 till fpoc-fk-test-010 in region europe-west4-a.   y/n?
+Okay to globalaccess fpoc-fk-test-001 till fpoc-fk-test-010 in region europe-west4-a.   y/n?
 ```
 
 You can use following options to enable/disable the global firewall-rule, obtain current status and show configured firewall-rules per instance.
@@ -358,9 +358,9 @@ You can use following options to enable/disable the global firewall-rule, obtain
 `-gs  | --global-access-status`           Status glocal access to instances
 
 #### Globallist
-The globallist action can be used to list the firewall-rules applied to the selected FortiPoC instances.
+The globalaccesslist action can be used to list the firewall-rules applied to the selected FortiPoC instances.
 
-`./gcpcmd-new.sh europe test globallist`
+`./gcpcmd-new.sh europe test globalaccesslist`
 
 ```
 ---------------------------------------------------------------------
@@ -370,8 +370,8 @@ The globallist action can be used to list the firewall-rules applied to the sele
  Enter amount of FortiPoC's : 8
  Enter start of numbered range : 8
 
-Okay to globallist fpoc-fk-test-008 till fpoc-fk-test-015 in region europe-west4-a.   y/n? y
-==> Lets go...using Owner=fkemps or Group=appsec, Zone=europe-west4-a, Product=test, Action=globallist
+Okay to globalaccesslist fpoc-fk-test-008 till fpoc-fk-test-015 in region europe-west4-a.   y/n? y
+==> Lets go...using Owner=fkemps or Group=appsec, Zone=europe-west4-a, Product=test, Action=globalaccesslist
 
 Listing firewall rules of all instances
 
