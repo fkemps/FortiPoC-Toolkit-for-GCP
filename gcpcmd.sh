@@ -66,7 +66,8 @@
 # 2021082401 Ferry Kemps, Fixed global access list reversed issue
 # 2021090701 Ferry Kemps, Code restructed, improved formatting, better Global Access messaging, firewall-rule fix on build
 # 2021091401 Ferry Kemps, Added update command
-GCPCMDVERSION="2021091401"
+# 2021111701 Ferry Kemps, Renamed global/globallist to globalaccess/globalaccesslist
+GCPCMDVERSION="2021111701"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -243,7 +244,7 @@ function gcpaclupdate() {
    fi
 }
 
-# Function to list all global instances
+# Function to list all globalaccess instances
 function gcplistglobal {
    OWNER=$1
    FPGROUP=$2
@@ -520,7 +521,7 @@ function displayhelp {
    echo "ARGUMENTS:"
    echo "       region  : america, asia, europe"
    echo "       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>"
-   echo "       action  : build, clone, delete, global, globallist, list, listpubip, machinetype, start, stop"
+   echo "       action  : build, clone, delete, globalaccess, globalaccesslist, list, listpubip, machinetype, start, stop"
    echo "                 action build needs -b configfile. Use ./gcpcmd.sh -b to generate fpoc-example.conf"
    echo ""
    [ "${NEWVERSION}" = "true" ] && echo "*** Newer version ${ONLINEVERSION} is available online on GitHub ("git pull" to update) ***"
@@ -887,16 +888,16 @@ delete) ACTION="delete" ;;
 machinetype) ACTION="machinetype" ;;
 list) ACTION="list" ;;
 listpubip) ACTION="listpubip" ;;
-global) ACTION="global" ;;
-globallist) ACTION="globallist" ;;
+globalaccess) ACTION="globalaccess" ;;
+globalaccesslist) ACTION="globalaccesslist" ;;
 *)
-   echo "[ERROR: ACTION] Specify: build, clone, delete, global, globallist, list, listpubip, machinetype, start or stop"
+   echo "[ERROR: ACTION] Specify: build, clone, delete, globalaccess, globalaccesslist, list, listpubip, machinetype, start or stop"
    exit
    ;;
 esac
 
 displayheader
-if [[ ${ACTION} == build || ${ACTION} == start || ${ACTION} == stop || ${ACTION} == delete || ${ACTION} == machinetype || ${ACTION} == global || ${ACTION} == globallist ]]; then
+if [[ ${ACTION} == build || ${ACTION} == start || ${ACTION} == stop || ${ACTION} == delete || ${ACTION} == machinetype || ${ACTION} == globalaccess || ${ACTION} == globalaccesslist ]]; then
    read -p " Enter amount of FortiPoC's : " FPCOUNT
    read -p " Enter start of numbered range : " FPNUMSTART
    if [ ${ACTION} == "machinetype" ]; then
@@ -913,7 +914,7 @@ if [[ ${ACTION} == build || ${ACTION} == start || ${ACTION} == stop || ${ACTION}
          exit
          ;;
       esac
-   elif [ ${ACTION} == "global" ]; then
+   elif [ ${ACTION} == "globalaccess" ]; then
       read -p " select world wide access : 1) Enable, 2) Disable : " NEWGLOBALACCESS
       case ${NEWGLOBALACCESS} in
       1) GLOBALACCESS="enable" ;;
@@ -979,8 +980,8 @@ start) parallel ${PARALLELOPT} gcpstart ${FPPREPEND} ${ZONE} ${PRODUCT} ::: $(se
 stop) parallel ${PARALLELOPT} gcpstop ${FPPREPEND} ${ZONE} ${PRODUCT} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
 delete) parallel ${PARALLELOPT} gcpdelete ${FPPREPEND} ${ZONE} ${PRODUCT} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
 machinetype) parallel ${PARALLELOPT} gcpmachinetype ${FPPREPEND} ${ZONE} ${PRODUCT} ${MACHINETYPE} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
-global) parallel ${PARALLELOPT} gcpglobalaccess ${FPPREPEND} ${ZONE} ${PRODUCT} ${GLOBALACCESS} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
-globallist) gcpglobalaccesslist ${FPPREPEND} ${ZONE} ${PRODUCT} ${FPNUMSTART} ${FPNUMEND} ;;
+globalaccess) parallel ${PARALLELOPT} gcpglobalaccess ${FPPREPEND} ${ZONE} ${PRODUCT} ${GLOBALACCESS} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
+globalaccesslist) gcpglobalaccesslist ${FPPREPEND} ${ZONE} ${PRODUCT} ${FPNUMSTART} ${FPNUMEND} ;;
 list) gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND zone~${ZONE}" | grep -e "NAME" -e ${PRODUCT} ;;
 listpubip) gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND zone~${ZONE}" | grep -e ${PRODUCT} | awk '{ printf $5 " " }' ;;
 esac
