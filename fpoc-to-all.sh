@@ -7,7 +7,8 @@
 # 2019112501 : Ferry Kemps - Updated --address description
 # 2020052501 : Ferry Kemps - General clean up, added banner more examples
 # 2020070901 : Ferry Kemps - added STARTDELAY to relax parallel starting
-FPOCSCRIPTVERSION="2020070901"
+# 2022031801 : Ferry Kemps - Password cleanup
+FPOCSCRIPTVERSION="2022031801"
 
 ###############################################################################################################################################
 # This script is to manage running FortiPoCs by executing CLI commands on FortiPoC console.                                                   #
@@ -97,7 +98,7 @@ echo "======== FortiPoC on IP : ${HOST} ========= FPOC: ${COUNT}"
 #############################################################################
 #echo "[*] Adding SSK-keys"; sshfpoc 'set ssh authorize keys "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNJYNMdL9o1Xt3ADg1DCOBhp8Vvr6eX8KGOK9tpqYH8Q6yW6Y1ARzDwqytg2zacRqwwZdpelEQ2vc9Kd4xsYA2Ds/OvUhwxJ1mPr5AVaqy6UxmkSU4fIQaIwkBgfaVxxntND8WRQVbjvkvlfoVBel93yz4jYcUDG0wsBNawuMS2BYHXDWb+w5RtEtkWf1cGfzHVSQSrhmk1uFFXMhFY95t9b1mMgroZqYkYaYb1sxmOxnQTQwC1J5Hf8LajXAMPV9br523mCXpJ5aeD+1T1706XM8EikT9JHDhgnqyTLMf8FAdaetT2fju2FZ9WnmHM2V3wQnC0t0QIuoYgEnZlQND fkemps@Ferrys-MacBook-Pro.local"'
 #echo "[*] Validating access"; sshfpoc 'exit'
-#echo "[*] Changing admin pwd"; sshfpoc 'set passwd bettertogether'
+#echo "[*] Changing admin pwd"; sshfpoc 'set passwd YOURADMINPASSWORD'
 
 
 
@@ -111,7 +112,7 @@ echo "======== FortiPoC on IP : ${HOST} ========= FPOC: ${COUNT}"
 
 # Remove admin pwd
 # ----------------------
-#echo "[*] Remove admin pwd"; sshfpoc 'unset passwd F0rt1n3t2019'
+#echo "[*] Remove admin pwd"; sshfpoc 'unset passwd YOURPASSWORD'
 
 # Removing SSH keys
 # ----------------------
@@ -173,7 +174,7 @@ echo "======== FortiPoC on IP : ${HOST} ========= FPOC: ${COUNT}"
 #-------------------------------------
 
 # Monday - FPX Ultimate Playground
-#echo "[*] Changing guest password to replace"; sshfpoc 'set guest passwd replace'
+#echo "[*] Changing guest password to YOURPASSWORD"; sshfpoc 'set guest passwd YOURPASSWORD'
 #echo "[*] Ejecting PoC-definition"; sshfpoc 'poc eject'
 #echo "[*] Synchronise repositories"; sshfpoc 'repo sync'
 #echo "[*] Removing all previous POC-definitions"; echo "y" | sshfpoc 'poc delete all'; echo ""
@@ -181,7 +182,7 @@ echo "======== FortiPoC on IP : ${HOST} ========= FPOC: ${COUNT}"
 #echo "[*] Prefetching all POC-definitions"; sshfpocparallel "poc prefetch all"
 
 # Tuesday - FAD
-#echo "[*] Changing guest password to secureadc"; sshfpoc 'set guest passwd SecureADC'
+#echo "[*] Changing guest password to YOURPASSWORD"; sshfpoc 'set guest passwd YOURPASSWORD'
 #echo "[*] Ejecting PoC-definition"; sshfpoc 'poc eject'
 #echo "[*] Synchronise repositories"; sshfpoc 'repo sync'
 #echo "[*] Removing all previous POC-definitions"; echo "y" | sshfpoc 'poc delete all'; echo ""
@@ -197,7 +198,7 @@ echo "======== FortiPoC on IP : ${HOST} ========= FPOC: ${COUNT}"
 #echo "[*] Prefetching all POC-definitions"; sshfpocparallel "poc prefetch all"
 
 # Wednesday - FIS
-#echo "[*] Changing guest password to airgap"; sshfpoc 'set guest passwd AirGAP'
+#echo "[*] Changing guest password to YOURPASSWORD"; sshfpoc 'set guest passwd YOURPASSWORD'
 #echo "[*] Ejecting PoC-definition"; sshfpoc 'poc eject'
 #echo "[*] Synchronise repositories"; sshfpoc 'repo sync'
 #echo "[*] Removing all previous POC-definitions"; echo "y" | sshfpoc 'poc delete all'; echo ""
@@ -206,7 +207,7 @@ echo "======== FortiPoC on IP : ${HOST} ========= FPOC: ${COUNT}"
 #echo "[*] Launching POC-definition"; sshfpocparallel 'poc launch "FortiIsolator Workshop Xperts"'
 
 # Thursday - FWB
-#echo "[*] Changing guest password to bestwaf"; sshfpoc 'set guest passwd BestWAF'
+#echo "[*] Changing guest password to YOURPASSWORD"; sshfpoc 'set guest passwd YOURPASSWORD'
 #echo "[*] Ejecting PoC-definition"; sshfpocparallel 'poc eject'
 #echo "[*] Synchronise repositories"; sshfpoc 'repo sync'
 #echo "[*] Removing all previous POC-definitions"; echo "y" | sshfpoc 'poc delete all'; echo ""
@@ -216,7 +217,7 @@ echo "======== FortiPoC on IP : ${HOST} ========= FPOC: ${COUNT}"
 #echo "[*] Launching POC-definition"; sshfpocparallel 'poc launch "FortiWeb Machine Learning Xperts"'
 
 # Friday - FPX
-#echo "[*] Changing guest password to replace"; sshfpoc 'set guest passwd REPLACE'
+#echo "[*] Changing guest password to YOURPASSWORD"; sshfpoc 'set guest passwd YOURPASSWORD'
 #echo "[*] Ejecting PoC-definition"; sshfpoc 'poc eject'
 #echo "[*] Ejecting PoC-definition"; sshfpocparallel 'poc eject'
 #echo "[*] Synchronise repositories"; sshfpoc 'repo sync'
