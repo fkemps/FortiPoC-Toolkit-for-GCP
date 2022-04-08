@@ -8,7 +8,8 @@
 # 2020052501 : Ferry Kemps - General clean up, added banner more examples
 # 2020070901 : Ferry Kemps - added STARTDELAY to relax parallel starting
 # 2022031801 : Ferry Kemps - Password cleanup
-FPOCSCRIPTVERSION="2022031801"
+# 2022040801 : Ferry Kemps - FortiPoC Title attendee number update, additional examples
+FPOCSCRIPTVERSION="2022040801"
 
 ###############################################################################################################################################
 # This script is to manage running FortiPoCs by executing CLI commands on FortiPoC console.                                                   #
@@ -101,14 +102,13 @@ echo "======== FortiPoC on IP : ${HOST} ========= FPOC: ${COUNT}"
 #echo "[*] Changing admin pwd"; sshfpoc 'set passwd YOURADMINPASSWORD'
 
 
-
-
-
+# --------------------------------------------------------------------------------------------------
 # ------------------ put your FortiPoC CLI commands to execute below this line ---------------------
+# --------------------------------------------------------------------------------------------------
 #
 # FortiPoC: Title settings
 #
-#echo "[*] Setting GUI tile"; sshfpoc 'set gui title "Xperts Summit 2020 - FPOC#" '
+#echo "[*] Setting GUI tile"; sshfpoc "set gui title 'Workshop Topic Location - Attendee #${COUNT}'"
 
 # Remove admin pwd
 # ----------------------
@@ -148,10 +148,16 @@ echo "======== FortiPoC on IP : ${HOST} ========= FPOC: ${COUNT}"
 # ----------------------
 #echo "[*] Prefetching all POC-definitions"; sshfpoc "poc prefetch all"
 
-#
 # FortiPoC: Set Simple Menu
-#
-#echo "Enable simple menu"; sshfpoc 'set gui simple enable'
+#echo "[*] Enable simple menu"; sshfpoc 'set gui simple enable'
+
+# FortiPoC: Set certificate on webserver
+#echo "[*] Change certificate on webserver"; sshfpoc 'set webserver cert YOUR-UPLOADED-CERTIFICATE'
+
+# FortiPoC: Upgrade FortiPoC
+# ----------------------
+#echo "[*] Ejecting PoC-definition"; sshfpoc 'poc eject'
+#echo "[*] Upgrading FortiPoC"; echo "yes" | sshfpoc 'execute upgrade'
 
 #
 # FortiPoC: random example collection delete, sync repo, load poc-definitions
