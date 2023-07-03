@@ -67,7 +67,12 @@
 # 2021090701 Ferry Kemps, Code restructed, improved formatting, better Global Access messaging, firewall-rule fix on build
 # 2021091401 Ferry Kemps, Added update command
 # 2021111701 Ferry Kemps, Renamed global/globallist to globalaccess/globalaccesslist
-GCPCMDVERSION="2021111701"
+# 2022011001 Ferry Kemps, Textual updates on help page
+# 2022080401 Ferry Kemps, Changed parallel option -j0 to supress warning
+# 2022080501 Ferry Kemps, Added option to move instances to other zone
+# 2022110401 Ferry Kemps, Updated help for --initials option to override 
+# 2023070301 Ferry Kemps, Added gcloud beta instance rename optopn
+GCPCMDVERSION="2023070301"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -76,6 +81,7 @@ GCPCMDVERSION="2021111701"
 
 # default zones where to deploy per region. You can adjust to deploy closest to your location
 ASIA="asia-southeast1-b"
+#EUROPE="europe-west2-a"
 EUROPE="europe-west4-a"
 #EUROPE="europe-west1-b"
 AMERICA="us-central1-c"
@@ -446,6 +452,33 @@ function gcpmachinetype {
    gcloud compute instances set-machine-type ${INSTANCENAME} --machine-type=${MACHINETYPE} --zone=${ZONE}
 }
 
+# Function to move FortiPoC instance to other zone
+function gcpmove {
+   FPPREPEND=$1
+   ZONE=$2
+   PRODUCT=$3
+   DESTINATIONZONE=$4
+   INSTANCE=$5
+   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
+   echo "==> Move instance ${INSTANCENAME} from zone ${ZONE} to ${DESTINATIONZONE}"
+   #gcloud compute instances move INSTANCE_NAME --destination-zone=DESTINATION_ZONE [--async] [--zone=ZONE] [GCLOUD_WIDE_FLAG …]
+   gcloud compute instances move ${INSTANCENAME} --zone=${ZONE} --destination-zone=${DESTINATIONZONE}
+}
+
+# Function to rename FortiPoC instance
+function gcprename {
+set -x
+   FPPREPEND=$1
+   ZONE=$2
+   PRODUCT=$3
+   NEWPRODUCT=$4
+   INSTANCE=$5
+   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
+   NEWINSTANCENAME="fpoc-${FPPREPEND}-${NEWPRODUCT}-${INSTANCE}"
+   echo "==> Renaming instance ${INSTANCENAME} to ${NEWINSTANCENAME}"
+   gcloud beta compute instances set-name ${INSTANCENAME} --new-name=${NEWINSTANCENAME} --zone=${ZONE}
+}
+
 # Function to change FortiPoC instance firewall-rules
 function gcpglobalaccess {
    #set -x
@@ -500,7 +533,7 @@ function displayhelp {
    echo ""
    echo "Usage: $0 [OPTIONS] [ARGUMENTS]"
    echo "       $0 [OPTIONS] <region> <product> <action>"
-   echo "       $0 [-b configfile] <region> <product> build"
+   echo "       $0 [OPTIONS] <-b configfile> <region> <product> build"
    echo "       $0 [OPTIONS] [region] [product] list"
    echo "       $0 [OPTIONS] [region] [product] listpubip"
    echo "OPTIONS:"
@@ -511,7 +544,7 @@ function displayhelp {
    echo "        -gd   --global-access-disable          Disable glocal access to instances"
    echo "        -gl   --global-access-list             List global access to instances"
    echo "        -gs   --global-access-status           Status glocal access to instances"
-   echo "        -i    --initials                       Override intials on instance name for group management"
+   echo "        -i    --initials <initials>            Override intials on instance name for group management"
    echo "        -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL"
    echo "        -ir   --ip-address-remove [IP-address] Remove current public IP-address from GCP ACL"
    echo "        -il   --ip-address-list                List current public IP-address on GCP ACL"
@@ -521,8 +554,8 @@ function displayhelp {
    echo "ARGUMENTS:"
    echo "       region  : america, asia, europe"
    echo "       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>"
-   echo "       action  : build, clone, delete, globalaccess, globalaccesslist, list, listpubip, machinetype, start, stop"
-   echo "                 action build needs -b configfile. Use ./gcpcmd.sh -b to generate fpoc-example.conf"
+   echo "       action  : build, clone, delete, globalaccess, globalaccesslist, list, listpubip, machinetype, move, rename, start, stop"
+   echo "                 action build needs -b <conf/configfile>. Use ./gcpcmd.sh -b to generate fpoc-example.conf file"
    echo ""
    [ "${NEWVERSION}" = "true" ] && echo "*** Newer version ${ONLINEVERSION} is available online on GitHub ("git pull" to update) ***"
    echo ""
@@ -882,22 +915,24 @@ esac
 case ${ARGUMENT3} in
 build) ACTION="build" ;;
 clone) ACTION="clone" ;;
-start) ACTION="start" ;;
-stop) ACTION="stop" ;;
 delete) ACTION="delete" ;;
-machinetype) ACTION="machinetype" ;;
-list) ACTION="list" ;;
-listpubip) ACTION="listpubip" ;;
 globalaccess) ACTION="globalaccess" ;;
 globalaccesslist) ACTION="globalaccesslist" ;;
+list) ACTION="list" ;;
+listpubip) ACTION="listpubip" ;;
+machinetype) ACTION="machinetype" ;;
+move) ACTION="move" ;;
+rename) ACTION="rename";;
+start) ACTION="start" ;;
+stop) ACTION="stop" ;;
 *)
-   echo "[ERROR: ACTION] Specify: build, clone, delete, globalaccess, globalaccesslist, list, listpubip, machinetype, start or stop"
+   echo "[ERROR: ACTION] Specify: build, clone, delete, globalaccess, globalaccesslist, list, listpubip, machinetype, move, rename, start or stop"
    exit
    ;;
 esac
 
 displayheader
-if [[ ${ACTION} == build || ${ACTION} == start || ${ACTION} == stop || ${ACTION} == delete || ${ACTION} == machinetype || ${ACTION} == globalaccess || ${ACTION} == globalaccesslist ]]; then
+if [[ ${ACTION} == build || ${ACTION} == delete || ${ACTION} == globalaccess || ${ACTION} == globalaccesslist || ${ACTION} == machinetype || ${ACTION} == move || ${ACTION} == rename || ${ACTION} == start || ${ACTION} == stop ]]; then
    read -p " Enter amount of FortiPoC's : " FPCOUNT
    read -p " Enter start of numbered range : " FPNUMSTART
    if [ ${ACTION} == "machinetype" ]; then
@@ -925,6 +960,22 @@ if [[ ${ACTION} == build || ${ACTION} == start || ${ACTION} == stop || ${ACTION}
          exit
          ;;
       esac
+   elif [ ${ACTION} == "move" ]; then
+      while [[ "${ZONESTATUS}" != "UP" ]] ; do
+      read -p " To which zone would you like to move the instance(s) : " DSTZONE
+      echo " Checking destination zone availability"
+      ZONESTATUS=`gcloud compute zones describe ${DSTZONE} --format=json | jq -r '.status'`
+      if [ "${ZONESTATUS}" == "UP" ]; then
+         read -p " Are the instances NOT RUNNING? y/n " choice
+         [ "${choice}" != "y" ] && exit
+      else
+        echo " That destination zone is not available or UP"
+      fi
+      done
+   elif [ ${ACTION} == "rename" ]; then
+      read -p " what is the new instance PRODUCT name (fpoc-${FPPREPEND}-PRODUCT-nnn) : " NEWPRODUCTNAME
+      read -p " is this new instance name  fpoc-${FPPREPEND}-${NEWPRODUCTNAME}-nnn correct? y/n " choice 
+         [ "${choice}" != "y" ] && exit
    fi
    let --FPCOUNT
    let FPNUMEND=FPNUMSTART+FPCOUNT
@@ -970,18 +1021,20 @@ fi
 echo "==> Lets go...using Owner=${OWNER} or Group=${FPGROUP}, Zone=${ZONE}, Product=${PRODUCT}, Action=${ACTION}"
 echo
 
-export -f gcpbuild gcpstart gcpstop gcpdelete gcpclone gcpmachinetype gcpglobalaccess
-export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE WORKSHOPSOURCEANY LABELS FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH NEWMACHINETYPE GCPSERVICEACCOUNT SSHKEYPERSONAL WORKSHOPSOURCENETWORKS
+export -f gcpbuild gcpstart gcpstop gcpdelete gcpclone gcpmachinetype gcpmove gcprename gcpglobalaccess
+export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE WORKSHOPSOURCEANY LABELS FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH NEWMACHINETYPE GCPSERVICEACCOUNT SSHKEYPERSONAL WORKSHOPSOURCENETWORKS DSTZONE NEWPRODUCTNAME
 
 case ${ACTION} in
-build) parallel ${PARALLELOPT} gcpbuild ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPTITLE}" ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
-clone) parallel ${PARALLELOPT} gcpclone ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPNUMBERTOCLONE}" ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
-start) parallel ${PARALLELOPT} gcpstart ${FPPREPEND} ${ZONE} ${PRODUCT} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
-stop) parallel ${PARALLELOPT} gcpstop ${FPPREPEND} ${ZONE} ${PRODUCT} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
-delete) parallel ${PARALLELOPT} gcpdelete ${FPPREPEND} ${ZONE} ${PRODUCT} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
-machinetype) parallel ${PARALLELOPT} gcpmachinetype ${FPPREPEND} ${ZONE} ${PRODUCT} ${MACHINETYPE} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
-globalaccess) parallel ${PARALLELOPT} gcpglobalaccess ${FPPREPEND} ${ZONE} ${PRODUCT} ${GLOBALACCESS} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
+build) parallel ${PARALLELOPT} -j0 gcpbuild ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPTITLE}" ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
+clone) parallel ${PARALLELOPT} -j0 gcpclone ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPNUMBERTOCLONE}" ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
+delete) parallel ${PARALLELOPT} -j0 gcpdelete ${FPPREPEND} ${ZONE} ${PRODUCT} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
+globalaccess) parallel ${PARALLELOPT} -j0 gcpglobalaccess ${FPPREPEND} ${ZONE} ${PRODUCT} ${GLOBALACCESS} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
 globalaccesslist) gcpglobalaccesslist ${FPPREPEND} ${ZONE} ${PRODUCT} ${FPNUMSTART} ${FPNUMEND} ;;
 list) gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND zone~${ZONE}" | grep -e "NAME" -e ${PRODUCT} ;;
 listpubip) gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND zone~${ZONE}" | grep -e ${PRODUCT} | awk '{ printf $5 " " }' ;;
+machinetype) parallel ${PARALLELOPT} -j0 gcpmachinetype ${FPPREPEND} ${ZONE} ${PRODUCT} ${MACHINETYPE} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
+move) parallel ${PARALLELOPT} -j0 gcpmove ${FPPREPEND} ${ZONE} ${PRODUCT} ${DSTZONE} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
+rename) parallel ${PARALLELOPT} -j0 gcprename ${FPPREPEND} ${ZONE} ${PRODUCT} ${NEWPRODUCTNAME} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
+start) parallel ${PARALLELOPT} -j0 gcpstart ${FPPREPEND} ${ZONE} ${PRODUCT} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
+stop) parallel ${PARALLELOPT} -j0 gcpstop ${FPPREPEND} ${ZONE} ${PRODUCT} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
 esac
