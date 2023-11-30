@@ -160,16 +160,16 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 |  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/
 |_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|
 
-(Version: 2021071601)
+(Version: 2023113001)
 Default deployment region: europe-west4-a
 Personal instance identification: fk
 Default product: test
 
-Usage: ./gcpcmd.sh [OPTIONS] [ARGUMENTS]
-       ./gcpcmd.sh [OPTIONS] <region> <product> <action>
-       ./gcpcmd.sh [-b configfile] <region> <product> build
-       ./gcpcmd.sh [OPTIONS] [region] [product] list
-       ./gcpcmd.sh [OPTIONS] [region] [product] listpubip
+Usage: /usr/local/bin/gcpcmd-new [OPTIONS] [ARGUMENTS]
+       /usr/local/bin/gcpcmd-new [OPTIONS] <region> <product> <action>
+       /usr/local/bin/gcpcmd-new [OPTIONS] <-b configfile> <region> <product> build
+       /usr/local/bin/gcpcmd-new [OPTIONS] [region] [product] list
+       /usr/local/bin/gcpcmd-new [OPTIONS] [region] [product] listpubip
 OPTIONS:
         -b    --build-file                     File for building instances. Leave blank to generate example
         -d    --delete-config                  Delete default user config settings
@@ -178,18 +178,19 @@ OPTIONS:
         -gd   --global-access-disable          Disable glocal access to instances
         -gl   --global-access-list             List global access to instances
         -gs   --global-access-status           Status glocal access to instances
-        -i    --initials                       Specify intials on instance name for group management
+        -i    --initials <initials>            Override intials on instance name for group management
         -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL
         -ir   --ip-address-remove [IP-address] Remove current public IP-address from GCP ACL
         -il   --ip-address-list                List current public IP-address on GCP ACL
         -lg   --list-global                    List all your instances globally
+        -ll   --list-labels                    List all your instances and labels
         -p    --preferences                    Show personal config preferences
-        -z    --zone.                          Override default region zone
+        -z    --zone                           Override default region zone
 ARGUMENTS:
        region  : america, asia, europe
        product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>
-       action  : build, clone, delete, globalaccess, globalaccesslist, list, listpubip, machinetype, start, stop
-                 action build needs -b configfile. Use ./gcpcmd.sh -b to generate fpoc-example.conf
+       action  : build, clone, delete, globalaccess, globalaccesslist, labellist, labelmodify, list, listpubip, machinetype, move, rename, start, stop
+                 action build needs -b <conf/configfile>. Use ./gcpcmd.sh -b to generate fpoc-example.conf file
 
 ```
 
@@ -386,11 +387,84 @@ fpoc-fk-test-013 : fortipoc-deny-default fortipoc-http-https-redir workshop-sour
 fpoc-fk-test-014 : fortipoc-deny-default fortipoc-http-https-redir workshop-source-any workshop-source-networks
 fpoc-fk-test-015 : fortipoc-deny-default fortipoc-http-https-redir workshop-source-any workshop-source-networks
 ```
+### Labellist
+The labellist action can be used to list all the labels applied on the selected FortiPoC instances.
+
+`./gcpcmd-new.sh europe test labellist`
+
+```
+---------------------------------------------------------------------
+             FortiPoC Toolkit for Google Cloud Platform
+---------------------------------------------------------------------
+
+ Enter amount of FortiPoC's : 10
+ Enter start of numbered range : 1
+
+Okay to labellist fpoc-fk-test-001 till fpoc-fk-test-010 in region europe-west2-a.   y/n? y
+==> Lets go...using Owner=fkemps or Group=appsec, Zone=europe-west2-a, Product=test, Action=labellist
+
+Listing labels of selected instances
+
+Instancename     : labels
+---------------------------------------------------------------------------------
+fpoc-fk-test-001 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-002 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-003 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-004 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-005 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-006 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-007 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-008 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-009 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-010 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
+```
+### Labelmodify
+The labelmodify action can be used to add/remove labels from the selected instances. To update a label you can remove and add the label, there's no update option on GCP.
+
+`./gcpcmd-new.sh europe test labelmodify`
+
+* Add   
+
+```
+---------------------------------------------------------------------
+             FortiPoC Toolkit for Google Cloud Platform
+---------------------------------------------------------------------
+
+ Enter amount of FortiPoC's : 2
+ Enter start of numbered range : 1
+ What label action would you like 1) Add, 2) Remove : 1
+Provide the label and value e.g. name=value : purpose=fortipoc
+
+Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west2-a.   y/n? y
+==> Lets go...using Owner=fkemps or Group=appsec, Zone=europe-west2-a, Product=test, Action=labelmodify
+
+==> Adding label purpose=fortipoc to instance fpoc-fk-test-001
+==> Adding label purpose=fortipoc to instance fpoc-fk-test-002
+```
+
+* Remove   
+
+```
+---------------------------------------------------------------------
+             FortiPoC Toolkit for Google Cloud Platform
+---------------------------------------------------------------------
+
+ Enter amount of FortiPoC's : 2
+ Enter start of numbered range : 1
+ What label action would you like 1) Add, 2) Remove : 2
+Provide the label name to remove : purpose
+
+Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west2-a.   y/n? y
+==> Lets go...using Owner=fkemps or Group=appsec, Zone=europe-west2-a, Product=test, Action=labelmodify
+
+==> Removing label purpose from instance fpoc-fk-test-001
+==> Removing label purpose from instance fpoc-fk-test-002
+```
 
 ### List
 Full overview of FortiPoC's can be obtained with **list** function. Specify *region*, *product* and *list*.
 
-`/gcpcmd.sh europe test list`
+`./gcpcmd.sh europe test list`
 
 ```
 ---------------------------------------------------------------------
