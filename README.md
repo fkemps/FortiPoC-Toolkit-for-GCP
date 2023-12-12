@@ -165,11 +165,11 @@ Default deployment region: europe-west4-a
 Personal instance identification: fk
 Default product: test
 
-Usage: /usr/local/bin/gcpcmd-new [OPTIONS] [ARGUMENTS]
-       /usr/local/bin/gcpcmd-new [OPTIONS] <region> <product> <action>
-       /usr/local/bin/gcpcmd-new [OPTIONS] <-b configfile> <region> <product> build
-       /usr/local/bin/gcpcmd-new [OPTIONS] [region] [product] list
-       /usr/local/bin/gcpcmd-new [OPTIONS] [region] [product] listpubip
+Usage: ./gcpcmd.sh [OPTIONS] [ARGUMENTS]
+       ./gcpcmd.sh [OPTIONS] <region> <product> <action>
+       ./gcpcmd.sh [OPTIONS] <-b configfile> <region> <product> build
+       ./gcpcmd.sh [OPTIONS] [region] [product] list
+       ./gcpcmd.sh [OPTIONS] [region] [product] listpubip
 OPTIONS:
         -b    --build-file                     File for building instances. Leave blank to generate example
         -d    --delete-config                  Delete default user config settings
