@@ -74,7 +74,8 @@
 # 2023070301 Ferry Kemps, Added gcloud beta instance rename optopn
 # 2023071001 Ferry Kemps, Remove debug and text correction on rename option
 # 2023113001 Ferry Kemps, Added labellist action to list labels, add/remove labels, updated instance fortipoc label
-GCPCMDVERSION="2023113001"
+# 2023121201 Ferry Kemps, Added label replace option
+GCPCMDVERSION="2023121201"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -509,21 +510,26 @@ function gcpglobalaccess {
    fi
 }
 
-# Function to add/remove FortiPoC instance labels
+# Function to add/remove/replace FortiPoC instance labels
 function gcplabelmodify {
    FPPREPEND=$1
    ZONE=$2
    PRODUCT=$3
    LABELACTION=$4
    LABEL=$5
-   INSTANCE=$6
+   NEWLABEL=$6
+   INSTANCE=$7
    INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
    if [ ${LABELACTION} = "add" ]; then
       echo "==> Adding label ${LABEL} to instance ${INSTANCENAME}"
       gcloud compute instances add-labels ${INSTANCENAME} --labels=${LABEL} --zone=${ZONE} --no-user-output-enabled
-   else
+   elif [ ${LABELACTION} = "remove" ]; then
       echo "==> Removing label ${LABEL} from instance ${INSTANCENAME}"
       gcloud beta compute instances remove-labels ${INSTANCENAME} --labels=${LABEL} --zone=${ZONE} --no-user-output-enabled
+   else
+      echo "==> Replacubg label ${LABEL} with ${NEWLABEL} on instance ${INSTANCENAME}"
+      gcloud beta compute instances remove-labels ${INSTANCENAME} --labels=${LABEL} --zone=${ZONE} --no-user-output-enabled
+      gcloud compute instances add-labels ${INSTANCENAME} --labels=${NEWLABEL} --zone=${ZONE} --no-user-output-enabled
    fi
 }
 
@@ -1024,10 +1030,11 @@ if [[ ${ACTION} == build || ${ACTION} == delete || ${ACTION} == globalaccess || 
          ;;
       esac
    elif [ ${ACTION} == "labelmodify" ]; then
-      read -p " What label action would you like 1) Add, 2) Remove : " NEWLABELACTION
+      read -p " What label action would you like 1) Add, 2) Remove, 3) replace : " NEWLABELACTION
       case ${NEWLABELACTION} in
       1) LABELACTION="add" ;;
       2) LABELACTION="remove" ;;
+      3) LABELACTION="replace" ;;
       *)
          echo "Wrong input given"
          echo ""
@@ -1035,9 +1042,12 @@ if [[ ${ACTION} == build || ${ACTION} == delete || ${ACTION} == globalaccess || 
          ;;
       esac
       if [ ${LABELACTION} == "add" ]; then
-         read -p "Provide the label and value e.g. name=value : " LABEL
+         read -p " Provide the new label and value e.g. name=value : " LABEL
+      elif [ ${LABELACTION} == "remove" ]; then
+         read -p " Provide the label name to remove : " LABEL
       else
-         read -p "Provide the label name to remove : " LABEL
+         read -p " Provide the label name to replace : " LABEL
+         read -p " Provide the new label and value e.g. name=value : " NEWLABEL
       fi
    elif [ ${ACTION} == "move" ]; then
       while [[ "${ZONESTATUS}" != "UP" ]] ; do
@@ -1101,7 +1111,7 @@ echo "==> Lets go...using Owner=${OWNER} or Group=${FPGROUP}, Zone=${ZONE}, Prod
 echo
 
 export -f gcpbuild gcpstart gcpstop gcpdelete gcpclone gcpmachinetype gcpmove gcprename gcpglobalaccess gcplabelmodify
-export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE WORKSHOPSOURCEANY LABELS LABEL FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH NEWMACHINETYPE GCPSERVICEACCOUNT SSHKEYPERSONAL WORKSHOPSOURCENETWORKS DSTZONE NEWPRODUCTNAME
+export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE WORKSHOPSOURCEANY LABELS LABEL NEWLABEL FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH NEWMACHINETYPE GCPSERVICEACCOUNT SSHKEYPERSONAL WORKSHOPSOURCENETWORKS DSTZONE NEWPRODUCTNAME
 
 case ${ACTION} in
 build) parallel ${PARALLELOPT} -j0 gcpbuild ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPTITLE}" ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
@@ -1110,7 +1120,7 @@ delete) parallel ${PARALLELOPT} -j0 gcpdelete ${FPPREPEND} ${ZONE} ${PRODUCT} ::
 globalaccess) parallel ${PARALLELOPT} -j0 gcpglobalaccess ${FPPREPEND} ${ZONE} ${PRODUCT} ${GLOBALACCESS} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
 globalaccesslist) gcpglobalaccesslist ${FPPREPEND} ${ZONE} ${PRODUCT} ${FPNUMSTART} ${FPNUMEND} ;;
 labellist) labellist ${FPPREPEND} ${ZONE} ${PRODUCT} ${FPNUMSTART} ${FPNUMEND} ;;
-labelmodify) parallel ${PARALLELOPT} -j0 gcplabelmodify ${FPPREPEND} ${ZONE} ${PRODUCT} ${LABELACTION} ${LABEL}  ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
+labelmodify) parallel ${PARALLELOPT} -j0 gcplabelmodify ${FPPREPEND} ${ZONE} ${PRODUCT} ${LABELACTION} ${LABEL} ${NEWLABEL} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
 list) gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND zone~${ZONE}" | grep -e "NAME" -e ${PRODUCT} ;;
 listpubip) gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND zone~${ZONE}" | grep -e ${PRODUCT} | awk '{ printf $5 " " }' ;;
 machinetype) parallel ${PARALLELOPT} -j0 gcpmachinetype ${FPPREPEND} ${ZONE} ${PRODUCT} ${MACHINETYPE} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
