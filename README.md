@@ -160,7 +160,7 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 |  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/
 |_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|
 
-(Version: 2023113001)
+(Version: 2023121201)
 Default deployment region: europe-west4-a
 Personal instance identification: fk
 Default product: test
