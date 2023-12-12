@@ -419,7 +419,7 @@ fpoc-fk-test-009 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
 fpoc-fk-test-010 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
 ```
 ### Labelmodify
-The labelmodify action can be used to add/remove labels from the selected instances. To update a label you can remove and add the label, there's no update option on GCP.
+The labelmodify action can be used to add/remove/replace labels from the selected instances.
 
 `./gcpcmd-new.sh europe test labelmodify`
 
@@ -432,8 +432,8 @@ The labelmodify action can be used to add/remove labels from the selected instan
 
  Enter amount of FortiPoC's : 2
  Enter start of numbered range : 1
- What label action would you like 1) Add, 2) Remove : 1
-Provide the label and value e.g. name=value : purpose=fortipoc
+ What label action would you like 1) Add, 2) Remove, 3) Replace : 1
+ Provide the label and value e.g. name=value : purpose=fortipoc
 
 Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west2-a.   y/n? y
 ==> Lets go...using Owner=fkemps or Group=appsec, Zone=europe-west2-a, Product=test, Action=labelmodify
@@ -451,14 +451,34 @@ Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west
 
  Enter amount of FortiPoC's : 2
  Enter start of numbered range : 1
- What label action would you like 1) Add, 2) Remove : 2
-Provide the label name to remove : purpose
+ What label action would you like 1) Add, 2) Remove, 3) Replace : 2
+ Provide the label name to remove : purpose
 
 Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west2-a.   y/n? y
 ==> Lets go...using Owner=fkemps or Group=appsec, Zone=europe-west2-a, Product=test, Action=labelmodify
 
 ==> Removing label purpose from instance fpoc-fk-test-001
 ==> Removing label purpose from instance fpoc-fk-test-002
+```
+
+* Replace
+
+```
+---------------------------------------------------------------------
+             FortiPoC Toolkit for Google Cloud Platform
+---------------------------------------------------------------------
+
+ Enter amount of FortiPoC's : 2
+ Enter start of numbered range : 1
+ What label action would you like 1) Add, 2) Remove, 3) replace : 3
+ Provide the label name to replace : purpose
+ Provide the new label and value e.g. name=value : test=test
+
+Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west2-a.   y/n? y
+==> Lets go...using Owner=fkemps or Group=appsec, Zone=europe-west2-a, Product=test, Action=labelmodify
+
+==> Replacubg label purpose with test=test on instance fpoc-fk-test-001
+==> Replacubg label purpose with test=test on instance fpoc-fk-test-002
 ```
 
 ### List
