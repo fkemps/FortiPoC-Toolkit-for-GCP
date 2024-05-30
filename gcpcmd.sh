@@ -75,7 +75,8 @@
 # 2023071001 Ferry Kemps, Remove debug and text correction on rename option
 # 2023113001 Ferry Kemps, Added labellist action to list labels, add/remove labels, updated instance fortipoc label
 # 2023121201 Ferry Kemps, Added label replace option
-GCPCMDVERSION="2023121201"
+# 2024053001 Ferry Kemps, Added -lr | --list-running option to list RUNNING instances
+GCPCMDVERSION="2024053001"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -273,6 +274,18 @@ function gcplistglobal {
       gcloud compute instances list --filter="labels.owner:${OWNER}"
    else
       gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP})"
+   fi
+}
+
+# Function to list all global RUNNING instances
+function gcplistrunning {
+   OWNER=$1
+   FPGROUP=$2
+   STATUS="RUNNING"
+   if [ -z ${FPGROUP} ]; then
+      gcloud compute instances list --filter="labels.owner:${OWNER} AND status:${STATUS}"
+   else
+      gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND status:${STATUS}"
    fi
 }
 
@@ -605,6 +618,7 @@ function displayhelp {
    echo "        -il   --ip-address-list                List current public IP-address on GCP ACL"
    echo "        -lg   --list-global                    List all your instances globally"
    echo "        -ll   --list-labels                    List all your instances and labels"
+   echo "        -lr   --list-running                   List all your instances in RUNNING state"
    echo "        -p    --preferences                    Show personal config preferences"
    echo "        -z    --zone                           Override default region zone"
    echo "ARGUMENTS:"
@@ -818,6 +832,9 @@ while [[ "$1" =~ ^-.* ]]; do
    -ll | --list-labels)
       RUN_LISTLABELS=true
       ;;
+   -lr | --list-running)
+      RUN_LISTRUNNING=true
+      ;;
    -z | --zone)
       ZONE=$2
       SET_ZONE="true"
@@ -888,6 +905,14 @@ if [ "${RUN_LISTLABELS}" == "true" ]; then
    echo "Listing all global instances and labels for owner:${OWNER} or group:${FPGROUP}"
    echo ""
    instancelabels ${OWNER} ${FPGROUP}
+   exit
+fi
+
+if [ "${RUN_LISTRUNNING}" == "true" ]; then
+   displayheader
+   echo "Listing all global RUNNING instances for owner:${OWNER} or group:${FPGROUP}"
+   echo ""
+   gcplistrunning ${OWNER} ${FPGROUP}
    exit
 fi
 
