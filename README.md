@@ -160,16 +160,16 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 |  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/
 |_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|
 
-(Version: 2023121201)
+(Version: 2024053001)
 Default deployment region: europe-west4-a
 Personal instance identification: fk
 Default product: test
 
-Usage: ./gcpcmd.sh [OPTIONS] [ARGUMENTS]
-       ./gcpcmd.sh [OPTIONS] <region> <product> <action>
-       ./gcpcmd.sh [OPTIONS] <-b configfile> <region> <product> build
-       ./gcpcmd.sh [OPTIONS] [region] [product] list
-       ./gcpcmd.sh [OPTIONS] [region] [product] listpubip
+Usage: /usr/local/bin/gcpcmd [OPTIONS] [ARGUMENTS]
+       /usr/local/bin/gcpcmd [OPTIONS] <region> <product> <action>
+       /usr/local/bin/gcpcmd [OPTIONS] <-b configfile> <region> <product> build
+       /usr/local/bin/gcpcmd [OPTIONS] [region] [product] list
+       /usr/local/bin/gcpcmd [OPTIONS] [region] [product] listpubip
 OPTIONS:
         -b    --build-file                     File for building instances. Leave blank to generate example
         -d    --delete-config                  Delete default user config settings
@@ -184,6 +184,7 @@ OPTIONS:
         -il   --ip-address-list                List current public IP-address on GCP ACL
         -lg   --list-global                    List all your instances globally
         -ll   --list-labels                    List all your instances and labels
+        -lr   --list-running                   List all your instances in RUNNING state
         -p    --preferences                    Show personal config preferences
         -z    --zone                           Override default region zone
 ARGUMENTS:
@@ -637,8 +638,8 @@ Listing public-ip addresses on GCP ACL
 10.1.1.1
 ```
 
-#### List all your instances
-`./gcpcmd.sh --list-global` will list all your instances of which you're the owner.
+#### Listing your instances
+`./gcpcmd.sh --list-global` will list all your instances of which you're the owner or from your group.
 
 ```
 ---------------------------------------------------------------------
@@ -650,12 +651,30 @@ Listing all global instances for owner:fkemps or group:fkemps
 NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
 fpoc-fk-test-001  europe-west4-a  n1-standard-4               10.164.0.60  34.90.228.152  RUNNING
 fpoc-fk-test-002  europe-west4-a  n1-standard-4               10.164.0.59  34.90.81.85    RUNNING
+fpoc-fk-test-003  europe-west4-a  n1-standard-4               10.164.0.58  34.90.81.86    TERMINATED
+fpoc-fk-test-004  europe-west4-a  n1-standard-4               10.164.0.57  34.90.81.87    TERMINATED
 ```
+
+`./gcpcmd.sh --list-running` will list all your running instances of which you're the owner or from your group.
+
+```
+---------------------------------------------------------------------
+             FortiPoC Toolkit for Google Cloud Platform
+---------------------------------------------------------------------
+
+Listing all global RUNNING instances for owner:fkemps or group:appsec
+
+NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
+fpoc-fk-test-001  europe-west4-a  n1-standard-4               10.164.0.60  34.90.228.152  RUNNING
+fpoc-fk-test-002  europe-west4-a  n1-standard-4               10.164.0.59  34.90.81.85    RUNNING
+```
+
 
 #### Manage your instances with a group
 `./gcpcmd.sh --group <groupname>` allows you to view, control and build instances with a group label.   
 The `-g` ro `--group` option can be specified after gcpcmd.sh command in any order and will override the stored perferences and config-template group definition.
 Order of group preferences is personal, config-template and command-option.
+
 
 ---
 
