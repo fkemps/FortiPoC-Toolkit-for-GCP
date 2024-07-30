@@ -719,7 +719,9 @@ if [ "${EXPAND}" = "new" ]; then
 
    # Request ProjectId from GCP and use that if no projectId is entered
    GCPPROJECTID=$(gcloud projects list --format json | jq -r '.[] .projectId')
-   read -p "Provide your GCP billing project ID [${GCPPROJECTID}] : " CONFPROJECTNAME
+   echo "Projects ID's found on GCP :"
+   echo ${GCPPROJECTID}
+   read -p "Provide your GCP Project ID : " CONFPROJECTNAME
    [ -z ${CONFPROJECTNAME} ] && CONFPROJECTNAME=${GCPPROJECTID}
 
    # Request default Compute Service Account and use that if no Service Account is entered
