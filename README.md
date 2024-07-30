@@ -159,8 +159,8 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 | |_ / _ \|  __| __| | |_) / _ \ / __|   | |/ _ \ / _ \| | |/ / | __| | |_ / _ \|  __| | |  _| |   | |_) |
 |  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/
 |_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|
-
 (Version: 2024080101)
+Selected project : dummy-project
 Default deployment region: europe-west3-a
 Personal instance identification: fk
 Default product: event
@@ -677,6 +677,80 @@ fpoc-fk-test-002  europe-west4-a  n1-standard-4               10.164.0.59  34.90
 The `-g` ro `--group` option can be specified after gcpcmd.sh command in any order and will override the stored perferences and config-template group definition.
 Order of group preferences is personal, config-template and command-option.
 
+### Multi-project feature
+
+#### Add GCP project
+`./gcpcmd.sh --project-add` will allow you to add a GCP project to your preferences definitions.
+
+```script
+Provide your initials e.g. fl : jd
+Provide your name to lable instanced e.g. flastname : jdoe
+Provide a groupname for shared instances (optional) : clowns
+Provide your region 1) Asia, 2) Europe, 3) America : 1
+Project ID's found on GCP
+dummy1
+dummy2
+Provide your GCP Project ID : dummy2
+Provide your GCP service account (only one if multiple shown) [1234567890-compute@developer.gserviceaccount.com] :
+IP-address of FortiPoC license server (if available) : 10.10.10.10
+Provide your SSH public key for FortiPoC access (optional) [ssh-rsa ARBCDEDGHIJKLMNOPQRSTUVWXYZAAAB3NzaC1yc2EAAAADA....1234567890 jdoe@JD-MacBook.local] :
+```
+#### Project select
+You can select the GCP project to work on from your preferences.
+
+`./gcpcmd.sh --project-select` will allow you to select your defined GCP projects
+
+```script
+--------------------------------------------------------------------------
+ Current project    : dummy1
+ Number of projects : 2
+ All projects       : dummy1 dummy2
+--------------------------------------------------------------------------
+
+  1) : dummy1
+  2) : dummy2
+
+ Select your GCP project : 2
+ Project "dummy2" selected and made permanent
+ Switching GCP-SDK to new selected project
+Updated property [core/project].
+```
+#### Project preferences overview
+You can show your saved project preferences.
+
+`./gcpcmd.sh --preferences` will show you the saved preferences.
+
+```script
+---------------------------------------------------------------------
+             FortiPoC Toolkit for Google Cloud Platform
+---------------------------------------------------------------------
+
+Your personal configuration preferences
+
+DEFAULTPROJECT="2"
+
+GCPCMD_PROJECT[1]="dummy1"
+GCPCMD_SERVICEACCOUNT[1]="1234567890-compute@developer.gserviceaccount.com"
+GCPCMD_LICENSESERVER[1]=""
+GCPCMD_FPPREPEND[1]="jd"
+GCPCMD_ZONE[1]="europe-west1-a"
+GCPCMD_LABELS[1]="purpose=fortipoc,owner=jdoe"
+GCPCMD_FPGROUP[1]="clowns"
+GCPCMD_PRODUCT[1]="event"
+GCPCMD_SSHKEYPERSONAL[1]="ssh-rsa ARBCDEDGHIJKLMNOPQRSTUVWXYZAAAB3NzaC1yc2EAAAADA....1234567890 jdoe@JD-MacBook.local"
+GCPCMD_VPC[1]="validated"
+GCPCMD_FIREWALLRULES[1]="validated"
+
+GCPCMD_PROJECT[2]="dummy2"
+GCPCMD_SERVICEACCOUNT[2]="1234567890-compute@developer.gserviceaccount.com"
+GCPCMD_LICENSESERVER[2]="10.10.10.10"
+GCPCMD_FPPREPEND[2]="jd"
+GCPCMD_ZONE[2]="asia-southeast1-b"
+GCPCMD_LABELS[2]="purpose=fortipoc,owner=jdoe"
+GCPCMD_FPGROUP[2]="clowns"
+GCPCMD_PRODUCT[2]="test"
+GCPCMD_SSHKEYPERSONAL[2]="ssh-rsa ARBCDEDGHIJKLMNOPQRSTUVWXYZAAAB3NzaC1yc2EAAAADA....1234567890 jdoe@JD-MacBook.local"
+```
 
 ---
 
