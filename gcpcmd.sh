@@ -76,7 +76,9 @@
 # 2023113001 Ferry Kemps, Added labellist action to list labels, add/remove labels, updated instance fortipoc label
 # 2023121201 Ferry Kemps, Added label replace option
 # 2024053001 Ferry Kemps, Added -lr | --list-running option to list RUNNING instances
-GCPCMDVERSION="2024053001"
+# 2024072901 Ferry Kemps, Added creation of "default" VPC and Networks if missing, optimized the gcloud validation delay
+# 2024080101 Ferry Kemps, Major update to support multi-project function
+GCPCMDVERSION="2024080101"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -85,9 +87,7 @@ GCPCMDVERSION="2024053001"
 
 # default zones where to deploy per region. You can adjust to deploy closest to your location
 ASIA="asia-southeast1-b"
-#EUROPE="europe-west2-a"
 EUROPE="europe-west4-a"
-#EUROPE="europe-west1-b"
 AMERICA="us-central1-c"
 
 # ------------------------------------------------
@@ -97,6 +97,7 @@ AMERICA="us-central1-c"
 # Let's create uniq logfiles with date-time stamp
 PARALLELOPT="--joblog logs/logfile-$(date +%Y%m%d%H%M%S) -j 100 "
 # Firewall-rules for instance tagging
+WORKSHOPVPC="default"
 WORKSHOPSOURCENETWORKS="workshop-source-networks"
 WORKSHOPSOURCEANY="workshop-source-any"
 DSTTCPPORTS="tcp:22,tcp:80,tcp:443,tcp:8000,tcp:8080,tcp:8888,tcp:10000-20000,tcp:20808,tcp:20909,tcp:22222"
@@ -111,33 +112,64 @@ POCDEFINITION6=""
 POCDEFINITION7=""
 POCDEFINITION8=""
 
+# Color code definitions
+BLACK='\033[0;30m'       ; DARKGRAY='\033[1;30m'
+RED='\033[0;31m'         ; LIGHTRED='\033[1;31m'
+GREEN='\033[0;32m'       ; LIGHTGREEN='\033[1;32m'
+ORANGE='\033[0;33m'      ; export YELLOW='\033[1;33m'
+BLUE='\033[0;34m'        ; LIGHTBLUE='\033[1;34m'
+PURPLE='\033[0;35m'      ; LIGHTPURPLE='\033[1;35m'
+CYAN='\033[0;36m'        ; LIGHTCYAN='\033[1;36m'
+LIGHTGRAY='\033[0;37m'   ; WHITE='\033[1;37m'
+REDREVERSED='\033[0;41m' ; GREENREVERSED='\033[0;42m'
+REDREVERSEDNEW='\033[1;41m' ; GREENREVERSEDNEW='\033[1;42m'
+GREENNEW='\033[1;32m'
+NOCOLOR='\033[0m'
+
 ###############################
 #   Functions
 ###############################
+function checkdefaultnetwork() {
+   if [ "${VPC}" != "validated" ]; then
+      if (! gcloud compute networks describe ${WORKSHOPVPC} --format=none > /dev/null 2>&1); then
+         echo "Default VPC networks not found, creating it"
+         gcloud compute networks create ${WORKSHOPVPC} \
+            --description="Default VPC network for FortiPoC" \
+            --mtu=1460
+         # Add VPC check to personal preferences file
+      fi
+      echo "GCPCMD_VPC[${DEFAULTPROJECT}]=\"validated\"" >> ${GCPCMDCONF}
+   fi
+}
+
 function checkfirewallrules() {
    #check if firewall-rules exist else create them
-   if (! gcloud compute firewall-rules describe ${WORKSHOPSOURCENETWORKS} --format=none >/dev/null 2>&1); then
-      echo "Firewall-rule ${WORKSHOPSOURCENETWORKS} not found, creating it"
-      gcloud compute firewall-rules create ${WORKSHOPSOURCENETWORKS} \
-         --allow=${DSTTCPPORTS},${DSTUDPPORTS} \
-         --description="Allow access from temporary workshop networks" \
-         --direction=INGRESS \
-         --priority=300 \
-         --source-ranges=10.10.10.10 \
-         --target-tags=${WORKSHOPSOURCENETWORKS} \
-         --no-user-output-enabled
-   fi
-   if (! gcloud compute firewall-rules describe ${WORKSHOPSOURCEANY} --format=none >/dev/null 2>&1); then
-      echo "Firewall-rule ${WORKSHOPSOURCEANY} not found, creating it (disabled by default)"
-      gcloud compute firewall-rules create ${WORKSHOPSOURCEANY} \
-         --allow=${DSTTCPPORTS},${DSTUDPPORTS} \
-         --description="Allow access from temporary workshop networks" \
-         --direction=INGRESS \
-         --priority=300 \
-         --source-ranges=0.0.0.0/0 \
-         --target-tags=${WORKSHOPSOURCEANY} \
-         --disabled \
-         --no-user-output-enabled
+   if [ "${FIREWALLRULES}" != "validated" ]; then
+      if (! gcloud compute firewall-rules describe ${WORKSHOPSOURCENETWORKS} --format=none >/dev/null 2>&1); then
+         echo "Firewall-rule ${WORKSHOPSOURCENETWORKS} not found, creating it"
+         gcloud compute firewall-rules create ${WORKSHOPSOURCENETWORKS} \
+            --allow=${DSTTCPPORTS},${DSTUDPPORTS} \
+            --description="Allow access from temporary workshop networks" \
+            --direction=INGRESS \
+            --priority=300 \
+            --source-ranges=10.10.10.10 \
+            --target-tags=${WORKSHOPSOURCENETWORKS} \
+            --no-user-output-enabled
+      fi
+      if (! gcloud compute firewall-rules describe ${WORKSHOPSOURCEANY} --format=none >/dev/null 2>&1); then
+         echo "Firewall-rule ${WORKSHOPSOURCEANY} not found, creating it (disabled by default)"
+         gcloud compute firewall-rules create ${WORKSHOPSOURCEANY} \
+            --allow=${DSTTCPPORTS},${DSTUDPPORTS} \
+            --description="Allow access from temporary workshop networks" \
+            --direction=INGRESS \
+            --priority=300 \
+            --source-ranges=0.0.0.0/0 \
+            --target-tags=${WORKSHOPSOURCEANY} \
+            --disabled \
+            --no-user-output-enabled
+         # Add Firewallrules check to personal preferences file
+      fi
+      echo "GCPCMD_FIREWALLRULES[${DEFAULTPROJECT}]=\"validated\"" >> ${GCPCMDCONF}
    fi
 }
 
@@ -321,7 +353,7 @@ function gcpbuild {
       --min-cpu-platform=Intel\ Broadwell --tags=fortipoc-http-https-redir,fortipoc-deny-default,${WORKSHOPSOURCENETWORKS} \
       --image=${FPIMAGE} \
       --image-project=${GCPPROJECT} \
-      --boot-disk-size=200GB \
+      --boot-disk-size=350GB \
       --boot-disk-type=pd-standard \
       --boot-disk-device-name=${INSTANCENAME} \
       --labels=${LABELS}
@@ -620,6 +652,8 @@ function displayhelp {
    echo "        -ll   --list-labels                    List all your instances and labels"
    echo "        -lr   --list-running                   List all your instances in RUNNING state"
    echo "        -p    --preferences                    Show personal config preferences"
+   echo "        -pa   --project-add                    Add GCP project to preferences"
+   echo "        -ps   --project-select                 Select project on GCP"
    echo "        -z    --zone                           Override default region zone"
    echo "ARGUMENTS:"
    echo "       region  : america, asia, europe"
@@ -631,50 +665,45 @@ function displayhelp {
    echo ""
 }
 
-###############################
-#   start of program
-###############################
-# Check if required software is available and exit if missing
-type gcloud >/dev/null 2>&1 || (
+# Function to select project on GCP from multi-project
+function projectselect {
    echo ""
-   echo "WARNING: gcloud SDK not installed"
-   exit 1
-)
-[ $? -eq 1 ] && exit
-type parallel >/dev/null 2>&1 || (
+   echo "--------------------------------------------------------------------------"
+   echo " Current project    : ${GCPCMD_PROJECT[${DEFAULTPROJECT}]}"
+   echo " Number of projects : ${#GCPCMD_PROJECT[@]}"
+   echo " All projects       : ${GCPCMD_PROJECT[@]}"
+   echo "--------------------------------------------------------------------------"
    echo ""
-   echo "WARNING: parallel software not installed"
-   exit 1
-)
-[ $? -eq 1 ] && exit
-type jq >/dev/null 2>&1 || (
-   echo""
-   echo "WARNING: jq software not installed"
-   exit 1
-)
-[ $? -eq 1 ] && exit
-type dig >/dev/null 2>&1 || (
+   for ((i=1;i<=${#GCPCMD_PROJECT[@]};i++))
+   do
+     echo "  ${i}) : ${GCPCMD_PROJECT[${i}]}"
+   done
    echo ""
-   echo "WARNING: dig software not installed (bind-tools)"
-   exit 1
-)
-[ $? -eq 1 ] && exit
-echo ""
+   read -p " Select your GCP project : " SELECTEDPROJECT
+   if [[ ${SELECTEDPROJECT} -lt 1 ]] || [[ ${SELECTEDPROJECT} -gt ${#GCPCMD_PROJECT[@]} ]]
+   then
+     echo " [ERROR] Invalid project number selected"
+     exit 1
+   else
+     echo " Project \"${GCPCMD_PROJECT[${SELECTEDPROJECT}]}\" selected and made permanent"
+     sed -i '' "s/DEFAULTPROJECT.*/DEFAULTPROJECT=\"${SELECTEDPROJECT}\"/" ${GCPCMDCONF}
+     echo " Switching GCP-SDK to new selected project"
+     gcloud config set project ${GCPCMD_PROJECT[${SELECTEDPROJECT}]}
+   fi
+}
 
-# Check on first run and user specific defaults
-# Chech if .fpoc logs and conf directories exists, create if it doesn't exist to store peronal perferences
-[ ! -d ~/.fpoc/ ] && mkdir ~/.fpoc
-[ ! -d logs ] && mkdir logs
-[ ! -d conf ] && mkdir conf
-
-# Check online if there is a newer Version
-ONLINEVERSION=$(curl --fail --silent --retry-max-time 1 --user-agent ${GCPCMDVERSION} http://www.4xion.com/gcpcmdversion.txt)
-[ ! -z "${ONLINEVERSION}" ] && [ ${ONLINEVERSION} -gt ${GCPCMDVERSION} ] && NEWVERSION="true"
-
-eval GCPCMDCONF="~/.fpoc/gcpcmd.conf"
+# Funtion to gatgher perferences
+function gatherpreferences {
+EXPAND="${1}"
 if [ ! -f ${GCPCMDCONF} ]; then
    echo "Welcome to FortiPoc Toolkit for Google Cloud Platform"
    echo "This is your first time use of gcpcmd.sh and no preferences are set. Let's set them!"
+   EXPAND="new"
+   echo 'DEFAULTPROJECT="1"' > ${GCPCMDCONF}
+   echo "" >> ${GCPCMDCONF}
+fi
+if [ "${EXPAND}" = "new" ]; then
+   let NEWPROJECTNUM=${#GCPCMD_PROJECT[@]}+1
    read -p "Provide your initials e.g. fl : " CONFINITIALS
    read -p "Provide your name to lable instanced e.g. flastname : " CONFGCPLABEL
    read -p "Provide a groupname for shared instances (optional) : " CONFGCPGROUP
@@ -718,54 +747,113 @@ if [ ! -f ${GCPCMDCONF} ]; then
    read -p "Provide your SSH public key for FortiPoC access (optional) [${SSHKEYPERSONAL}] : " CONFSSHKEYPERSONAL
    CONFSSHKEYPERSONAL="${SSHKEYPERSONAL}"
 
-   cat <<EOF >${GCPCMDCONF}
-GCPPROJECT="${CONFPROJECTNAME}"
-GCPSERVICEACCOUNT="${CONFSERVICEACCOUNT}"
-LICENSESERVER="${CONFLICENSESERVER}"
-FPPREPEND="${CONFINITIALS}"
-ZONE="${CONFREGION}"
-LABELS="purpose=fortipoc,owner=${CONFGCPLABEL}"
-FPGROUP="${CONFGCPGROUP}"
-PRODUCT="test"
-SSHKEYPERSONAL="${CONFSSHKEYPERSONAL}"
+   cat <<EOF >>${GCPCMDCONF}
+
+GCPCMD_PROJECT[${NEWPROJECTNUM}]="${CONFPROJECTNAME}"
+GCPCMD_SERVICEACCOUNT[${NEWPROJECTNUM}]="${CONFSERVICEACCOUNT}"
+GCPCMD_LICENSESERVER[${NEWPROJECTNUM}]="${CONFLICENSESERVER}"
+GCPCMD_FPPREPEND[${NEWPROJECTNUM}]="${CONFINITIALS}"
+GCPCMD_ZONE[${NEWPROJECTNUM}]="${CONFREGION}"
+GCPCMD_LABELS[${NEWPROJECTNUM}]="purpose=fortipoc,owner=${CONFGCPLABEL}"
+GCPCMD_FPGROUP[${NEWPROJECTNUM}]="${CONFGCPGROUP}"
+GCPCMD_PRODUCT[${NEWPROJECTNUM}]="test"
+GCPCMD_SSHKEYPERSONAL[${NEWPROJECTNUM}]="${CONFSSHKEYPERSONAL}"
 EOF
    echo ""
 fi
+}
+
+###############################
+#   start of program
+###############################
+# Check if required software is available and exit if missing
+type gcloud >/dev/null 2>&1 || (
+   echo ""
+   echo "WARNING: gcloud SDK not installed"
+   exit 1
+)
+[ $? -eq 1 ] && exit
+type parallel >/dev/null 2>&1 || (
+   echo ""
+   echo "WARNING: parallel software not installed"
+   exit 1
+)
+[ $? -eq 1 ] && exit
+type jq >/dev/null 2>&1 || (
+   echo""
+   echo "WARNING: jq software not installed"
+   exit 1
+)
+[ $? -eq 1 ] && exit
+type dig >/dev/null 2>&1 || (
+   echo ""
+   echo "WARNING: dig software not installed (bind-tools)"
+   exit 1
+)
+[ $? -eq 1 ] && exit
+echo ""
+
+# Check on first run and user specific defaults
+# Chech if .fpoc logs and conf directories exists, create if it doesn't exist to store peronal perferences
+[ ! -d ~/.fpoc/ ] && mkdir ~/.fpoc
+[ ! -d logs ] && mkdir logs
+[ ! -d conf ] && mkdir conf
+
+eval GCPCMDCONF="~/.fpoc/gcpcmd.conf"
+gatherpreferences
 source ${GCPCMDCONF}
 
-# Verify if label "owner" is populated in prefences file. If not than gcpcmd.sh was updated.
+# Populate the internal (old) variables from the multi-project gcpcmd.conf preferences file
+GCPPROJECT="${GCPCMD_PROJECT[${DEFAULTPROJECT}]}"
+GCPSERVICEACCOUNT="${GCPCMD_SERVICEACCOUNT[${DEFAULTPROJECT}]}"
+LICENSESERVER="${GCPCMD_LICENSESERVER[${DEFAULTPROJECT}]}"
+FPPREPEND="${GCPCMD_FPPREPEND[${DEFAULTPROJECT}]}"
+ZONE="${GCPCMD_ZONE[${DEFAULTPROJECT}]}"
+LABELS="${GCPCMD_LABELS[${DEFAULTPROJECT}]}"
+FPGROUP="${GCPCMD_FPGROUP[${DEFAULTPROJECT}]}"
+PRODUCT="${GCPCMD_PRODUCT[${DEFAULTPROJECT}]}"
+SSHKEYPERSONAL="${GCPCMD_SSHKEYPERSONAL[${DEFAULTPROJECT}]}"
+VPC="${GCPCMD_VPC[${DEFAULTPROJECT}]}"
+FIREWALLRULES="${GCPCMD_FIREWALLRULES[${DEFAULTPROJECT}]}"
 OWNER=$(echo ${LABELS} | grep owner | cut -d "=" -f 3)
-if [ -z ${OWNER} ] && [ ! "$1" == "-d" ]; then
-   echo "Run ./gcpcmd.sh -d because your configured preferences are from older gcpcmd.sh version."
+
+# Check online if there is a newer Version
+ONLINEVERSION=$(curl --fail --silent --retry-max-time 1 --user-agent ${GCPCMDVERSION}-${GCPPROJECT}-${FPPREPEND} http://www.4xion.com/gcpcmdversion.txt)
+[ ! -z "${ONLINEVERSION}" ] && [ ${ONLINEVERSION} -gt ${GCPCMDVERSION} ] && NEWVERSION="true"
+
+# Verify if DEFAULTPROJECT is populated in prefences file. If not than gcpcmd.sh was updated to multi-project support..
+if [ -z ${DEFAULTPROJECT} ] && [ ! "$1" == "-d" ]; then
+   echo "Run ./gcpcmd.sh -d because your configured preferences are from older gcpcmd.sh version not supporting multi-projects."
    [ -f ${GCPCMDCONF} ] && displaypreferences ${GCPCMDCONF}
    exit
 fi
 
 # Verify if SSHKEY was populated from prefences file. If not than gcpcmd.sh was updated.
-if [ -z "${SSHKEYPERSONAL}" ] && [ ! "$1" == "-d" ]; then
-   echo "Run ./gcpcmd.sh -d because your configured preferences are from older gcpcmd.sh version."
-   [ -f ${GCPCMDCONF} ] && displaypreferences ${GCPCMDCONF}
-   exit
-fi
+#if [ -z "${SSHKEYPERSONAL}" ] && [ ! "$1" == "-d" ]; then
+#   echo "Run ./gcpcmd.sh -d because your configured preferences are from older gcpcmd.sh version."
+#   [ -f ${GCPCMDCONF} ] && displaypreferences ${GCPCMDCONF}
+#   exit
+#fi
 
 # Verify if group variable preference is set, else gcpcmd.sh was update
-if [ -z ${FPGROUP} ] && [ ! $(grep FPGROUP ${GCPCMDCONF}) ] && [ ! "$1" == "-d" ]; then
-   echo "Run ./gcpcmd.sh -d because your configured preferences are from older gcpcmd.sh version."
-   [ -f ${GCPCMDCONF} ] && displaypreferences ${GCPCMDCONF}
-   exit
-elif [ -z ${FPGROUP} ]; then
-   FPGROUP=${OWNER}
-fi
+#if [ -z ${FPGROUP} ] && [ ! $(grep FPGROUP ${GCPCMDCONF}) ] && [ ! "$1" == "-d" ]; then
+#   echo "Run ./gcpcmd.sh -d because your configured preferences are from older gcpcmd.sh version."
+#   [ -f ${GCPCMDCONF} ] && displaypreferences ${GCPCMDCONF}
+#   exit
+#elif [ -z ${FPGROUP} ]; then
+#   FPGROUP=${OWNER}
+#fi
 
 # Verify if Service Account preference is set, else append to personal preference file
-if [ ! $(grep GCPSERVICEACCOUNT ${GCPCMDCONF}) ]; then
-   GCPSRVACCOUNT=$(gcloud iam service-accounts list --filter=Compute --format=json | jq -r '.[] .email')
-   echo "Adding default Service Account to your personal preference file"
-   echo "GCPSERVICEACCOUNT=\"${GCPSRVACCOUNT}\"" >>${GCPCMDCONF}
-fi
+#if [ ! $(grep GCPSERVICEACCOUNT ${GCPCMDCONF}) ]; then
+#   GCPSRVACCOUNT=$(gcloud iam service-accounts list --filter=Compute --format=json | jq -r '.[] .email')
+#   echo "Adding default Service Account to your personal preference file"
+#   echo "GCPSERVICEACCOUNT=\"${GCPSRVACCOUNT}\"" >>${GCPCMDCONF}
+#fi
 
-# Check if GCP firewall-rules exist
-checkfirewallrules
+# Check if GCP default VPC and Firewall rules exist
+   checkdefaultnetwork
+   checkfirewallrules
 
 # Handling options given
 while [[ "$1" =~ ^-.* ]]; do
@@ -821,11 +909,6 @@ while [[ "$1" =~ ^-.* ]]; do
       gcpaclupdate list
       exit
       ;;
-   -p | --preferences)
-      displayheader
-      displaypreferences ${GCPCMDCONF}
-      exit
-      ;;
    -lg | --list-global)
       RUN_LISTGLOBAL=true
       ;;
@@ -834,6 +917,19 @@ while [[ "$1" =~ ^-.* ]]; do
       ;;
    -lr | --list-running)
       RUN_LISTRUNNING=true
+      ;;
+   -p | --preferences)
+      displayheader
+      displaypreferences ${GCPCMDCONF}
+      exit
+      ;;
+   -pa | --projectadd)
+      gatherpreferences new
+      exit
+      ;;
+   -ps | --projectselect)
+      projectselect
+      exit
       ;;
    -z | --zone)
       ZONE=$2
@@ -857,8 +953,8 @@ if [ "${RUN_CONFIGFILE}" == "true" ]; then
          FPGROUP=${OVERRIDE_FPGROUP}
       fi
    else
-      echo "Config file not found. Example file written as fpoc-example.conf"
-      cat <<EOF >fpoc-example.conf
+      echo "Config file not found. Example file fpoc-example.conf in directory ./conf"
+      cat <<EOF > .conf/fpoc-example.conf
 # Uncomment and speficy to override user defaults
 #GCPPROJECT="${GCPPROJECT}"
 #GCPSERVICEACCOUNT="${GCPSERVICEACCOUNT}"
@@ -869,7 +965,7 @@ if [ "${RUN_CONFIGFILE}" == "true" ]; then
 # --- edits below this line ---
 # Specify FortiPoC instance details.
 MACHINETYPE="n1-standard-4"
-FPIMAGE="fortipoc-1-7-14-clear"
+FPIMAGE="fortipoc-1-9-11-cloud"
 #FPSIMPLEMENU="enable"
 FPTRAILKEY='ES-xamadrid-201907:765eb11f6523382c10513b66a8a4daf5'
 #GCPREPO=""
@@ -894,7 +990,8 @@ fi
 
 if [ "${RUN_LISTGLOBAL}" == "true" ]; then
    displayheader
-   echo "Listing all global instances for owner:${OWNER} or group:${FPGROUP}"
+   #echo "Listing all global instances for project: ${GREENREVERSED}${GCPPROJECT}${NOCOLOR} owner:${GREENREVERSED}${OWNER}${NOCOLOR} or group:${GREENREVERSED}${FPGROUP}${NOCOLOR}"
+   echo "Listing all global instances for Project:${GCPPROJECT} Owner:${OWNER} or Group:${FPGROUP}"
    echo ""
    gcplistglobal ${OWNER} ${FPGROUP}
    exit
@@ -902,7 +999,7 @@ fi
 
 if [ "${RUN_LISTLABELS}" == "true" ]; then
    displayheader
-   echo "Listing all global instances and labels for owner:${OWNER} or group:${FPGROUP}"
+   echo "Listing all global instances and labels for Project:${GCPPROJECT} Owner:${OWNER} or Group:${FPGROUP}"
    echo ""
    instancelabels ${OWNER} ${FPGROUP}
    exit
@@ -910,7 +1007,7 @@ fi
 
 if [ "${RUN_LISTRUNNING}" == "true" ]; then
    displayheader
-   echo "Listing all global RUNNING instances for owner:${OWNER} or group:${FPGROUP}"
+   echo "Listing all global RUNNING instances for Project:${GCPPROJECT} Owner:${OWNER} or Group:${FPGROUP}"
    echo ""
    gcplistrunning ${OWNER} ${FPGROUP}
    exit
@@ -929,9 +1026,22 @@ ARGUMENT3=$3
 
 # Validate given arguments
 case ${ARGUMENT1} in
-america) ZONE=${AMERICA} ;;
-asia) ZONE=${ASIA} ;;
-europe) ZONE=${EUROPE} ;;
+# Check if preference file contains the preferred zone, else take hardcoded
+america)
+   if [[ ! ${ZONE} =~ "us" ]]; then
+    ZONE=${AMERICA}
+   fi 
+   ;;
+asia)
+   if [[ ! ${ZONE} =~ "asia" ]]; then
+    ZONE=${ASIA}
+   fi 
+   ;;
+europe)
+   if [[ ! ${ZONE} =~ "europe" ]]; then
+    ZONE=${EUROPE}
+   fi 
+   ;;
 list)
    echo "Using your default settings"
    ARGUMENT2=${PRODUCT}
