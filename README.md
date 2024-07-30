@@ -160,10 +160,10 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 |  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/
 |_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|
 
-(Version: 2024053001)
-Default deployment region: europe-west4-a
+(Version: 2024080101)
+Default deployment region: europe-west3-a
 Personal instance identification: fk
-Default product: test
+Default product: event
 
 Usage: /usr/local/bin/gcpcmd [OPTIONS] [ARGUMENTS]
        /usr/local/bin/gcpcmd [OPTIONS] <region> <product> <action>
@@ -186,6 +186,8 @@ OPTIONS:
         -ll   --list-labels                    List all your instances and labels
         -lr   --list-running                   List all your instances in RUNNING state
         -p    --preferences                    Show personal config preferences
+        -pa   --project-add                    Add GCP project to preferences
+        -ps   --project-select                 Select project on GCP
         -z    --zone                           Override default region zone
 ARGUMENTS:
        region  : america, asia, europe
@@ -198,7 +200,7 @@ ARGUMENTS:
 ### Build
 Building will be fully automatic per specified config file. Each FortiPoC will be provisioned in parallel and download all needed VM-images and documentation. This will cause a high download on FortiPoC repository and the more you deploy in parallel the longer it will take. Advice is to not provision more then 10 simultaniously. Do it in batches or build just one and use the `clone` function to duplicate which will be much faster.
 
-Good practice is to have a config file per environment e.g. testing, workshop, seminars, products or solutions. For example `conf/fpoc-apac-se-fwb-ws.conf`, `conf/fpoc-emea-xa-fad-ws.conf`, `conf/fpoc-appsecc-demo.conf`.
+Good practice is to have a config file per environment e.g. testing, workshop, seminars, products or solutions. For example `conf/fpoc-apac-se-fwb-ws.conf`, `conf/fpoc-emea-xa-fad-ws.conf`, `conf/fpoc-project-demo.conf`.
 
 FortiPoC's will be running with e.g. PoC-definitions loaded, VM-images and documentation prefetched, guest/guest account enabled, GUI title set and optionally a PoC-definition launched.
 
@@ -373,7 +375,7 @@ The globalaccesslist action can be used to list the firewall-rules applied to th
  Enter start of numbered range : 8
 
 Okay to globalaccesslist fpoc-fk-test-008 till fpoc-fk-test-015 in region europe-west4-a.   y/n? y
-==> Lets go...using Owner=fkemps or Group=appsec, Zone=europe-west4-a, Product=test, Action=globalaccesslist
+==> Lets go...using Owner=fkemps or Group=demo, Zone=europe-west4-a, Product=test, Action=globalaccesslist
 
 Listing firewall rules of all instances
 
@@ -402,22 +404,22 @@ The labellist action can be used to list all the labels applied on the selected 
  Enter start of numbered range : 1
 
 Okay to labellist fpoc-fk-test-001 till fpoc-fk-test-010 in region europe-west2-a.   y/n? y
-==> Lets go...using Owner=fkemps or Group=appsec, Zone=europe-west2-a, Product=test, Action=labellist
+==> Lets go...using Owner=fkemps or Group=demo, Zone=europe-west2-a, Product=test, Action=labellist
 
 Listing labels of selected instances
 
 Instancename     : labels
 ---------------------------------------------------------------------------------
-fpoc-fk-test-001 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
-fpoc-fk-test-002 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
-fpoc-fk-test-003 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
-fpoc-fk-test-004 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
-fpoc-fk-test-005 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
-fpoc-fk-test-006 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
-fpoc-fk-test-007 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
-fpoc-fk-test-008 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
-fpoc-fk-test-009 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
-fpoc-fk-test-010 : expire=2024-12-31,group=appsec,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-001 : expire=2024-12-31,group=demo,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-002 : expire=2024-12-31,group=demo,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-003 : expire=2024-12-31,group=demo,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-004 : expire=2024-12-31,group=demo,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-005 : expire=2024-12-31,group=demo,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-006 : expire=2024-12-31,group=demo,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-007 : expire=2024-12-31,group=demo,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-008 : expire=2024-12-31,group=demo,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-009 : expire=2024-12-31,group=demo,owner=fkemps,purpose=fortipoc
+fpoc-fk-test-010 : expire=2024-12-31,group=demo,owner=fkemps,purpose=fortipoc
 ```
 ### Labelmodify
 The labelmodify action can be used to add/remove/replace labels from the selected instances.
@@ -437,7 +439,7 @@ The labelmodify action can be used to add/remove/replace labels from the selecte
  Provide the label and value e.g. name=value : purpose=fortipoc
 
 Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west2-a.   y/n? y
-==> Lets go...using Owner=fkemps or Group=appsec, Zone=europe-west2-a, Product=test, Action=labelmodify
+==> Lets go...using Owner=fkemps or Group=demo, Zone=europe-west2-a, Product=test, Action=labelmodify
 
 ==> Adding label purpose=fortipoc to instance fpoc-fk-test-001
 ==> Adding label purpose=fortipoc to instance fpoc-fk-test-002
@@ -456,7 +458,7 @@ Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west
  Provide the label name to remove : purpose
 
 Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west2-a.   y/n? y
-==> Lets go...using Owner=fkemps or Group=appsec, Zone=europe-west2-a, Product=test, Action=labelmodify
+==> Lets go...using Owner=fkemps or Group=demo, Zone=europe-west2-a, Product=test, Action=labelmodify
 
 ==> Removing label purpose from instance fpoc-fk-test-001
 ==> Removing label purpose from instance fpoc-fk-test-002
@@ -476,7 +478,7 @@ Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west
  Provide the new label and value e.g. name=value : test=test
 
 Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west2-a.   y/n? y
-==> Lets go...using Owner=fkemps or Group=appsec, Zone=europe-west2-a, Product=test, Action=labelmodify
+==> Lets go...using Owner=fkemps or Group=demo, Zone=europe-west2-a, Product=test, Action=labelmodify
 
 ==> Replacubg label purpose with test=test on instance fpoc-fk-test-001
 ==> Replacubg label purpose with test=test on instance fpoc-fk-test-002
@@ -646,7 +648,7 @@ Listing public-ip addresses on GCP ACL
              FortiPoC Toolkit for Google Cloud Platform
 ---------------------------------------------------------------------
 
-Listing all global instances for owner:fkemps or group:fkemps
+Listing all global instances for Project:dummy-project Owner:fkemps or Group:demo
 
 NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
 fpoc-fk-test-001  europe-west4-a  n1-standard-4               10.164.0.60  34.90.228.152  RUNNING
@@ -662,7 +664,7 @@ fpoc-fk-test-004  europe-west4-a  n1-standard-4               10.164.0.57  34.90
              FortiPoC Toolkit for Google Cloud Platform
 ---------------------------------------------------------------------
 
-Listing all global RUNNING instances for owner:fkemps or group:appsec
+Listing all global RUNNING instances for Project:dummy-project Owner:fkemps or Group:demo
 
 NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
 fpoc-fk-test-001  europe-west4-a  n1-standard-4               10.164.0.60  34.90.228.152  RUNNING
