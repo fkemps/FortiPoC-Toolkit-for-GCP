@@ -698,11 +698,20 @@ function projectselect {
 function gatherpreferences {
 EXPAND="${1}"
 if [ ! -f ${GCPCMDCONF} ]; then
-   echo "Welcome to FortiPoc Toolkit for Google Cloud Platform"
+   echo "-------------------------------------------------------"
+   echo " Welcome to FortiPoc Toolkit for Google Cloud Platform"
+   echo "-------------------------------------------------------"
+   echo ""
    echo "This is your first time use of gcpcmd.sh and no preferences are set. Let's set them!"
-   EXPAND="new"
    echo 'DEFAULTPROJECT="1"' > ${GCPCMDCONF}
+   read -p "Would you like to have "gcpcmd" as a global command? y/n : " choice
+   if [ -z "${choice}" ] || [ "${choice}" == "y" ]; then
+      if [[ ${PATH} =~ "/usr/local/bin" ]]; then
+        [ -d /usr/local/bin ] && ln -s $(pwd)/gcpcmd.sh /usr/local/bin/gcpcmd
+      fi
+   fi
    echo "" >> ${GCPCMDCONF}
+   EXPAND="new"
 fi
 if [ "${EXPAND}" = "new" ]; then
    let NEWPROJECTNUM=${#GCPCMD_PROJECT[@]}+1
