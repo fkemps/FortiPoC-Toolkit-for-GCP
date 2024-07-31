@@ -100,11 +100,15 @@ As part of the configuration you need to have your **GCP Project ID**. This can 
 ```
 Welcome to FortiPoc Toolkit for Google Cloud Platform
 This is your first time use of gcpcmd.sh and no preferences are set. Let's set them!
-Provide your initials e.g. fl : fl
-Provide your name to lable instanced e.g. flastname : flastname.    <<===firstname letter + lastname
-Provide a groupname for shared instances (optional) :
-Provide your region 1) Asia, 2) Europe, 3) America : 2
-Provide your GCP billing project ID [cse-projects-000000] :
+Your initials e.g. fl                       : fl
+Your name to lable instanced e.g. flastname : flastname <<=== firstname letter + lastname
+Groupname for shared instances (optional)   : teamwork
+Your region 1) Asia, 2) Europe, 3) America  : 2
+You have access to the following GCP Projects
+  0) : "dummy1"
+  1) : "dummy2"
+
+ Select your GCP project : 1
 Provide your GCP service account (only one if multiple shown) [00000000-compute@developer.gserviceaccount.com] :
 IP-address of FortiPoC license server (if available) :
 Provide your SSH public key for FortiPoC access [ssh-rsa <value>] :
