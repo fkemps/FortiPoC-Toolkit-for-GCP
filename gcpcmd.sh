@@ -79,7 +79,8 @@
 # 2024072901 Ferry Kemps, Added creation of "default" VPC and Networks if missing, optimized the gcloud validation delay
 # 2024080101 Ferry Kemps, Major update to support multi-project function
 # 2024080102 Ferry Kemps, Updated onboarding project selection, clone max text
-GCPCMDVERSION="2024080102"
+# 2024080103 Ferry Kemps, Corrected labelmodify bug with numbering
+GCPCMDVERSION="2024080103"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -1202,8 +1203,10 @@ if [[ ${ACTION} == build || ${ACTION} == delete || ${ACTION} == globalaccess || 
       esac
       if [ ${LABELACTION} == "add" ]; then
          read -p " Provide the new label and value e.g. name=value : " LABEL
+         NEWLABEL="dummy"
       elif [ ${LABELACTION} == "remove" ]; then
          read -p " Provide the label name to remove : " LABEL
+         NEWLABEL="dummy"
       else
          read -p " Provide the label name to replace : " LABEL
          read -p " Provide the new label and value e.g. name=value : " NEWLABEL
@@ -1231,7 +1234,7 @@ if [[ ${ACTION} == build || ${ACTION} == delete || ${ACTION} == globalaccess || 
    FPNUMEND=$(printf "%03d" ${FPNUMEND})
 
    echo ""
-   read -p "Okay to ${ACTION} fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMSTART} till fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMEND} in region ${ZONE}.   y/n? " choice
+   read -p "Okay to ${ACTION} fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMSTART} till fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMEND}, Project=${GCPPROJECT}, region=${ZONE}.   y/n? " choice
    [ "${choice}" != "y" ] && exit
 fi
 
@@ -1251,7 +1254,7 @@ if [[ ${ACTION} == clone ]]; then
       FPGROUP=${OVERRIDE_FPGROUP}
    fi
    echo ""
-   read -p "Okay to ${ACTION} ${CLONESOURCE} to fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMSTART} till fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMEND} in region ${ZONE}.   y/n? " choice
+   read -p "Okay to ${ACTION} ${CLONESOURCE} to fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMSTART} till fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMEND}, Project=${GCPPROJECT}, region=${ZONE}.   y/n? " choice
    [ "${choice}" != "y" ] && exit
    # Safest is to use fresh machine-image because it includes latest changes and there is not check if a machine-image exists
    # To speed up cloning you could skip machine-image creation and assume there's an machine-image available.
@@ -1266,7 +1269,7 @@ if [[ ${ACTION} == clone ]]; then
    fi
 fi
 
-echo "==> Lets go...using Owner=${OWNER} or Group=${FPGROUP}, Zone=${ZONE}, Product=${PRODUCT}, Action=${ACTION}"
+echo "==> Lets go...using Owner=${OWNER} or Group=${FPGROUP}, Project=${GCPPROJECT}, Zone=${ZONE}, Product=${PRODUCT}, Action=${ACTION}"
 echo
 
 export -f gcpbuild gcpstart gcpstop gcpdelete gcpclone gcpmachinetype gcpmove gcprename gcpglobalaccess gcplabelmodify
