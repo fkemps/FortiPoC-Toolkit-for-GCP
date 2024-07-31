@@ -78,7 +78,8 @@
 # 2024053001 Ferry Kemps, Added -lr | --list-running option to list RUNNING instances
 # 2024072901 Ferry Kemps, Added creation of "default" VPC and Networks if missing, optimized the gcloud validation delay
 # 2024080101 Ferry Kemps, Major update to support multi-project function
-GCPCMDVERSION="2024080101"
+# 2024080102 Ferry Kemps, Updated onboarding project selection, clone max text
+GCPCMDVERSION="2024080102"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -705,11 +706,11 @@ if [ ! -f ${GCPCMDCONF} ]; then
 fi
 if [ "${EXPAND}" = "new" ]; then
    let NEWPROJECTNUM=${#GCPCMD_PROJECT[@]}+1
-   read -p "Provide your initials e.g. fl : " CONFINITIALS
-   read -p "Provide your name to lable instanced e.g. flastname : " CONFGCPLABEL
-   read -p "Provide a groupname for shared instances (optional) : " CONFGCPGROUP
+   read -p "Your initials e.g. fl                       : " CONFINITIALS
+   read -p "Your name to lable instanced e.g. flastname : " CONFGCPLABEL
+   read -p "Groupname for shared instances (optional)   : " CONFGCPGROUP
    until [ ! -z ${CONFREGION} ]; do
-      read -p "Provide your region 1) Asia, 2) Europe, 3) America : " CONFREGIONANSWER
+      read -p "Your region 1) Asia, 2) Europe, 3) America  : " CONFREGIONANSWER
       case ${CONFREGIONANSWER} in
       1) CONFREGION="${ASIA}" ;;
       2) CONFREGION="${EUROPE}" ;;
@@ -718,22 +719,33 @@ if [ "${EXPAND}" = "new" ]; then
    done
 
    # Request ProjectId from GCP and use that if no projectId is entered
-   GCPPROJECTID=$(gcloud projects list --format json | jq -r '.[] .projectId')
-   echo "Projects ID's found on GCP :"
-   echo ${GCPPROJECTID}
-   read -p "Provide your GCP Project ID : " CONFPROJECTNAME
-   [ -z ${CONFPROJECTNAME} ] && CONFPROJECTNAME=${GCPPROJECTID}
+   echo "You have access to the following GCP Projects"
+   GCPPROJECTS=$(gcloud projects list --format json | jq '.[] .projectId')
+   GCPPROJECTID=(${GCPPROJECTS})
+   for ((i=0;i<${#GCPPROJECTID[@]};i++))
+   do
+     echo "  ${i}) : ${GCPPROJECTID[${i}]}"
+   done
+   echo ""
+   read -p " Select your GCP project : " SELECTEDPROJECT
+   if [[ ${SELECTEDPROJECT} -lt 0 ]] || [[ ${SELECTEDPROJECT} -ge ${#GCPPROJECTID[@]} ]]
+   then
+     echo " [ERROR] Invalid project selected"
+     exit 1
+   else
+     CONFPROJECTNAME=$(echo ${GCPPROJECTID[${SELECTEDPROJECT}]} | tr -d \")
+   fi
 
    # Request default Compute Service Account and use that if no Service Account is entered
    GCPSRVACCOUNT=$(gcloud iam service-accounts list --filter=Compute --format=json | jq -r '.[] .email')
    until [[ ${ONEACCOUNT} -eq 1 ]]; do
-      read -p "Provide your GCP service account (only one if multiple shown) [${GCPSRVACCOUNT}] : " CONFSERVICEACCOUNT
+      read -p "GCP service account (provide only one) [${GCPSRVACCOUNT}] : " CONFSERVICEACCOUNT
       [ -z "${CONFSERVICEACCOUNT}" ] && CONFSERVICEACCOUNT="${GCPSRVACCOUNT}"
       [[ ! ${CONFSERVICEACCOUNT} =~ \  ]] && ONEACCOUNT=1
    done
 
    until [[ ${VALIDIP} -eq 1 ]]; do
-      read -p "IP-address of FortiPoC license server (if available) : " CONFLICENSESERVER
+      read -p "IP-address of license-server (optional) : " CONFLICENSESERVER
       if [ -z ${CONFLICENSESERVER} ]; then
          VALIDIP=1
       else
@@ -747,7 +759,7 @@ if [ "${EXPAND}" = "new" ]; then
    if [ -f ~/.ssh/id_rsa.pub ]; then
       SSHKEYPERSONAL=$(head -1 ~/.ssh/id_rsa.pub)
    fi
-   read -p "Provide your SSH public key for FortiPoC access (optional) [${SSHKEYPERSONAL}] : " CONFSSHKEYPERSONAL
+   read -p "Your SSH public key for FortiPoC access (optional) [${SSHKEYPERSONAL}] : " CONFSSHKEYPERSONAL
    CONFSSHKEYPERSONAL="${SSHKEYPERSONAL}"
 
    cat <<EOF >>${GCPCMDCONF}
@@ -1216,9 +1228,9 @@ fi
 
 if [[ ${ACTION} == clone ]]; then
    displayheader
-   read -p " FortiPoC instance number to clone : " FPNUMBERTOCLONE
-   read -p " Enter amount of FortiPoC's clones : " FPCOUNT
-   read -p " Enter start of numbered range : " FPNUMSTART
+   read -p " FortiPoC instance number to clone        : " FPNUMBERTOCLONE
+   read -p " Enter amount of FortiPoC's clones (max 5): " FPCOUNT
+   read -p " Enter start of numbered range            : " FPNUMSTART
    let --FPCOUNT
    let FPNUMEND=FPNUMSTART+FPCOUNT
    FPNUMSTART=$(printf "%03d" ${FPNUMSTART})
