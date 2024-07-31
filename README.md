@@ -168,7 +168,7 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 | |_ / _ \|  __| __| | |_) / _ \ / __|   | |/ _ \ / _ \| | |/ / | __| | |_ / _ \|  __| | |  _| |   | |_) |
 |  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/
 |_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|
-(Version: 2024080101)
+(Version: 2024080103)
 Selected project : dummy-project
 Default deployment region: europe-west3-a
 Personal instance identification: fk
@@ -223,7 +223,7 @@ FortiPoC's will be running with e.g. PoC-definitions loaded, VM-images and docum
  Enter amount of FortiPoC's : 3
  Enter start of numbered range : 1
 
-Okay to build fpoc-fk-test-001 till fpoc-fk-test-003 in region europe-west4-a.   y/n? y
+Okay to build fpoc-fk-test-001 till fpoc-fk-test-003, Project=dummy, region=europe-west4-a.   y/n? y
 ==> Lets go...using Owner=fkemps or Group=fkemps, Zone=europe-west4-a, Product=test, Action=build
 ==> Sleeping 1s seconds to avoid GCP DB locking
 ==> Creating instance fpoc-fk-test-003
@@ -284,7 +284,7 @@ You can use first the `build` function to provision a FortiPoC, tweak as wanted 
  Enter amount of FortiPoC's clones : 15
  Enter start of numbered range : 2
 
-Okay to clone fpoc-fk-test-001 to fpoc-fk-test-002 till fpoc-fk-test-016 in region europe-west4-a.   y/n?
+Okay to clone fpoc-fk-test-001 to fpoc-fk-test-002 till fpoc-fk-test-016, Project=dummy, region=europe-west4-a.   y/n?
 Do you want to create a fresh snapshot? (If no, latest snapshot will be used if available) y/n:
 Creating snapshot(s) fpoc-fk-test...done.
 ==> Lets go...using Zone=europe-west4-a, Product=test, Action=clone
@@ -311,7 +311,7 @@ fpoc-fk-test-002  europe-west4-a  n1-standard-4               10.164.0.38  34.90
  Enter amount of FortiPoC's : 3
  Enter start of numbered range : 1
 
-Okay to delete fpoc-fk-test-001 till fpoc-fk-test-003 in region europe-west4-a.   y/n? y
+Okay to delete fpoc-fk-test-001 till fpoc-fk-test-003, Project=dummy, region=europe-west4-a.   y/n? y
 ==> Lets go...using Zone=europe-west4-a, Product=test, Action=delete
 
 ==> Deleting instance fpoc-fk-test-002
@@ -360,7 +360,7 @@ You can use the globalaccess action to enable/disable FortiPoC instances for glo
  Enter start of numbered range : 1
  select world wide access : 1) Enable, 2) Disable : 1
 
-Okay to globalaccess fpoc-fk-test-001 till fpoc-fk-test-010 in region europe-west4-a.   y/n?
+Okay to globalaccess fpoc-fk-test-001 till fpoc-fk-test-010, Project=dummy, region=europe-west4-a.   y/n?
 ```
 
 You can use following options to enable/disable the global firewall-rule, obtain current status and show configured firewall-rules per instance.
@@ -383,7 +383,7 @@ The globalaccesslist action can be used to list the firewall-rules applied to th
  Enter amount of FortiPoC's : 8
  Enter start of numbered range : 8
 
-Okay to globalaccesslist fpoc-fk-test-008 till fpoc-fk-test-015 in region europe-west4-a.   y/n? y
+Okay to globalaccesslist fpoc-fk-test-008 till fpoc-fk-test-015, Project=dummy, region=europe-west4-a.   y/n? y
 ==> Lets go...using Owner=fkemps or Group=demo, Zone=europe-west4-a, Product=test, Action=globalaccesslist
 
 Listing firewall rules of all instances
@@ -412,7 +412,7 @@ The labellist action can be used to list all the labels applied on the selected 
  Enter amount of FortiPoC's : 10
  Enter start of numbered range : 1
 
-Okay to labellist fpoc-fk-test-001 till fpoc-fk-test-010 in region europe-west2-a.   y/n? y
+Okay to labellist fpoc-fk-test-001 till fpoc-fk-test-010, Project=dummy, region=europe-west2-a.   y/n? y
 ==> Lets go...using Owner=fkemps or Group=demo, Zone=europe-west2-a, Product=test, Action=labellist
 
 Listing labels of selected instances
@@ -447,7 +447,7 @@ The labelmodify action can be used to add/remove/replace labels from the selecte
  What label action would you like 1) Add, 2) Remove, 3) Replace : 1
  Provide the label and value e.g. name=value : purpose=fortipoc
 
-Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west2-a.   y/n? y
+Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002, Project=dummy, region=europe-west2-a.   y/n? y
 ==> Lets go...using Owner=fkemps or Group=demo, Zone=europe-west2-a, Product=test, Action=labelmodify
 
 ==> Adding label purpose=fortipoc to instance fpoc-fk-test-001
@@ -466,7 +466,7 @@ Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west
  What label action would you like 1) Add, 2) Remove, 3) Replace : 2
  Provide the label name to remove : purpose
 
-Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west2-a.   y/n? y
+Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002, Project=dummy, region=europe-west2-a.   y/n? y
 ==> Lets go...using Owner=fkemps or Group=demo, Zone=europe-west2-a, Product=test, Action=labelmodify
 
 ==> Removing label purpose from instance fpoc-fk-test-001
@@ -486,7 +486,7 @@ Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west
  Provide the label name to replace : purpose
  Provide the new label and value e.g. name=value : test=test
 
-Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west2-a.   y/n? y
+Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002, Project=dummy, region=europe-west2-a.   y/n? y
 ==> Lets go...using Owner=fkemps or Group=demo, Zone=europe-west2-a, Product=test, Action=labelmodify
 
 ==> Replacubg label purpose with test=test on instance fpoc-fk-test-001
@@ -540,7 +540,7 @@ You can change the machine-type to adjust CPU/Memory of the instance on GCP.
  Enter start of numbered range : 1
  select machine-type : 1) n1-standard-1, 2) n1-standard-2, 3) n1-standard-4, 4) n1-standard-8, 5) n1-standard-16 : 2
 
-Okay to machinetype fpoc-fk-test-001 till fpoc-fk-test-020 in region europe-west4-a.   y/n?
+Okay to machinetype fpoc-fk-test-001 till fpoc-fk-test-020, Project=dummy, region=europe-west4-a.   y/n?
 ```
 
 ### Start / Stop
@@ -555,7 +555,7 @@ Okay to machinetype fpoc-fk-test-001 till fpoc-fk-test-020 in region europe-west
  Enter amount of FortiPoC's : 2
  Enter start of numbered range : 1
 
-Okay to stop fpoc-fk-test-001 till fpoc-fk-test-002 in region europe-west4-a.   y/n? y
+Okay to stop fpoc-fk-test-001 till fpoc-fk-test-002, Project=dummy, region=europe-west4-a.   y/n? y
 ==> Lets go...using Zone=europe-west4-a, Product=test, Action=stop
 
 ==> Stopping instance fpoc-fk-test-001
