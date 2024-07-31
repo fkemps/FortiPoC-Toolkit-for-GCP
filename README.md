@@ -98,8 +98,13 @@ The user default settings are stored in `~/.fpoc/gcpcmd.conf`
 As part of the configuration you need to have your **GCP Project ID**. This can be obtain via `gcloud projects list` and is listed as PROJECT_ID.
 
 ```
-Welcome to FortiPoc Toolkit for Google Cloud Platform
+-------------------------------------------------------
+ Welcome to FortiPoc Toolkit for Google Cloud Platform
+-------------------------------------------------------
+
 This is your first time use of gcpcmd.sh and no preferences are set. Let's set them!
+Would you like to have gcpcmd as a global command? y/n :
+
 Your initials e.g. fl                       : fl
 Your name to lable instanced e.g. flastname : flastname <<=== firstname letter + lastname
 Groupname for shared instances (optional)   : teamwork
