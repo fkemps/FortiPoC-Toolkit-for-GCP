@@ -224,7 +224,7 @@ FortiPoC's will be running with e.g. PoC-definitions loaded, VM-images and docum
  Enter start of numbered range : 1
 
 Okay to build fpoc-fk-test-001 till fpoc-fk-test-003, Project=dummy, region=europe-west4-a.   y/n? y
-==> Lets go...using Owner=fkemps or Group=fkemps, Zone=europe-west4-a, Product=test, Action=build
+==> Lets go...using Owner=fkemps or Group=fkemps, Project=dummy, Zone=europe-west4-a, Product=test, Action=build
 ==> Sleeping 1s seconds to avoid GCP DB locking
 ==> Creating instance fpoc-fk-test-003
 NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP  STATUS
@@ -287,7 +287,7 @@ You can use first the `build` function to provision a FortiPoC, tweak as wanted 
 Okay to clone fpoc-fk-test-001 to fpoc-fk-test-002 till fpoc-fk-test-016, Project=dummy, region=europe-west4-a.   y/n?
 Do you want to create a fresh snapshot? (If no, latest snapshot will be used if available) y/n:
 Creating snapshot(s) fpoc-fk-test...done.
-==> Lets go...using Zone=europe-west4-a, Product=test, Action=clone
+==> Lets go...using Owner=fkemps or Group=demo, Project=dummy, Zone=europe-west2-a, Product=test, Action=clone
 
 ==> Sleeping 6s seconds to avoid GCP DB locking
 ==> Cloning instance fpoc-fk-test-001 to fpoc-fk-test-002
@@ -312,7 +312,7 @@ fpoc-fk-test-002  europe-west4-a  n1-standard-4               10.164.0.38  34.90
  Enter start of numbered range : 1
 
 Okay to delete fpoc-fk-test-001 till fpoc-fk-test-003, Project=dummy, region=europe-west4-a.   y/n? y
-==> Lets go...using Zone=europe-west4-a, Product=test, Action=delete
+==> Lets go...using Owner=fkemps or Group=demo, Project=dummy, Zone=europe-west2-a, Product=test, Action=delete
 
 ==> Deleting instance fpoc-fk-test-002
 The following instances will be deleted. Any attached disks configured
@@ -384,7 +384,7 @@ The globalaccesslist action can be used to list the firewall-rules applied to th
  Enter start of numbered range : 8
 
 Okay to globalaccesslist fpoc-fk-test-008 till fpoc-fk-test-015, Project=dummy, region=europe-west4-a.   y/n? y
-==> Lets go...using Owner=fkemps or Group=demo, Zone=europe-west4-a, Product=test, Action=globalaccesslist
+==> Lets go...using Owner=fkemps or Group=demo, Project=dummy, Zone=europe-west4-a, Product=test, Action=globalaccesslist
 
 Listing firewall rules of all instances
 
@@ -413,7 +413,7 @@ The labellist action can be used to list all the labels applied on the selected 
  Enter start of numbered range : 1
 
 Okay to labellist fpoc-fk-test-001 till fpoc-fk-test-010, Project=dummy, region=europe-west2-a.   y/n? y
-==> Lets go...using Owner=fkemps or Group=demo, Zone=europe-west2-a, Product=test, Action=labellist
+==> Lets go...using Owner=fkemps or Group=demo, Project=dummy, Zone=europe-west2-a, Product=test, Action=labellist
 
 Listing labels of selected instances
 
@@ -448,7 +448,7 @@ The labelmodify action can be used to add/remove/replace labels from the selecte
  Provide the label and value e.g. name=value : purpose=fortipoc
 
 Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002, Project=dummy, region=europe-west2-a.   y/n? y
-==> Lets go...using Owner=fkemps or Group=demo, Zone=europe-west2-a, Product=test, Action=labelmodify
+==> Lets go...using Owner=fkemps or Group=demo, Project=dummy, Zone=europe-west2-a, Product=test, Action=labelmodify
 
 ==> Adding label purpose=fortipoc to instance fpoc-fk-test-001
 ==> Adding label purpose=fortipoc to instance fpoc-fk-test-002
@@ -467,7 +467,7 @@ Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002, Project=dummy, regio
  Provide the label name to remove : purpose
 
 Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002, Project=dummy, region=europe-west2-a.   y/n? y
-==> Lets go...using Owner=fkemps or Group=demo, Zone=europe-west2-a, Product=test, Action=labelmodify
+==> Lets go...using Owner=fkemps or Group=demo, Project=dummy, Zone=europe-west2-a, Product=test, Action=labelmodify
 
 ==> Removing label purpose from instance fpoc-fk-test-001
 ==> Removing label purpose from instance fpoc-fk-test-002
@@ -487,7 +487,7 @@ Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002, Project=dummy, regio
  Provide the new label and value e.g. name=value : test=test
 
 Okay to labelmodify fpoc-fk-test-001 till fpoc-fk-test-002, Project=dummy, region=europe-west2-a.   y/n? y
-==> Lets go...using Owner=fkemps or Group=demo, Zone=europe-west2-a, Product=test, Action=labelmodify
+==> Lets go...using Owner=fkemps or Group=demo, Project=dummy, Zone=europe-west2-a, Product=test, Action=labelmodify
 
 ==> Replacubg label purpose with test=test on instance fpoc-fk-test-001
 ==> Replacubg label purpose with test=test on instance fpoc-fk-test-002
@@ -503,7 +503,7 @@ Full overview of FortiPoC's can be obtained with **list** function. Specify *reg
              FortiPoC Toolkit for Google Cloud Platform
 ---------------------------------------------------------------------
 
-==> Lets go...using Owner=fkemps or Group=fkemps, Zone=europe-west4-a, Product=test, Action=list
+==> Lets go...using Owner=fkemps or Group=fkemps, Project=dummy, Zone=europe-west4-a, Product=test, Action=list
 
 NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
 fpoc-fk-test-001  europe-west4-a  n1-standard-4               10.164.0.66  34.90.107.239  RUNNING
@@ -520,7 +520,7 @@ FortiPoC IP-addresses can be obtained to use for `fpoc-to-all.sh` usage.
              FortiPoC Toolkit for Google Cloud Platform
 ---------------------------------------------------------------------
 
-==> Lets go...using Owner=fkemps or Group=fkemps, Zone=europe-west4-a, Product=test, Action=listpubip
+==> Lets go...using Owner=fkemps or Group=fkemps, Project=dummy, Zone=europe-west4-a, Product=test, Action=listpubip
 
 34.90.107.239 34.90.90.164 34.90.88.37
 ```
@@ -556,7 +556,7 @@ Okay to machinetype fpoc-fk-test-001 till fpoc-fk-test-020, Project=dummy, regio
  Enter start of numbered range : 1
 
 Okay to stop fpoc-fk-test-001 till fpoc-fk-test-002, Project=dummy, region=europe-west4-a.   y/n? y
-==> Lets go...using Zone=europe-west4-a, Product=test, Action=stop
+==> Lets go...using Owner=fkemps or Group=demo, Project=dummy, Zone=europe-west2-a, Product=test, Action=stop
 
 ==> Stopping instance fpoc-fk-test-001
 Stopping instance(s) fpoc-fk-test-001...
