@@ -103,6 +103,7 @@ As part of the configuration you need to have your **GCP Project ID**. This can 
 -------------------------------------------------------
 
 This is your first time use of gcpcmd.sh and no preferences are set. Let's set them!
+NOTE: Make sure you have enabled the 'Compute Engine API' via the Google Cloud Console first!
 Would you like to have gcpcmd as a global command? y/n :
 
 Your initials e.g. fl                       : fl
@@ -197,6 +198,7 @@ OPTIONS:
         -p    --preferences                    Show personal config preferences
         -pa   --project-add                    Add GCP project to preferences
         -ps   --project-select                 Select project on GCP
+        -t    --type                           Override default type name (fpoc)
         -z    --zone                           Override default region zone
 ARGUMENTS:
        region  : america, asia, europe
