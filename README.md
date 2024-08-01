@@ -169,24 +169,25 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 | |_ / _ \|  __| __| | |_) / _ \ / __|   | |/ _ \ / _ \| | |/ / | __| | |_ / _ \|  __| | |  _| |   | |_) |
 |  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/
 |_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|
-(Version: 2024080103)
-Selected project : dummy-project
+((Version: 2024080105)
+
+Selected project : fkemps-cse-labs
 Default deployment region: europe-west3-a
 Personal instance identification: fk
 Default product: event
 
-Usage: /usr/local/bin/gcpcmd [OPTIONS] [ARGUMENTS]
-       /usr/local/bin/gcpcmd [OPTIONS] <region> <product> <action>
-       /usr/local/bin/gcpcmd [OPTIONS] <-b configfile> <region> <product> build
-       /usr/local/bin/gcpcmd [OPTIONS] [region] [product] list
-       /usr/local/bin/gcpcmd [OPTIONS] [region] [product] listpubip
+Usage: ./gcpcmd-new.sh [OPTIONS] [ARGUMENTS]
+       ./gcpcmd-new.sh [OPTIONS] <region> <product> <action>
+       ./gcpcmd-new.sh [OPTIONS] <-b configfile> <region> <product> build
+       ./gcpcmd-new.sh [OPTIONS] [region] [product] list
+       ./gcpcmd-new.sh [OPTIONS] [region] [product] listpubip
 OPTIONS:
         -b    --build-file                     File for building instances. Leave blank to generate example
         -d    --delete-config                  Delete default user config settings
         -g    --group                          Group name for shared instances
         -ge   --global-access-enable           Enable glocal access to instances
         -gd   --global-access-disable          Disable glocal access to instances
-        -gl   --global-access-list             List global access to instances
+        -gl   --global-access-list             List global access to instances (network tags)
         -gs   --global-access-status           Status glocal access to instances
         -i    --initials <initials>            Override intials on instance name for group management
         -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL
@@ -203,8 +204,10 @@ OPTIONS:
 ARGUMENTS:
        region  : america, asia, europe
        product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>
-       action  : build, clone, delete, globalaccess, globalaccesslist, labellist, labelmodify, list, listpubip, machinetype, move, rename, start, stop
-                 action build needs -b <conf/configfile>. Use ./gcpcmd.sh -b to generate fpoc-example.conf file
+       action  : accesslist, accessmodify, build*, clone, delete, globalaccess, labellist, labelmodify
+                 list, listpubip, machinetype, move, rename, start, stop
+
+                *action build needs -b <conf/configfile>. Use ./gcpcmd.sh -b to generate fpoc-example.conf file
 
 ```
 
@@ -372,8 +375,8 @@ You can use following options to enable/disable the global firewall-rule, obtain
 `-gl  | --global-access-list`             List global access to instances
 `-gs  | --global-access-status`           Status glocal access to instances
 
-#### Globallist
-The globalaccesslist action can be used to list the firewall-rules applied to the selected FortiPoC instances.
+#### Network tags (firewall-rules)
+The accesslist action can be used to list the network tags (firewall-rules) applied to the selected FortiPoC instances.
 
 `./gcpcmd-new.sh europe test globalaccesslist`
 
@@ -385,12 +388,12 @@ The globalaccesslist action can be used to list the firewall-rules applied to th
  Enter amount of FortiPoC's : 8
  Enter start of numbered range : 8
 
-Okay to globalaccesslist fpoc-fk-test-008 till fpoc-fk-test-015, Project=dummy, region=europe-west4-a.   y/n? y
-==> Lets go...using Owner=fkemps or Group=demo, Project=dummy, Zone=europe-west4-a, Product=test, Action=globalaccesslist
+Okay to accesslist fpoc-fk-test-008 till fpoc-fk-test-015, Project=dummy, region=europe-west4-a.   y/n? y
+==> Lets go...using Owner=fkemps or Group=demo, Project=dummy, Zone=europe-west4-a, Product=test, Action=accesslist
 
-Listing firewall rules of all instances
+Listing network tags (firewall rules) of all instances
 
-Instancename    : firewall-rules attached
+Instancename    : network tags
 ---------------------------------------------------------------------------------
 fpoc-fk-test-008 : fortipoc-deny-default fortipoc-http-https-redir workshop-source-any workshop-source-networks
 fpoc-fk-test-009 : fortipoc-deny-default fortipoc-http-https-redir workshop-source-any workshop-source-networks
@@ -401,6 +404,69 @@ fpoc-fk-test-013 : fortipoc-deny-default fortipoc-http-https-redir workshop-sour
 fpoc-fk-test-014 : fortipoc-deny-default fortipoc-http-https-redir workshop-source-any workshop-source-networks
 fpoc-fk-test-015 : fortipoc-deny-default fortipoc-http-https-redir workshop-source-any workshop-source-networks
 ```
+### Accessmodify
+The accessmodify action can be used to add/remove/replace network tags from the selected instances.
+
+`./gcpcmd-new.sh europe test accessmodify`
+
+* Add   
+
+```
+---------------------------------------------------------------------
+             FortiPoC Toolkit for Google Cloud Platform
+---------------------------------------------------------------------
+
+ Enter amount of FortiPoC's : 2
+ Enter start of numbered range : 1
+ What network tag action would you like 1) Add, 2) Remove, 3) Replace : 1
+ Provide the network tag and value e.g. name=value : purpose=fortipoc
+
+Okay to accessmodify fpoc-fk-test-001 till fpoc-fk-test-002, Project=dummy, region=europe-west2-a.   y/n? y
+==> Lets go...using Owner=fkemps or Group=demo, Project=dummy, Zone=europe-west2-a, Product=test, Action=accessmodify
+
+==> Adding network tag purpose=fortipoc to instance fpoc-fk-test-001
+==> Adding network tag purpose=fortipoc to instance fpoc-fk-test-002
+```
+
+* Remove   
+
+```
+---------------------------------------------------------------------
+             FortiPoC Toolkit for Google Cloud Platform
+---------------------------------------------------------------------
+
+ Enter amount of FortiPoC's : 2
+ Enter start of numbered range : 1
+ What network tag action would you like 1) Add, 2) Remove, 3) Replace : 2
+ Provide the network tag name to remove : purpose
+
+Okay to accessmodify fpoc-fk-test-001 till fpoc-fk-test-002, Project=dummy, region=europe-west2-a.   y/n? y
+==> Lets go...using Owner=fkemps or Group=demo, Project=dummy, Zone=europe-west2-a, Product=test, Action=accessmodify
+
+==> Removing network tag purpose from instance fpoc-fk-test-001
+==> Removing network tag purpose from instance fpoc-fk-test-002
+```
+
+* Replace
+
+```
+---------------------------------------------------------------------
+             FortiPoC Toolkit for Google Cloud Platform
+---------------------------------------------------------------------
+
+ Enter amount of FortiPoC's : 2
+ Enter start of numbered range : 1
+ What network tag action would you like 1) Add, 2) Remove, 3) replace : 3
+ Provide the network tag name to replace : purpose
+ Provide the new network tag and value e.g. name=value : test=test
+
+Okay to accessmodify fpoc-fk-test-001 till fpoc-fk-test-002, Project=dummy, region=europe-west2-a.   y/n? y
+==> Lets go...using Owner=fkemps or Group=demo, Project=dummy, Zone=europe-west2-a, Product=test, Action=accessmodify
+
+==> Replacubg network tag purpose with test=test on instance fpoc-fk-test-001
+==> Replacubg network tag purpose with test=test on instance fpoc-fk-test-002
+```
+
 ### Labellist
 The labellist action can be used to list all the labels applied on the selected FortiPoC instances.
 
