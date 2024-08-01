@@ -80,7 +80,8 @@
 # 2024080101 Ferry Kemps, Major update to support multi-project function
 # 2024080102 Ferry Kemps, Updated onboarding project selection, clone max text
 # 2024080103 Ferry Kemps, Corrected labelmodify bug with numbering
-GCPCMDVERSION="2024080103"
+# 2024080104 Ferry Kemps, Added note for Compute Engine API, added Type name override option 
+GCPCMDVERSION="2024080104"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -104,6 +105,7 @@ WORKSHOPSOURCENETWORKS="workshop-source-networks"
 WORKSHOPSOURCEANY="workshop-source-any"
 DSTTCPPORTS="tcp:22,tcp:80,tcp:443,tcp:8000,tcp:8080,tcp:8888,tcp:10000-20000,tcp:20808,tcp:20909,tcp:22222"
 DSTUDPPORTS="udp:53,udp:514,udp:1812,udp:1813"
+TYPE="fpoc"
 # Clear POC-definitions
 POCDEFINITION1=""
 POCDEFINITION2=""
@@ -132,6 +134,7 @@ NOCOLOR='\033[0m'
 #   Functions
 ###############################
 function checkdefaultnetwork() {
+set -x
    if [ "${VPC}" != "validated" ]; then
       if (! gcloud compute networks describe ${WORKSHOPVPC} --format=none > /dev/null 2>&1); then
          echo "Default VPC networks not found, creating it"
@@ -140,7 +143,7 @@ function checkdefaultnetwork() {
             --mtu=1460
          # Add VPC check to personal preferences file
       fi
-      echo "GCPCMD_VPC[${DEFAULTPROJECT}]=\"validated\"" >> ${GCPCMDCONF}
+      sed -i '' "s/GCPCMD_VPC\[${DEFAULTPROJECT}\].*/GCPCMD_VPC\[${DEFAULTPROJECT}\]=\"validated\"/" ${GCPCMDCONF}
    fi
 }
 
@@ -171,8 +174,10 @@ function checkfirewallrules() {
             --no-user-output-enabled
          # Add Firewallrules check to personal preferences file
       fi
-      echo "GCPCMD_FIREWALLRULES[${DEFAULTPROJECT}]=\"validated\"" >> ${GCPCMDCONF}
+      #echo "GCPCMD_FIREWALLRULES[${DEFAULTPROJECT}]=\"validated\"" >> ${GCPCMDCONF}
+      sed -i '' "s/GCPCMD_FIREWALLRULES\[${DEFAULTPROJECT}\].*/GCPCMD_FIREWALLRULES[${DEFAULTPROJECT}]=\"validated\"/" ${GCPCMDCONF}
    fi
+exit
 }
 
 function togglefirewallruleany() {
@@ -337,7 +342,7 @@ function gcpbuild {
    PRODUCT=$3
    FPTITLE=$4
    INSTANCE=$5
-   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
+   INSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
 
    echo "==> Sleeping ${RANDOMSLEEP} seconds to avoid GCP DB locking"
    sleep ${RANDOMSLEEP}
@@ -442,9 +447,9 @@ function gcpclone {
    PRODUCT=$3
    FPNUMBERTOCLONE=$4
    INSTANCE=$5
-   CLONESOURCE="fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
-   CLONEMACHINEIMAGE="fpoc-${FPPREPEND}-${PRODUCT}"
-   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
+   CLONESOURCE="${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
+   CLONEMACHINEIMAGE="${TYPE}-${FPPREPEND}-${PRODUCT}"
+   INSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
 
    echo "==> Sleeping ${RANDOMSLEEP} seconds to avoid GCP DB locking"
    sleep ${RANDOMSLEEP}
@@ -474,7 +479,7 @@ function gcpstart {
    ZONE=$2
    PRODUCT=$3
    INSTANCE=$4
-   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
+   INSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
    echo "==> Starting instance ${INSTANCENAME}"
    gcloud compute instances start ${INSTANCENAME} --zone=${ZONE}
 }
@@ -485,7 +490,7 @@ function gcpstop {
    ZONE=$2
    PRODUCT=$3
    INSTANCE=$4
-   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
+   INSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
    echo "==> Stopping instance ${INSTANCENAME}"
    #  gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command 'poc eject' # not working if admin pwd is set
    gcloud compute instances stop ${INSTANCENAME} --zone=${ZONE}
@@ -497,7 +502,7 @@ function gcpdelete {
    ZONE=$2
    PRODUCT=$3
    INSTANCE=$4
-   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
+   INSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
    echo "==> Deleting instance ${INSTANCENAME}"
    echo yes | gcloud compute instances delete ${INSTANCENAME} --zone=${ZONE}
 }
@@ -509,7 +514,7 @@ function gcpmachinetype {
    PRODUCT=$3
    MACHINETYPE=$4
    INSTANCE=$5
-   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
+   INSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
    echo "==> Changing machine-type of ${INSTANCENAME}"
    gcloud compute instances set-machine-type ${INSTANCENAME} --machine-type=${MACHINETYPE} --zone=${ZONE}
 }
@@ -521,7 +526,7 @@ function gcpmove {
    PRODUCT=$3
    DESTINATIONZONE=$4
    INSTANCE=$5
-   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
+   INSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
    echo "==> Move instance ${INSTANCENAME} from zone ${ZONE} to ${DESTINATIONZONE}"
    #gcloud compute instances move INSTANCE_NAME --destination-zone=DESTINATION_ZONE [--async] [--zone=ZONE] [GCLOUD_WIDE_FLAG …]
    gcloud compute instances move ${INSTANCENAME} --zone=${ZONE} --destination-zone=${DESTINATIONZONE}
@@ -534,8 +539,8 @@ function gcprename {
    PRODUCT=$3
    NEWPRODUCT=$4
    INSTANCE=$5
-   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
-   NEWINSTANCENAME="fpoc-${FPPREPEND}-${NEWPRODUCT}-${INSTANCE}"
+   INSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
+   NEWINSTANCENAME="${TYPE}-${FPPREPEND}-${NEWPRODUCT}-${INSTANCE}"
    echo "==> Renaming instance ${INSTANCENAME} to ${NEWINSTANCENAME}"
    gcloud beta compute instances set-name ${INSTANCENAME} --new-name=${NEWINSTANCENAME} --zone=${ZONE}
 }
@@ -547,7 +552,7 @@ function gcpglobalaccess {
    PRODUCT=$3
    GLOBALACCESS=$4
    INSTANCE=$5
-   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
+   INSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
    if [ ${GLOBALACCESS} = "enable" ]; then
       echo "==> Enabling global access firewall-rule of ${INSTANCENAME}"
       gcloud compute instances add-tags ${INSTANCENAME} --tags=${WORKSHOPSOURCEANY} --zone=${ZONE} --no-user-output-enabled
@@ -566,7 +571,7 @@ function gcplabelmodify {
    LABEL=$5
    NEWLABEL=$6
    INSTANCE=$7
-   INSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
+   INSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
    if [ ${LABELACTION} = "add" ]; then
       echo "==> Adding label ${LABEL} to instance ${INSTANCENAME}"
       gcloud compute instances add-labels ${INSTANCENAME} --labels=${LABEL} --zone=${ZONE} --no-user-output-enabled
@@ -593,7 +598,7 @@ function gcpglobalaccesslist {
    echo "---------------------------------------------------------------------------------"
    for ((COUNT = $INSTANCESTART; $COUNT <= $INSTANCEEND; COUNT++)); do
       INSTANCENUMBER=$(printf "%03d" $COUNT)
-      FPINSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCENUMBER}"
+      FPINSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCENUMBER}"
       #gcloud compute instances describe ${INSTANCENAME} --zone=${ZONE} | jq -r '.tags .items[]'
       TAGS=($(gcloud compute instances describe ${FPINSTANCENAME} --zone=${ZONE} --format=json | jq -r '.tags .items[]'))
       echo "${FPINSTANCENAME} : ${TAGS[@]}"
@@ -613,7 +618,7 @@ function labellist {
    echo "---------------------------------------------------------------------------------"
    for ((COUNT = $INSTANCESTART; $COUNT <= $INSTANCEEND; COUNT++)); do
       INSTANCENUMBER=$(printf "%03d" $COUNT)
-      FPINSTANCENAME="fpoc-${FPPREPEND}-${PRODUCT}-${INSTANCENUMBER}"
+      FPINSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCENUMBER}"
       #gcloud compute instances describe ${INSTANCENAME} --zone=${ZONE} | jq -r '.tags .items[]'
       LABELS=($(gcloud compute instances describe ${FPINSTANCENAME} --zone=${ZONE} --format=json | jq -c '.labels'| sed 's/{//;s/}//;s/:/=/g;s/"//g'))
       echo "${FPINSTANCENAME} : ${LABELS[@]}"
@@ -657,6 +662,7 @@ function displayhelp {
    echo "        -p    --preferences                    Show personal config preferences"
    echo "        -pa   --project-add                    Add GCP project to preferences"
    echo "        -ps   --project-select                 Select project on GCP"
+   echo "        -t    --type                           Override default type name (fpoc)"
    echo "        -z    --zone                           Override default region zone"
    echo "ARGUMENTS:"
    echo "       region  : america, asia, europe"
@@ -704,6 +710,8 @@ if [ ! -f ${GCPCMDCONF} ]; then
    echo "-------------------------------------------------------"
    echo ""
    echo "This is your first time use of gcpcmd.sh and no preferences are set. Let's set them!"
+   echo "NOTE: Make sure you have enabled the 'Compute Engine API' via the Google Cloud Console first!"
+   sleep 3
    echo 'DEFAULTPROJECT="1"' > ${GCPCMDCONF}
    read -p "Would you like to have "gcpcmd" as a global command? y/n : " choice
    if [ -z "${choice}" ] || [ "${choice}" == "y" ]; then
@@ -783,6 +791,8 @@ GCPCMD_LABELS[${NEWPROJECTNUM}]="purpose=fortipoc,owner=${CONFGCPLABEL}"
 GCPCMD_FPGROUP[${NEWPROJECTNUM}]="${CONFGCPGROUP}"
 GCPCMD_PRODUCT[${NEWPROJECTNUM}]="test"
 GCPCMD_SSHKEYPERSONAL[${NEWPROJECTNUM}]="${CONFSSHKEYPERSONAL}"
+GCPCMD_VPC[1]=""
+GCPCMD_FIREWALLRULES[1]=""
 EOF
    echo ""
 fi
@@ -962,6 +972,12 @@ while [[ "$1" =~ ^-.* ]]; do
       OVERRIDE_ZONE=${ZONE}
       shift
       ;;
+   -t | --type)
+      TYPE=$2
+      SET_TYPE="true"
+      OVERRIDE_TYPE=${TYPE}
+      shift
+      ;;
    -*)
       # Report invalid option
       echo "[ERROR] Invalid option ${1}"
@@ -1011,6 +1027,10 @@ fi
 
 if [ "${SET_FPPREPEND}" == "true" ]; then
    FPPREPEND=${OVERRIDE_FPPREPEND}
+fi
+
+if [ "${SET_TYPE}" == "true" ]; then
+   TYPE=${OVERRIDE_TYPE}
 fi
 
 if [ "${RUN_LISTGLOBAL}" == "true" ]; then
@@ -1224,8 +1244,8 @@ if [[ ${ACTION} == build || ${ACTION} == delete || ${ACTION} == globalaccess || 
       fi
       done
    elif [ ${ACTION} == "rename" ]; then
-      read -p " What is the new instance PRODUCT name (fpoc-${FPPREPEND}-PRODUCT-nnn) : " NEWPRODUCTNAME
-      read -p " Is this new instance name fpoc-${FPPREPEND}-${NEWPRODUCTNAME}-nnn correct? y/n " choice 
+      read -p " What is the new instance PRODUCT name (${TYPE}-${FPPREPEND}-PRODUCT-nnn) : " NEWPRODUCTNAME
+      read -p " Is this new instance name ${TYPE}-${FPPREPEND}-${NEWPRODUCTNAME}-nnn correct? y/n " choice 
          [ "${choice}" != "y" ] && exit
    fi
    let --FPCOUNT
@@ -1234,7 +1254,7 @@ if [[ ${ACTION} == build || ${ACTION} == delete || ${ACTION} == globalaccess || 
    FPNUMEND=$(printf "%03d" ${FPNUMEND})
 
    echo ""
-   read -p "Okay to ${ACTION} fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMSTART} till fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMEND}, Project=${GCPPROJECT}, region=${ZONE}.   y/n? " choice
+   read -p "Okay to ${ACTION} ${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMSTART} till ${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMEND}, Project=${GCPPROJECT}, region=${ZONE}.   y/n? " choice
    [ "${choice}" != "y" ] && exit
 fi
 
@@ -1248,13 +1268,13 @@ if [[ ${ACTION} == clone ]]; then
    FPNUMSTART=$(printf "%03d" ${FPNUMSTART})
    FPNUMEND=$(printf "%03d" ${FPNUMEND})
    FPNUMBERTOCLONE=$(printf "%03d" ${FPNUMBERTOCLONE})
-   CLONESOURCE="fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
-   CLONEMACHINEIMAGE="fpoc-${FPPREPEND}-${PRODUCT}"
+   CLONESOURCE="${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
+   CLONEMACHINEIMAGE="${TYPE}-${FPPREPEND}-${PRODUCT}"
    if [ ! -z ${SET_FPGROUP} ] && [ ${SET_FPGROUP} == "true" ]; then
       FPGROUP=${OVERRIDE_FPGROUP}
    fi
    echo ""
-   read -p "Okay to ${ACTION} ${CLONESOURCE} to fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMSTART} till fpoc-${FPPREPEND}-${PRODUCT}-${FPNUMEND}, Project=${GCPPROJECT}, region=${ZONE}.   y/n? " choice
+   read -p "Okay to ${ACTION} ${CLONESOURCE} to ${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMSTART} till ${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMEND}, Project=${GCPPROJECT}, region=${ZONE}.   y/n? " choice
    [ "${choice}" != "y" ] && exit
    # Safest is to use fresh machine-image because it includes latest changes and there is not check if a machine-image exists
    # To speed up cloning you could skip machine-image creation and assume there's an machine-image available.
@@ -1273,7 +1293,7 @@ echo "==> Lets go...using Owner=${OWNER} or Group=${FPGROUP}, Project=${GCPPROJE
 echo
 
 export -f gcpbuild gcpstart gcpstop gcpdelete gcpclone gcpmachinetype gcpmove gcprename gcpglobalaccess gcplabelmodify
-export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE WORKSHOPSOURCEANY LABELS LABEL NEWLABEL FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH NEWMACHINETYPE GCPSERVICEACCOUNT SSHKEYPERSONAL WORKSHOPSOURCENETWORKS DSTZONE NEWPRODUCTNAME
+export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE WORKSHOPSOURCEANY LABELS LABEL NEWLABEL FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH NEWMACHINETYPE GCPSERVICEACCOUNT SSHKEYPERSONAL WORKSHOPSOURCENETWORKS DSTZONE NEWPRODUCTNAME TYPE
 
 case ${ACTION} in
 build) parallel ${PARALLELOPT} -j0 gcpbuild ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPTITLE}" ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
