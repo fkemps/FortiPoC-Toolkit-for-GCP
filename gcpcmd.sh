@@ -81,7 +81,8 @@
 # 2024080102 Ferry Kemps, Updated onboarding project selection, clone max text
 # 2024080103 Ferry Kemps, Corrected labelmodify bug with numbering
 # 2024080104 Ferry Kemps, Added note for Compute Engine API, added Type name override option 
-GCPCMDVERSION="2024080104"
+# 2024080105 Ferry Kemps, Added network tag add/remove/replace with action accesslist, accessmodify. Removed globalaccesslist action
+GCPCMDVERSION="2024080105"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -575,24 +576,47 @@ function gcplabelmodify {
       gcloud compute instances add-labels ${INSTANCENAME} --labels=${LABEL} --zone=${ZONE} --no-user-output-enabled
    elif [ ${LABELACTION} = "remove" ]; then
       echo "==> Removing label ${LABEL} from instance ${INSTANCENAME}"
-      gcloud beta compute instances remove-labels ${INSTANCENAME} --labels=${LABEL} --zone=${ZONE} --no-user-output-enabled
+      gcloud compute instances remove-labels ${INSTANCENAME} --labels=${LABEL} --zone=${ZONE} --no-user-output-enabled
    else
-      echo "==> Replacubg label ${LABEL} with ${NEWLABEL} on instance ${INSTANCENAME}"
-      gcloud beta compute instances remove-labels ${INSTANCENAME} --labels=${LABEL} --zone=${ZONE} --no-user-output-enabled
+      echo "==> Replacibg label ${LABEL} with ${NEWLABEL} on instance ${INSTANCENAME}"
+      gcloud compute instances remove-labels ${INSTANCENAME} --labels=${LABEL} --zone=${ZONE} --no-user-output-enabled
       gcloud compute instances add-labels ${INSTANCENAME} --labels=${NEWLABEL} --zone=${ZONE} --no-user-output-enabled
    fi
 }
 
+# Function to add/remove/replace FortiPoC instance network tags
+function gcpaccessmodify {
+   FPPREPEND=$1
+   ZONE=$2
+   PRODUCT=$3
+   TAGACTION=$4
+   TAG=$5
+   NEWTAG=$6
+   INSTANCE=$7
+   INSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
+   if [ ${TAGACTION} = "add" ]; then
+      echo "==> Adding network tag ${TAG} to instance ${INSTANCENAME}"
+      gcloud compute instances add-tags ${INSTANCENAME} --tags=${TAG} --zone=${ZONE} --no-user-output-enabled
+   elif [ ${TAGACTION} = "remove" ]; then
+      echo "==> Removing network tag ${TAG} from instance ${INSTANCENAME}"
+      gcloud compute instances remove-tags ${INSTANCENAME} --tags=${TAG} --zone=${ZONE} --no-user-output-enabled
+   else
+      echo "==> Replacibg network tag ${TAG} with ${NEWTAG} on instance ${INSTANCENAME}"
+      gcloud compute instances remove-tags ${INSTANCENAME} --tags=${TAG} --zone=${ZONE} --no-user-output-enabled
+      gcloud compute instances add-tags ${INSTANCENAME} --tags=${NEWTAG} --zone=${ZONE} --no-user-output-enabled
+   fi
+}
+
 # Function to list FortiPoC instance firewall-rules
-function gcpglobalaccesslist {
+function gcpaccesslist {
    FPPREPEND=$1
    ZONE=$2
    PRODUCT=$3
    INSTANCESTART=$(expr $4)
    INSTANCEEND=$(expr $5)
-   echo "Listing firewall rules of selected instances"
+   echo "Listing network tags (firewall-rules) of selected instances"
    echo ""
-   echo "Instancename     : firewall-rules attached"
+   echo "Instancename     : network tags"
    echo "---------------------------------------------------------------------------------"
    for ((COUNT = $INSTANCESTART; $COUNT <= $INSTANCEEND; COUNT++)); do
       INSTANCENUMBER=$(printf "%03d" $COUNT)
@@ -648,7 +672,7 @@ function displayhelp {
    echo "        -g    --group                          Group name for shared instances"
    echo "        -ge   --global-access-enable           Enable glocal access to instances"
    echo "        -gd   --global-access-disable          Disable glocal access to instances"
-   echo "        -gl   --global-access-list             List global access to instances"
+   echo "        -gl   --global-access-list             List global access to instances (network tags)"
    echo "        -gs   --global-access-status           Status glocal access to instances"
    echo "        -i    --initials <initials>            Override intials on instance name for group management"
    echo "        -ia   --ip-address-add [IP-address]    Add current public IP-address to GCP ACL"
@@ -665,8 +689,10 @@ function displayhelp {
    echo "ARGUMENTS:"
    echo "       region  : america, asia, europe"
    echo "       product : appsec, fad, fpx, fsa, fsw, fwb, sme, test, xa or <custom-name>"
-   echo "       action  : build, clone, delete, globalaccess, globalaccesslist, labellist, labelmodify, list, listpubip, machinetype, move, rename, start, stop"
-   echo "                 action build needs -b <conf/configfile>. Use ./gcpcmd.sh -b to generate fpoc-example.conf file"
+   echo "       action  : accesslist, accessmodify, build*, clone, delete, globalaccess, labellist, labelmodify"
+   echo "                 list, listpubip, machinetype, move, rename, start, stop"
+   echo ""
+   echo "                *action build needs -b <conf/configfile>. Use ./gcpcmd.sh -b to generate fpoc-example.conf file"
    echo ""
    [ "${NEWVERSION}" = "true" ] && echo "*** Newer version ${ONLINEVERSION} is available online on GitHub ("git pull" to update) ***"
    echo ""
@@ -1158,6 +1184,8 @@ listpubip)
 esac
 
 case ${ARGUMENT3} in
+accesslist) ACTION="accesslist" ;;
+accessmodify) ACTION="accessmodify" ;;
 build) ACTION="build" ;;
 clone) ACTION="clone" ;;
 delete) ACTION="delete" ;;
@@ -1173,13 +1201,13 @@ rename) ACTION="rename";;
 start) ACTION="start" ;;
 stop) ACTION="stop" ;;
 *)
-   echo "[ERROR: ACTION] Specify: build, clone, delete, globalaccess, globalaccesslist, labellist, labelmodify, list, listpubip, machinetype, move, rename, start or stop"
+   echo "[ERROR: ACTION] Specify: accesslist, accessmodify, build, clone, delete, globalaccess, globalaccesslist, labellist, labelmodify, list, listpubip, machinetype, move, rename, start or stop"
    exit
    ;;
 esac
 
 displayheader
-if [[ ${ACTION} == build || ${ACTION} == delete || ${ACTION} == globalaccess || ${ACTION} == globalaccesslist || ${ACTION} == "labellist" || ${ACTION} == "labelmodify" || ${ACTION} == machinetype || ${ACTION} == move || ${ACTION} == rename || ${ACTION} == start || ${ACTION} == stop ]]; then
+if [[ ${ACTION} == accesslist || ${ACTION} == accessmodify || ${ACTION} == build || ${ACTION} == delete || ${ACTION} == globalaccess || ${ACTION} == globalaccesslist || ${ACTION} == "labellist" || ${ACTION} == "labelmodify" || ${ACTION} == machinetype || ${ACTION} == move || ${ACTION} == rename || ${ACTION} == start || ${ACTION} == stop ]]; then
    read -p " Enter amount of FortiPoC's : " FPCOUNT
    read -p " Enter start of numbered range : " FPNUMSTART
    if [ ${ACTION} == "machinetype" ]; then
@@ -1228,6 +1256,28 @@ if [[ ${ACTION} == build || ${ACTION} == delete || ${ACTION} == globalaccess || 
       else
          read -p " Provide the label name to replace : " LABEL
          read -p " Provide the new label and value e.g. name=value : " NEWLABEL
+      fi
+    elif [ ${ACTION} == "accessmodify" ]; then
+      read -p " What network tag (firewall-rule) action would you like 1) Add, 2) Remove, 3) replace : " NEWTAGACTION
+      case ${NEWTAGACTION} in
+      1) TAGACTION="add" ;;
+      2) TAGACTION="remove" ;;
+      3) TAGACTION="replace" ;;
+      *)
+         echo "Wrong input given"
+         echo ""
+         exit
+         ;;
+      esac
+      if [ ${TAGACTION} == "add" ]; then
+         read -p " Provide the new network tag and value e.g. default-deny-all : " NETWORKTAG
+         NEWNETWORKTAG="dummy"
+      elif [ ${TAGACTION} == "remove" ]; then
+         read -p " Provide the network tag  name to remove : " NETWORKTAG
+         NEWNETWORKTAG="dummy"
+      else
+         read -p " Provide the network tag name to replace : " NETWORKTAG
+         read -p " Provide the new network tag and value e.g. allow-http-any : " NEWNETWORKTAG
       fi
    elif [ ${ACTION} == "move" ]; then
       while [[ "${ZONESTATUS}" != "UP" ]] ; do
@@ -1290,17 +1340,18 @@ fi
 echo "==> Lets go...using Owner=${OWNER} or Group=${FPGROUP}, Project=${GCPPROJECT}, Zone=${ZONE}, Product=${PRODUCT}, Action=${ACTION}"
 echo
 
-export -f gcpbuild gcpstart gcpstop gcpdelete gcpclone gcpmachinetype gcpmove gcprename gcpglobalaccess gcplabelmodify
-export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE WORKSHOPSOURCEANY LABELS LABEL NEWLABEL FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH NEWMACHINETYPE GCPSERVICEACCOUNT SSHKEYPERSONAL WORKSHOPSOURCENETWORKS DSTZONE NEWPRODUCTNAME TYPE
+export -f gcpaccessmodify gcpbuild gcpstart gcpstop gcpdelete gcpclone gcpmachinetype gcpmove gcprename gcpglobalaccess gcplabelmodify
+export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE WORKSHOPSOURCEANY LABELS LABEL NEWLABEL NETWORKTAG NEWNETWORKTAG FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH NEWMACHINETYPE GCPSERVICEACCOUNT SSHKEYPERSONAL WORKSHOPSOURCENETWORKS DSTZONE NEWPRODUCTNAME TYPE
 
 case ${ACTION} in
+accesslist) gcpaccesslist ${FPPREPEND} ${ZONE} ${PRODUCT} ${FPNUMSTART} ${FPNUMEND} ;;
 build) parallel ${PARALLELOPT} -j0 gcpbuild ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPTITLE}" ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
 clone) parallel ${PARALLELOPT} -j0 gcpclone ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPNUMBERTOCLONE}" ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
 delete) parallel ${PARALLELOPT} -j0 gcpdelete ${FPPREPEND} ${ZONE} ${PRODUCT} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
 globalaccess) parallel ${PARALLELOPT} -j0 gcpglobalaccess ${FPPREPEND} ${ZONE} ${PRODUCT} ${GLOBALACCESS} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
-globalaccesslist) gcpglobalaccesslist ${FPPREPEND} ${ZONE} ${PRODUCT} ${FPNUMSTART} ${FPNUMEND} ;;
 labellist) labellist ${FPPREPEND} ${ZONE} ${PRODUCT} ${FPNUMSTART} ${FPNUMEND} ;;
 labelmodify) parallel ${PARALLELOPT} -j0 gcplabelmodify ${FPPREPEND} ${ZONE} ${PRODUCT} ${LABELACTION} ${LABEL} ${NEWLABEL} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
+accessmodify) parallel ${PARALLELOPT} -j0 gcpaccessmodify ${FPPREPEND} ${ZONE} ${PRODUCT} ${TAGACTION} ${NETWORKTAG} ${NEWNETWORKTAG} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
 list) gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND zone~${ZONE}" | grep -e "NAME" -e ${PRODUCT} ;;
 listpubip) gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND zone~${ZONE}" | grep -e ${PRODUCT} | awk '{ printf $5 " " }' ;;
 machinetype) parallel ${PARALLELOPT} -j0 gcpmachinetype ${FPPREPEND} ${ZONE} ${PRODUCT} ${MACHINETYPE} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
