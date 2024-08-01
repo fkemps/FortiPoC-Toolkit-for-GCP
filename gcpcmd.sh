@@ -134,7 +134,6 @@ NOCOLOR='\033[0m'
 #   Functions
 ###############################
 function checkdefaultnetwork() {
-set -x
    if [ "${VPC}" != "validated" ]; then
       if (! gcloud compute networks describe ${WORKSHOPVPC} --format=none > /dev/null 2>&1); then
          echo "Default VPC networks not found, creating it"
@@ -177,7 +176,6 @@ function checkfirewallrules() {
       #echo "GCPCMD_FIREWALLRULES[${DEFAULTPROJECT}]=\"validated\"" >> ${GCPCMDCONF}
       sed -i '' "s/GCPCMD_FIREWALLRULES\[${DEFAULTPROJECT}\].*/GCPCMD_FIREWALLRULES[${DEFAULTPROJECT}]=\"validated\"/" ${GCPCMDCONF}
    fi
-exit
 }
 
 function togglefirewallruleany() {
