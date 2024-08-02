@@ -169,18 +169,18 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 | |_ / _ \|  __| __| | |_) / _ \ / __|   | |/ _ \ / _ \| | |/ / | __| | |_ / _ \|  __| | |  _| |   | |_) |
 |  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/
 |_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|
-((Version: 2024080105)
+(Version: 2024080201)
 
 Selected project : fkemps-cse-labs
 Default deployment region: europe-west3-a
 Personal instance identification: fk
 Default product: event
 
-Usage: ./gcpcmd-new.sh [OPTIONS] [ARGUMENTS]
-       ./gcpcmd-new.sh [OPTIONS] <region> <product> <action>
-       ./gcpcmd-new.sh [OPTIONS] <-b configfile> <region> <product> build
-       ./gcpcmd-new.sh [OPTIONS] [region] [product] list
-       ./gcpcmd-new.sh [OPTIONS] [region] [product] listpubip
+Usage: /usr/local/bin/gcpcmd [OPTIONS] [ARGUMENTS]
+       /usr/local/bin/gcpcmd [OPTIONS] <region> <product> <action>
+       /usr/local/bin/gcpcmd [OPTIONS] <-b configfile> <region> <product> build
+       /usr/local/bin/gcpcmd [OPTIONS] [region] [product] list
+       /usr/local/bin/gcpcmd [OPTIONS] [region] [product] listpubip
 OPTIONS:
         -b    --build-file                     File for building instances. Leave blank to generate example
         -d    --delete-config                  Delete default user config settings
@@ -200,6 +200,7 @@ OPTIONS:
         -pa   --project-add                    Add GCP project to preferences
         -ps   --project-select                 Select project on GCP
         -t    --type                           Override default type name (fpoc)
+        -ui   --upload-image                   Upload image to build an instance
         -z    --zone                           Override default region zone
 ARGUMENTS:
        region  : america, asia, europe
@@ -828,6 +829,40 @@ GCPCMD_FPGROUP[2]="clowns"
 GCPCMD_PRODUCT[2]="test"
 GCPCMD_SSHKEYPERSONAL[2]="ssh-rsa ARBCDEDGHIJKLMNOPQRSTUVWXYZAAAB3NzaC1yc2EAAAADA....1234567890 jdoe@JD-MacBook.local"
 ```
+
+### Upload image
+This option allows you to upload a file to your bucket (images-<yourname>) and create automatically an image which you can use to build an instance.
+
+`gcpcmd -ui`
+
+```script
+This option allows you to upload a tar.gz file as an image
+ What is the image filename (full path)? : fortipoc-1.9_1.9.11.cloud.tar.gz
+ Provide image filename for GCP (to build an instance)  : fortipoc-1-9-11
+
+ Copying fortipoc-1.9_1.9.11.cloud.tar.gz to you bucket gs://images-fkemps/
+Copying file://fortipoc-1.9_1.9.11.cloud.tar.gz [Content-Type=application/x-tar]...
+==> NOTE: You are uploading one or more large file(s), which would run
+significantly faster if you enable parallel composite uploads. This
+feature can be enabled by editing the
+"parallel_composite_upload_threshold" value in your .boto
+configuration file. However, note that if you do this large files will
+be uploaded as `composite objects
+<https://cloud.google.com/storage/docs/composite-objects>`_,which
+means that any user who downloads such objects will need to have a
+compiled crcmod installed (see "gsutil help crcmod"). This is because
+without a compiled crcmod, computing checksums on composite objects is
+so slow that gsutil disables downloads of composite objects.
+
+- [1 files][809.6 MiB/809.6 MiB]   50.2 MiB/s
+Operation completed over 1 objects/809.6 MiB.
+
+ Building your image file fortipoc-1-9-11
+Created [https://www.googleapis.com/compute/v1/projects/fkemps-cse-labs/global/images/fortipoc-1-9-11].
+NAME             PROJECT          FAMILY    DEPRECATED  STATUS
+fortipoc-1-9-11  dummy            fortipoc              READY
+```
+
 
 ---
 
