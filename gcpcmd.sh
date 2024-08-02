@@ -82,7 +82,8 @@
 # 2024080103 Ferry Kemps, Corrected labelmodify bug with numbering
 # 2024080104 Ferry Kemps, Added note for Compute Engine API, added Type name override option 
 # 2024080105 Ferry Kemps, Added network tag add/remove/replace with action accesslist, accessmodify. Removed globalaccesslist action
-GCPCMDVERSION="2024080105"
+# 2024080201 Ferry Kemps, Added quit option during project sign-up to exit
+GCPCMDVERSION="2024080201"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -685,6 +686,7 @@ function displayhelp {
    echo "        -pa   --project-add                    Add GCP project to preferences"
    echo "        -ps   --project-select                 Select project on GCP"
    echo "        -t    --type                           Override default type name (fpoc)"
+   echo "        -ui   --upload-image                   Upload image to build an instance"
    echo "        -z    --zone                           Override default region zone"
    echo "ARGUMENTS:"
    echo "       region  : america, asia, europe"
@@ -725,6 +727,35 @@ function projectselect {
    fi
 }
 
+# Function to upload a tar.gz file into GCP as image
+function gcpuploadimage {
+   echo " This option allows you to upload a tar.gz file as an image"
+   read -p " What is the image filename (full path)? : " IMAGEFILE
+   if [[ ! ${IMAGEFILE} =~ "tar.gz" ]]; then
+     echo " Filename is not ending in tar.gz"
+     exit
+   fi
+   read -p " Provide image filename for GCP (to build an instance)  : " IMAGENAME
+   echo ""
+   echo " Copying ${IMAGEFILE} to you bucket gs://images-${OWNER}/"
+   gsutil ls gs://images-${OWNER} > /dev/null 2>&1
+   if [ ! "$?" = "0" ]; then
+     gcloud storage buckets create gs://images-${OWNER} --project=${GCPPROJECT} --location=$(echo ${ZONE}|awk -F "-" '{ print $1"-"$2}')
+   fi
+   gsutil cp ${IMAGEFILE} gs://images-${OWNER}
+   if [ "$?" = "0" ]; then 
+      echo ""
+      echo " Building your image file ${IMAGENAME}"
+      gcloud compute images create ${IMAGENAME} \
+       --project=${GCPPROJECT} \
+       --source-uri gs://images-${OWNER}/${IMAGEFILE} \
+       --licenses "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx" \
+       --family fortipoc
+   else
+     echo " There was an error copying the file"
+   fi
+}
+
 # Funtion to gatgher perferences
 function gatherpreferences {
 EXPAND="${1}"
@@ -761,6 +792,7 @@ if [ "${EXPAND}" = "new" ]; then
    done
 
    # Request ProjectId from GCP and use that if no projectId is entered
+   echo ""
    echo "You have access to the following GCP Projects"
    GCPPROJECTS=$(gcloud projects list --format json | jq '.[] .projectId')
    GCPPROJECTID=(${GCPPROJECTS})
@@ -769,13 +801,18 @@ if [ "${EXPAND}" = "new" ]; then
      echo "  ${i}) : ${GCPPROJECTID[${i}]}"
    done
    echo ""
+   echo "   q to quit"
+   echo ""
    read -p " Select your GCP project : " SELECTEDPROJECT
-   if [[ ${SELECTEDPROJECT} -lt 0 ]] || [[ ${SELECTEDPROJECT} -ge ${#GCPPROJECTID[@]} ]]
+   if [[ ${SELECTEDPROJECT} -lt 0 ]] || [[ ${SELECTEDPROJECT} -ge ${#GCPPROJECTID[@]} ]] && [ ! ${SELECTEDPROJECT} == "q" ]
    then
      echo " [ERROR] Invalid project selected"
      exit 1
    else
-     CONFPROJECTNAME=$(echo ${GCPPROJECTID[${SELECTEDPROJECT}]} | tr -d \")
+     if [ ${SELECTEDPROJECT} = "q" ]; then exit
+     else
+       CONFPROJECTNAME=$(echo ${GCPPROJECTID[${SELECTEDPROJECT}]} | tr -d \")
+     fi
    fi
 
    # Request default Compute Service Account and use that if no Service Account is entered
@@ -811,7 +848,7 @@ GCPCMD_SERVICEACCOUNT[${NEWPROJECTNUM}]="${CONFSERVICEACCOUNT}"
 GCPCMD_LICENSESERVER[${NEWPROJECTNUM}]="${CONFLICENSESERVER}"
 GCPCMD_FPPREPEND[${NEWPROJECTNUM}]="${CONFINITIALS}"
 GCPCMD_ZONE[${NEWPROJECTNUM}]="${CONFREGION}"
-GCPCMD_LABELS[${NEWPROJECTNUM}]="purpose=fortipoc,owner=${CONFGCPLABEL}"
+GCPCMD_LABELS[${NEWPROJECTNUM}]="expire=MM-DD-YYYY,group=${CONFGCPGROUP}, purpose=ReplaceMe,owner=${CONFGCPLABEL}"
 GCPCMD_FPGROUP[${NEWPROJECTNUM}]="${CONFGCPGROUP}"
 GCPCMD_PRODUCT[${NEWPROJECTNUM}]="test"
 GCPCMD_SSHKEYPERSONAL[${NEWPROJECTNUM}]="${CONFSSHKEYPERSONAL}"
@@ -990,16 +1027,20 @@ while [[ "$1" =~ ^-.* ]]; do
       projectselect
       exit
       ;;
-   -z | --zone)
-      ZONE=$2
-      SET_ZONE="true"
-      OVERRIDE_ZONE=${ZONE}
-      shift
-      ;;
    -t | --type)
       TYPE=$2
       SET_TYPE="true"
       OVERRIDE_TYPE=${TYPE}
+      shift
+      ;;
+   -ui | --upload-image)
+      gcpuploadimage
+      exit
+      ;;
+   -z | --zone)
+      ZONE=$2
+      SET_ZONE="true"
+      OVERRIDE_ZONE=${ZONE}
       shift
       ;;
    -*)
