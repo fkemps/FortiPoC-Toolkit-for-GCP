@@ -85,7 +85,7 @@
 # 2024080201 Ferry Kemps, Added quit option during project sign-up to exit
 # 2024080202 Ferry Kemps, Added machinetype e2-medium for allways-on small instances
 # 2024080501 Ferry Kemps, Corrected global command creation
-GCPCMDVERSION="2024080202"
+GCPCMDVERSION="2024080501"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
