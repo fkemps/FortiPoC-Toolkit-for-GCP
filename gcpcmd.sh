@@ -1,4 +1,4 @@
-2024080202#! /bin/bash
+#! /bin/bash
 
 # This script is to perform Google Cloud Platform (GCP) actions for creating, starting, stopping, deleting FortiPoC's
 # 2018113001 Ferry Kemps, Initial release
