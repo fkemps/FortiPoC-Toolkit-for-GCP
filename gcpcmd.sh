@@ -83,7 +83,9 @@
 # 2024080104 Ferry Kemps, Added note for Compute Engine API, added Type name override option 
 # 2024080105 Ferry Kemps, Added network tag add/remove/replace with action accesslist, accessmodify. Removed globalaccesslist action
 # 2024080201 Ferry Kemps, Added quit option during project sign-up to exit
-GCPCMDVERSION="2024080201"
+# 2024080202 Ferry Kemps, Added machinetype e2-medium for allways-on small instances
+# 2024080501 Ferry Kemps, Corrected global command creation
+GCPCMDVERSION="2024080202"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -696,7 +698,7 @@ function displayhelp {
    echo ""
    echo "                *action build needs -b <conf/configfile>. Use ./gcpcmd.sh -b to generate fpoc-example.conf file"
    echo ""
-   [ "${NEWVERSION}" = "true" ] && echo "*** Newer version ${ONLINEVERSION} is available online on GitHub ("git pull" to update) ***"
+   [ "${NEWVERSION}" = "true" ] && echo "***** Newer version ${ONLINEVERSION} is available online on GitHub (use 'git pull' to update) *****"
    echo ""
 }
 
@@ -771,7 +773,7 @@ if [ ! -f ${GCPCMDCONF} ]; then
    read -p "Would you like to have "gcpcmd" as a global command? y/n : " choice
    if [ -z "${choice}" ] || [ "${choice}" == "y" ]; then
       if [[ ${PATH} =~ "/usr/local/bin" ]]; then
-        [ -d /usr/local/bin ] && ln -s $(pwd)/gcpcmd.sh /usr/local/bin/gcpcmd
+        [ -d /usr/local/bin ] && sudo ln -s $(pwd)/gcpcmd.sh /usr/local/bin/gcpcmd
       fi
    fi
    echo "" >> ${GCPCMDCONF}
@@ -1252,8 +1254,9 @@ if [[ ${ACTION} == accesslist || ${ACTION} == accessmodify || ${ACTION} == build
    read -p " Enter amount of FortiPoC's : " FPCOUNT
    read -p " Enter start of numbered range : " FPNUMSTART
    if [ ${ACTION} == "machinetype" ]; then
-      read -p " select machine-type : 1) n1-standard-1, 2) n1-standard-2, 3) n1-standard-4, 4) n1-standard-8, 5) n1-standard-16 : " NEWMACHINETYPE
+      read -p " select machine-type : 0) e2-medium 1) n1-standard-1, 2) n1-standard-2, 3) n1-standard-4, 4) n1-standard-8, 5) n1-standard-16 : " NEWMACHINETYPE
       case ${NEWMACHINETYPE} in
+      0) MACHINETYPE="e2-medium" ;;
       1) MACHINETYPE="n1-standard-1" ;;
       2) MACHINETYPE="n1-standard-2" ;;
       3) MACHINETYPE="n1-standard-4" ;;
