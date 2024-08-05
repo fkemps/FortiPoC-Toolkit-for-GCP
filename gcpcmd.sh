@@ -85,7 +85,8 @@
 # 2024080201 Ferry Kemps, Added quit option during project sign-up to exit
 # 2024080202 Ferry Kemps, Added machinetype e2-medium for allways-on small instances
 # 2024080501 Ferry Kemps, Corrected global command creation
-GCPCMDVERSION="2024080501"
+# 2024080502 Ferry Kemps, Fixed OWNER label definition
+GCPCMDVERSION="2024080502"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -913,7 +914,8 @@ PRODUCT="${GCPCMD_PRODUCT[${DEFAULTPROJECT}]}"
 SSHKEYPERSONAL="${GCPCMD_SSHKEYPERSONAL[${DEFAULTPROJECT}]}"
 VPC="${GCPCMD_VPC[${DEFAULTPROJECT}]}"
 FIREWALLRULES="${GCPCMD_FIREWALLRULES[${DEFAULTPROJECT}]}"
-OWNER=$(echo ${LABELS} | grep owner | cut -d "=" -f 3)
+#OWNER=$(echo ${LABELS} | grep owner | cut -d "=" -f 3)
+OWNER=$(echo ${LABELS} | awk -F "owner=" '{ print $2}')
 
 # Check online if there is a newer Version
 ONLINEVERSION=$(curl --fail --silent --retry-max-time 1 --user-agent ${GCPCMDVERSION}-${GCPPROJECT}-${FPPREPEND} http://www.4xion.com/gcpcmdversion.txt)
