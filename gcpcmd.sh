@@ -85,8 +85,8 @@
 # 2024080201 Ferry Kemps, Added quit option during project sign-up to exit
 # 2024080202 Ferry Kemps, Added machinetype e2-medium for allways-on small instances
 # 2024080501 Ferry Kemps, Corrected global command creation
-# 2024080502 Ferry Kemps, Fixed OWNER label definition
-GCPCMDVERSION="2024080502"
+# 2024080601 Ferry Kemps, Updated OWNER label definition, updated the fpoc-example.conf directory
+GCPCMDVERSION="2024080601"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -1064,7 +1064,7 @@ if [ "${RUN_CONFIGFILE}" == "true" ]; then
       fi
    else
       echo "Config file not found. Example file fpoc-example.conf in directory ./conf"
-      cat <<EOF > .conf/fpoc-example.conf
+      cat <<EOF > ./conf/fpoc-example.conf
 # Uncomment and speficy to override user defaults
 #GCPPROJECT="${GCPPROJECT}"
 #GCPSERVICEACCOUNT="${GCPSERVICEACCOUNT}"
