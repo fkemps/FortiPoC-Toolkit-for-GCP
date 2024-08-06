@@ -86,7 +86,8 @@
 # 2024080202 Ferry Kemps, Added machinetype e2-medium for allways-on small instances
 # 2024080501 Ferry Kemps, Corrected global command creation
 # 2024080601 Ferry Kemps, Updated OWNER label definition, updated the fpoc-example.conf directory
-GCPCMDVERSION="2024080601"
+# 2024080602 Ferry Kemps, Improved the upload image feature
+GCPCMDVERSION="2024080602"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -733,7 +734,8 @@ function projectselect {
 # Function to upload a tar.gz file into GCP as image
 function gcpuploadimage {
    echo " This option allows you to upload a tar.gz file as an image"
-   read -p " What is the image filename (full path)? : " IMAGEFILE
+   read -p " What is the image filename (full path)? : " IMAGEFILENAME
+   IMAGEFILE=$(basename ${IMAGEFILENAME})
    if [[ ! ${IMAGEFILE} =~ "tar.gz" ]]; then
      echo " Filename is not ending in tar.gz"
      exit
@@ -745,7 +747,7 @@ function gcpuploadimage {
    if [ ! "$?" = "0" ]; then
      gcloud storage buckets create gs://images-${OWNER} --project=${GCPPROJECT} --location=$(echo ${ZONE}|awk -F "-" '{ print $1"-"$2}')
    fi
-   gsutil cp ${IMAGEFILE} gs://images-${OWNER}
+   gsutil cp ${IMAGEFILENAME} gs://images-${OWNER}/${IMAGEFILE}
    if [ "$?" = "0" ]; then 
       echo ""
       echo " Building your image file ${IMAGENAME}"
