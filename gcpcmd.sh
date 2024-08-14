@@ -87,7 +87,9 @@
 # 2024080501 Ferry Kemps, Corrected global command creation
 # 2024080601 Ferry Kemps, Updated OWNER label definition, updated the fpoc-example.conf directory
 # 2024080602 Ferry Kemps, Improved the upload image feature
-GCPCMDVERSION="2024080602"
+# 2024080701 Ferry Kemps, Removed obsolete fortipoc-http-https-redir network tag, fixed VPN/FIREWALLRULE in preference file
+# 2024081401 Ferry Kemps, Shell code syntax checked and corrected
+GCPCMDVERSION="2024081401"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -148,7 +150,7 @@ function checkdefaultnetwork() {
             --mtu=1460
          # Add VPC check to personal preferences file
       fi
-      sed -i '' "s/GCPCMD_VPC\[${DEFAULTPROJECT}\].*/GCPCMD_VPC\[${DEFAULTPROJECT}\]=\"validated\"/" ${GCPCMDCONF}
+      sed -i '' "s/GCPCMD_VPC\[${DEFAULTPROJECT}\].*/GCPCMD_VPC\[${DEFAULTPROJECT}\]=\"validated\"/" "${GCPCMDCONF}"
    fi
 }
 
@@ -180,20 +182,20 @@ function checkfirewallrules() {
          # Add Firewallrules check to personal preferences file
       fi
       #echo "GCPCMD_FIREWALLRULES[${DEFAULTPROJECT}]=\"validated\"" >> ${GCPCMDCONF}
-      sed -i '' "s/GCPCMD_FIREWALLRULES\[${DEFAULTPROJECT}\].*/GCPCMD_FIREWALLRULES[${DEFAULTPROJECT}]=\"validated\"/" ${GCPCMDCONF}
+      sed -i '' "s/GCPCMD_FIREWALLRULES\[${DEFAULTPROJECT}\].*/GCPCMD_FIREWALLRULES[${DEFAULTPROJECT}]=\"validated\"/" "${GCPCMDCONF}"
    fi
 }
 
 function togglefirewallruleany() {
-   if [ $1 = "disable" ]; then
+   if [ "${1}" = "disable" ]; then
       gcloud compute firewall-rules update ${WORKSHOPSOURCEANY} --disabled --no-user-output-enabled
       echo "Global access to instances => Disabled"
-   elif [ $1 = "enable" ]; then
+   elif [ "${1}" = "enable" ]; then
       gcloud compute firewall-rules update ${WORKSHOPSOURCEANY} --no-disabled --no-user-output-enabled
       echo "Global access to instances => Enabled"
-   elif [ $1 = "status" ]; then
+   elif [ "${1}" = "status" ]; then
       GLOBALACCESSSTATUS=$(gcloud compute firewall-rules describe ${WORKSHOPSOURCEANY} --format=json | jq -r '.disabled')
-      [ ${GLOBALACCESSSTATUS} = "false" ] && GLOBALACCESSSTATUS="Enabled" || GLOBALACCESSSTATUS="Disabled"
+      [ "${GLOBALACCESSSTATUS}" = "false" ] && GLOBALACCESSSTATUS="Enabled" || GLOBALACCESSSTATUS="Disabled"
       echo "Global access status: ${GLOBALACCESSSTATUS}"
    else
       echo "Unknown global access request"
@@ -208,11 +210,11 @@ function instancefirewallrules() {
    echo "---------------------------------------------------------------------------------"
    # Get all instance-names from default zone
    INSTANCEARRAY=($(gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP})" | awk '{ print $1"_"$2 }' | grep -v NAME))
-   for FPINSTANCE in ${INSTANCEARRAY[@]}; do
-      FPINSTANCENAME="$(echo ${FPINSTANCE} | awk -F "_" '{ print $1 }')"
-      FPINSTANCEZONE="$(echo ${FPINSTANCE} | awk -F "_" '{ print $2 }')"
-      TAGS=($(gcloud compute instances describe ${FPINSTANCENAME} --zone=${FPINSTANCEZONE} --format=json | jq -r '.tags .items[]'))
-      echo "${FPINSTANCENAME} : ${TAGS[@]}"
+   for FPINSTANCE in ${INSTANCEARRAY[*]}; do
+      FPINSTANCENAME="$(echo "${FPINSTANCE}" | awk -F "_" '{ print $1 }')"
+      FPINSTANCEZONE="$(echo "${FPINSTANCE}" | awk -F "_" '{ print $2 }')"
+      TAGS=($(gcloud compute instances describe "${FPINSTANCENAME}" --zone="${FPINSTANCEZONE}" --format=json | jq -r '.tags .items[]'))
+      echo "${FPINSTANCENAME} : ${TAGS[*]}"
    done
 }
 
@@ -222,11 +224,11 @@ function instancelabels() {
    echo "---------------------------------------------------------------------------------"
    # Get all instance-names from default zone
    INSTANCEARRAY=($(gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP})" | awk '{ print $1"_"$2 }' | grep -v NAME))
-   for FPINSTANCE in ${INSTANCEARRAY[@]}; do
-      FPINSTANCENAME="$(echo ${FPINSTANCE} | awk -F "_" '{ print $1 }')"
-      FPINSTANCEZONE="$(echo ${FPINSTANCE} | awk -F "_" '{ print $2 }')"
-      LABELS=($(gcloud compute instances describe ${FPINSTANCENAME} --zone=${FPINSTANCEZONE} --format=json | jq -c '.labels' | sed 's/{//;s/}//;s/:/=/g;s/"//g'))
-      echo "${FPINSTANCENAME} : ${LABELS[@]}"
+   for FPINSTANCE in ${INSTANCEARRAY[*]}; do
+      FPINSTANCENAME="$(echo "${FPINSTANCE}" | awk -F "_" '{ print $1 }')"
+      FPINSTANCEZONE="$(echo "${FPINSTANCE}" | awk -F "_" '{ print $2 }')"
+      LABELS=($(gcloud compute instances describe "${FPINSTANCENAME}" --zone="${FPINSTANCEZONE}" --format=json | jq -c '.labels' | sed 's/{//;s/}//;s/:/=/g;s/"//g'))
+      echo "${FPINSTANCENAME} : ${LABELS[*]}"
    done
 }
 
@@ -243,7 +245,7 @@ function displaypreferences() {
    local CONFFILE=$1
    echo "Your personal configuration preferences"
    echo ""
-   cat ${CONFFILE}
+   cat "${CONFFILE}"
 }
 
 # Function to validate IP-address format
@@ -266,16 +268,16 @@ function validateIP() {
 function gcpaclupdate() {
    CMD=$1
    PUBLICIP=$2
-   if [ -z ${PUBLICIP} ]; then
+   if [ -z "${PUBLICIP}" ]; then
       # Obtain current public IP-address
       PUBLICIP=$(dig TXT -4 +short o-o.myaddr.l.google.com @ns1.google.com | sed -e 's/"//g')
    fi
-   validateIP ${PUBLICIP}
+   validateIP "${PUBLICIP}"
    [ ! $? -eq 0 ] && (
       echo "Public IP not retreavable or not valid"
       exit
    )
-   if [ ${CMD} == add ]; then
+   if [ "${CMD}" == add ]; then
       echo "Adding public-ip ${PUBLICIP} to GCP ACL to allow access from this location"
       while read line; do
          if [ -z ${SOURCERANGE} ]; then
@@ -289,7 +291,7 @@ function gcpaclupdate() {
       echo "Current GCP ACL list"
       gcloud compute firewall-rules list --filter="name=${WORKSHOPSOURCENETWORKS}" --format=json | jq -r '.[] .sourceRanges[]'
       echo ""
-   elif [ ${CMD} == remove ]; then
+   elif [ "${CMD}" == "remove" ]; then
       echo "Removing public-ip ${PUBLICIP} to GCP ACL to remove access from this location"
       while read line; do
          if [ -z ${SOURCERANGE} ]; then
@@ -313,10 +315,15 @@ function gcpaclupdate() {
 function gcplistglobal {
    OWNER=$1
    FPGROUP=$2
+   WILDCARD=$3
    if [ -z ${FPGROUP} ]; then
       gcloud compute instances list --filter="labels.owner:${OWNER}"
    else
-      gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP})"
+      if [ "${WILDCARD}" == "all" ]; then
+        gcloud compute instances list
+      else
+        gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP})"
+      fi
    fi
 }
 
@@ -361,7 +368,7 @@ function gcpbuild {
       --subnet=default --network-tier=PREMIUM \
       --maintenance-policy=MIGRATE \
       --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
-      --min-cpu-platform=Intel\ Broadwell --tags=fortipoc-http-https-redir,fortipoc-deny-default,${WORKSHOPSOURCENETWORKS} \
+      --min-cpu-platform=Intel\ Broadwell --tags=fortipoc-deny-default,${WORKSHOPSOURCENETWORKS} \
       --image=${FPIMAGE} \
       --image-project=${GCPPROJECT} \
       --boot-disk-size=350GB \
@@ -468,7 +475,7 @@ function gcpclone {
    #  --maintenance-policy=MIGRATE \
    #  --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
    #  --min-cpu-platform=Intel\ Broadwell \
-   #  --tags=fortipoc-http-https-redir,${WORKSHOPSOURCENETWORKS} \
+   #  --tags=${WORKSHOPSOURCENETWORKS} \
    #  --disk "name=${INSTANCENAME},device-name=${INSTANCENAME},mode=rw,boot=yes,auto-delete=yes" \
    #  --labels=${LABELS}
    gcloud beta compute instances create ${INSTANCENAME} \
@@ -628,7 +635,7 @@ function gcpaccesslist {
       FPINSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCENUMBER}"
       #gcloud compute instances describe ${INSTANCENAME} --zone=${ZONE} | jq -r '.tags .items[]'
       TAGS=($(gcloud compute instances describe ${FPINSTANCENAME} --zone=${ZONE} --format=json | jq -r '.tags .items[]'))
-      echo "${FPINSTANCENAME} : ${TAGS[@]}"
+      echo "${FPINSTANCENAME} : ${TAGS[*]}"
    done
 }
 
@@ -648,7 +655,7 @@ function labellist {
       FPINSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCENUMBER}"
       #gcloud compute instances describe ${INSTANCENAME} --zone=${ZONE} | jq -r '.tags .items[]'
       LABELS=($(gcloud compute instances describe ${FPINSTANCENAME} --zone=${ZONE} --format=json | jq -c '.labels'| sed 's/{//;s/}//;s/:/=/g;s/"//g'))
-      echo "${FPINSTANCENAME} : ${LABELS[@]}"
+      echo "${FPINSTANCENAME} : ${LABELS[*]}"
    done
 }
 
@@ -710,7 +717,7 @@ function projectselect {
    echo "--------------------------------------------------------------------------"
    echo " Current project    : ${GCPCMD_PROJECT[${DEFAULTPROJECT}]}"
    echo " Number of projects : ${#GCPCMD_PROJECT[@]}"
-   echo " All projects       : ${GCPCMD_PROJECT[@]}"
+   echo " All projects       : ${GCPCMD_PROJECT[*]}"
    echo "--------------------------------------------------------------------------"
    echo ""
    for ((i=1;i<=${#GCPCMD_PROJECT[@]};i++))
@@ -721,7 +728,7 @@ function projectselect {
    read -p " Select your GCP project : " SELECTEDPROJECT
    if [[ ${SELECTEDPROJECT} -lt 1 ]] || [[ ${SELECTEDPROJECT} -gt ${#GCPCMD_PROJECT[@]} ]]
    then
-     echo " [ERROR] Invalid project number selected"
+     echo""; echo " [ERROR] Invalid project number selected"
      exit 1
    else
      echo " Project \"${GCPCMD_PROJECT[${SELECTEDPROJECT}]}\" selected and made permanent"
@@ -757,7 +764,7 @@ function gcpuploadimage {
        --licenses "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx" \
        --family fortipoc
    else
-     echo " There was an error copying the file"
+     echo""; echo " There was an error copying the file"
    fi
 }
 
@@ -811,10 +818,10 @@ if [ "${EXPAND}" = "new" ]; then
    read -p " Select your GCP project : " SELECTEDPROJECT
    if [[ ${SELECTEDPROJECT} -lt 0 ]] || [[ ${SELECTEDPROJECT} -ge ${#GCPPROJECTID[@]} ]] && [ ! ${SELECTEDPROJECT} == "q" ]
    then
-     echo " [ERROR] Invalid project selected"
+     echo""; echo " [ERROR] Invalid project selected"
      exit 1
    else
-     if [ ${SELECTEDPROJECT} = "q" ]; then exit
+     if [ "${SELECTEDPROJECT}" = "q" ]; then exit
      else
        CONFPROJECTNAME=$(echo ${GCPPROJECTID[${SELECTEDPROJECT}]} | tr -d \")
      fi
@@ -857,8 +864,8 @@ GCPCMD_LABELS[${NEWPROJECTNUM}]="expire=MM-DD-YYYY,group=${CONFGCPGROUP}, purpos
 GCPCMD_FPGROUP[${NEWPROJECTNUM}]="${CONFGCPGROUP}"
 GCPCMD_PRODUCT[${NEWPROJECTNUM}]="test"
 GCPCMD_SSHKEYPERSONAL[${NEWPROJECTNUM}]="${CONFSSHKEYPERSONAL}"
-GCPCMD_VPC[1]=""
-GCPCMD_FIREWALLRULES[1]=""
+GCPCMD_VPC[${NEWPROJECTNUM}]=""
+GCPCMD_FIREWALLRULES[${NEWPROJECTNUM}]=""
 EOF
    echo ""
 fi
@@ -1051,7 +1058,7 @@ while [[ "$1" =~ ^-.* ]]; do
       ;;
    -*)
       # Report invalid option
-      echo "[ERROR] Invalid option ${1}"
+      echo ""; echo " [ERROR] Invalid option ${1}"
       echo ""
       ;;
    esac
@@ -1109,7 +1116,7 @@ if [ "${RUN_LISTGLOBAL}" == "true" ]; then
    #echo "Listing all global instances for project: ${GREENREVERSED}${GCPPROJECT}${NOCOLOR} owner:${GREENREVERSED}${OWNER}${NOCOLOR} or group:${GREENREVERSED}${FPGROUP}${NOCOLOR}"
    echo "Listing all global instances for Project:${GCPPROJECT} Owner:${OWNER} or Group:${FPGROUP}"
    echo ""
-   gcplistglobal ${OWNER} ${FPGROUP}
+   gcplistglobal ${OWNER} ${FPGROUP} ${1}
    exit
 fi
 
@@ -1169,7 +1176,7 @@ listpubip)
    ARGUMENT3="listpubip"
    ;;
 *)
-   echo "[ERROR: REGION] Specify: america, asia or europe"
+   echo ""; echo " [ERROR: REGION] Specify: america, asia or europe"
    echo ""
    exit
    ;;
@@ -1248,7 +1255,7 @@ rename) ACTION="rename";;
 start) ACTION="start" ;;
 stop) ACTION="stop" ;;
 *)
-   echo "[ERROR: ACTION] Specify: accesslist, accessmodify, build, clone, delete, globalaccess, globalaccesslist, labellist, labelmodify, list, listpubip, machinetype, move, rename, start or stop"
+   echo ""; echo " [ERROR: ACTION] Specify: accesslist, accessmodify, build, clone, delete, globalaccess, globalaccesslist, labellist, labelmodify, list, listpubip, machinetype, move, rename, start or stop"
    exit
    ;;
 esac
