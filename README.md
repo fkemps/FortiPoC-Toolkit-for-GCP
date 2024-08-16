@@ -282,29 +282,6 @@ You can use first the `build` function to provision a FortiPoC, tweak as wanted 
 `./gcpcmd.sh europe test clone`
 
 ```
----------------------------------------------------------------------
-             FortiPoC Toolkit for Google Cloud Platform
----------------------------------------------------------------------
-
- FortiPoC instance number to clone : 1
- Enter amount of FortiPoC's clones : 15
- Enter start of numbered range : 2
-
-Okay to clone fpoc-fk-test-001 to fpoc-fk-test-002 till fpoc-fk-test-016, Project=dummy, region=europe-west4-a.   y/n?
-Do you want to create a fresh snapshot? (If no, latest snapshot will be used if available) y/n:
-Creating snapshot(s) fpoc-fk-test...done.
-==> Lets go...using Owner=fkemps or Group=demo, Project=dummy, Zone=europe-west2-a, Product=test, Action=clone
-
-==> Sleeping 6s seconds to avoid GCP DB locking
-==> Cloning instance fpoc-fk-test-001 to fpoc-fk-test-002
-==> Creating disk for fpoc-fk-test-002
-NAME              ZONE            SIZE_GB  TYPE         STATUS
-fpoc-fk-test-002  europe-west4-a  200      pd-standard  READY
-==> Create instance fpoc-fk-test-002
-NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP   STATUS
-fpoc-fk-test-002  europe-west4-a  n1-standard-4               10.164.0.38  34.90.151.94  RUNNING
-
-
 -------------------------------------------------------------------------------------------
                         FortiPoC Toolkit for Google Cloud Platform
 -------------------------------------------------------------------------------------------
