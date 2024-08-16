@@ -90,7 +90,8 @@
 # 2024080701 Ferry Kemps, Removed obsolete fortipoc-http-https-redir network tag, fixed VPN/FIREWALLRULE in preference file
 # 2024081401 Ferry Kemps, Shell code syntax checked and corrected
 # 2024081501 Ferry Kemps, Syntax updates, beta statements removed, reduced pd-standard-disk to 200GB to reduce storage cost, added bulk cloning
-GCPCMDVERSION="2024081501"
+# 2024081601 Ferry Kemps, Optimizing the bulk clone option
+GCPCMDVERSION="2024081601"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -449,7 +450,7 @@ function gcpclonebulk {
    CLONEMACHINEIMAGE="${TYPE}-${FPPREPEND}-${PRODUCT}-${IMAGENUMTOCLONE}"
    INSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
 
-   echo "  - Create instance ${INSTANCENAME}"
+   echo "   - Create instance ${INSTANCENAME}"
    gcloud compute instances create ${INSTANCENAME} \
       --project=${GCPPROJECT} \
       --zone=${ZONE} \
@@ -464,7 +465,7 @@ function gcpclone {
 
    # Decrease FPCOUNT to get correct starting number
    ((FPCOUNT--))
-   let FPNUMEND=$FPNUMSTART+$FPCOUNT
+   FPNUMEND=$((FPNUMSTART+FPCOUNT))
 
    # Mark the last instance number because we make FPNUMEND dynamic
    FPNUMMAX=$FPNUMEND
@@ -484,35 +485,45 @@ function gcpclone {
    CLONESOURCE="${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
    CLONEMACHINEIMAGE="${TYPE}-${FPPREPEND}-${PRODUCT}"
    # Make a rough time estimate to show
-   let CLONETIME=${FPCOUNT}*1
-
-   echo ""; echo "==> Preparing machine-image(s)....be patienced, enjoy a tasty espresso (estimation ${CLONETIME} minutes))"
-
+   CLONETIME=$((FPCOUNT*2))
+   echo ""; echo "==> Preparing machine-image(s)....be patienced, enjoy a tasty espresso (estimated ${CLONETIME} minutes))"
+   STARTTIME=$SECONDS
    # Catch the 1 clone request 
    [[ $FPCOUNT -eq 0 ]] && ((FPCOUNT++))
- 
    # Run the loop to batch 5 builds at a time
-   for ((COUNT=1; COUNT<FPCOUNT; COUNT+=5))
+   for ((COUNT=0; COUNT<FPCOUNT; COUNT+=5))
    do
       echo "  ...Wait a second for the next batch" #$COUNT"
       echo "y" | gcloud compute machine-images delete ${CLONEMACHINEIMAGE}-${COUNT} >/dev/null 2>&1
       gcloud compute machine-images create ${CLONEMACHINEIMAGE}-${COUNT} \
          --source-instance ${CLONESOURCE} \
          --source-instance-zone=${ZONE} >/dev/null 2>&1
-      let FPNUMEND=${FPNUMSTART}+5
-      if [[ $FPNUMEND -gt $FPNUMMAX ]]
+      
+      FPNUMEND=$((FPNUMSTART+5))
+      # Check is another clone batch is needed
+      if [[ FPNUMSTART -le FPNUMMAX ]]
       then
-         FPNUMEND=${FPNUMMAX}
+         if [[ FPNUMEND -gt FPNUMMAX ]]
+         then
+            FPNUMEND=$FPNUMMAX
+         fi      
+         # Make FPNUMBERTOCLONE in 3 digit format for aligned screen output
+         FPNUMSTARTUI=$(printf "%03d" ${FPNUMSTART})
+         FPNUMENDUI=$(printf "%03d" ${FPNUMEND})
+         echo "  => Cloning instances ${CLONEMACHINEIMAGE}-${FPNUMSTARTUI} to ${CLONEMACHINEIMAGE}-${FPNUMENDUI}"
+         parallel ${PARALLELOPT} -j0 gcpclonebulk ${TYPE} ${FPPREPEND} ${PRODUCT} ${COUNT} ${ZONE} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND})
+         # Lets shutdown the new instance
+         #prallel ${PARALLELOPT} -j0 gcpstop ${FPPREPEND}  ${ZONE} ${PRODUCT} ${COUNT} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND})
+         FPNUMSTART=$((FPNUMEND+1))
+         # exit the bulk building loop when START reached last instance (FPNUMMAX)
+         [[ FPNUMSTART -ge FPNUMMAX ]] && ((COUNT+=999))
       fi
-
-      # Make FPNUMBERTOCLONE in 3 digit format for aligned screen output
-      FPNUMSTARTUI=$(printf "%03d" ${FPNUMSTART})
-      FPNUMENDUI=$(printf "%03d" ${FPNUMEND})
-      echo "  - Cloning instances ${CLONEMACHINEIMAGE}-${FPNUMSTARTUI} to ${CLONEMACHINEIMAGE}-${FPNUMENDUI}"
-      parallel ${PARALLELOPT} -j0 gcpclonebulk ${TYPE} ${FPPREPEND} ${PRODUCT} ${COUNT} ${ZONE} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND})
-      let FPNUMSTART=${FPNUMEND}+1
    done
-   echo "==> Cloning finished"; echo ""
+   echo "==> Cloning finished"
+
+   # Show how long the cloning took
+   DURATION=$(( (SECONDS-STARTTIME)/60 ))
+   echo "    It took: $DURATION minutes to clone."; echo ""
 }
 
 # Function to start instance
@@ -535,7 +546,7 @@ function gcpstop {
    INSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
    echo "==> Stopping instance ${INSTANCENAME}"
    #  gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command 'poc eject' # not working if admin pwd is set
-   gcloud compute instances stop ${INSTANCENAME} --zone=${ZONE}
+   gcloud compute instances stop ${INSTANCENAME} --zone=${ZONE} --quiet #> /dev/null 2>&1
 }
 
 # Function to delete instance
