@@ -89,7 +89,8 @@
 # 2024080602 Ferry Kemps, Improved the upload image feature
 # 2024080701 Ferry Kemps, Removed obsolete fortipoc-http-https-redir network tag, fixed VPN/FIREWALLRULE in preference file
 # 2024081401 Ferry Kemps, Shell code syntax checked and corrected
-GCPCMDVERSION="2024081401"
+# 2024081501 Ferry Kemps, Syntax updates, beta statements removed, reduced pd-standard-disk to 200GB to reduce storage cost, added bulk cloning
+GCPCMDVERSION="2024081501"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -205,38 +206,22 @@ function togglefirewallruleany() {
 }
 
 function instancefirewallrules() {
-   echo ""
-   echo "Instancename     : firewall-rules attached"
-   echo "---------------------------------------------------------------------------------"
-   # Get all instance-names from default zone
-   INSTANCEARRAY=($(gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP})" | awk '{ print $1"_"$2 }' | grep -v NAME))
-   for FPINSTANCE in ${INSTANCEARRAY[*]}; do
-      FPINSTANCENAME="$(echo "${FPINSTANCE}" | awk -F "_" '{ print $1 }')"
-      FPINSTANCEZONE="$(echo "${FPINSTANCE}" | awk -F "_" '{ print $2 }')"
-      TAGS=($(gcloud compute instances describe "${FPINSTANCENAME}" --zone="${FPINSTANCEZONE}" --format=json | jq -r '.tags .items[]'))
-      echo "${FPINSTANCENAME} : ${TAGS[*]}"
-   done
+   displayheader
+   echo "Listing all global instances and firewall-rules for Project:${GCPPROJECT} Owner:${OWNER} or Group:${FPGROUP}"
+   gcloud compute instances list --filter="((labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND tags.items:*)" --format="table[box,title='✨ FIREWALL-RULES ✨'](name:label=INSTANCE, zone:label=ZONE, tags.items:label=TAGS,STATUS)"
 }
 
 function instancelabels() {
-   echo ""
-   echo "Instancename     : labels"
-   echo "---------------------------------------------------------------------------------"
-   # Get all instance-names from default zone
-   INSTANCEARRAY=($(gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP})" | awk '{ print $1"_"$2 }' | grep -v NAME))
-   for FPINSTANCE in ${INSTANCEARRAY[*]}; do
-      FPINSTANCENAME="$(echo "${FPINSTANCE}" | awk -F "_" '{ print $1 }')"
-      FPINSTANCEZONE="$(echo "${FPINSTANCE}" | awk -F "_" '{ print $2 }')"
-      LABELS=($(gcloud compute instances describe "${FPINSTANCENAME}" --zone="${FPINSTANCEZONE}" --format=json | jq -c '.labels' | sed 's/{//;s/}//;s/:/=/g;s/"//g'))
-      echo "${FPINSTANCENAME} : ${LABELS[*]}"
-   done
+   displayheader
+   echo "Listing all global instances and labels for Project:${GCPPROJECT} Owner:${OWNER} or Group:${FPGROUP}"
+   gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP})" --format="table[box, title='✨ LABELS ✨'](name:label=INSTANCE, zone:label=ZONE, labels:label=LABELS,STATUS)"
 }
 
 function displayheader() {
    clear
-   echo "---------------------------------------------------------------------"
-   echo "             FortiPoC Toolkit for Google Cloud Platform             "
-   echo "---------------------------------------------------------------------"
+   echo "-------------------------------------------------------------------------------------------"
+   echo "                        FortiPoC Toolkit for Google Cloud Platform                         "
+   echo "-------------------------------------------------------------------------------------------"
    echo ""
 }
 
@@ -278,8 +263,8 @@ function gcpaclupdate() {
       exit
    )
    if [ "${CMD}" == add ]; then
-      echo "Adding public-ip ${PUBLICIP} to GCP ACL to allow access from this location"
-      while read line; do
+      echo "Adding public IP address ${PUBLICIP} to GCP ACL to allow access from the location"
+      while read -r line; do
          if [ -z ${SOURCERANGE} ]; then
             SOURCERANGE="$line"
          else
@@ -292,8 +277,8 @@ function gcpaclupdate() {
       gcloud compute firewall-rules list --filter="name=${WORKSHOPSOURCENETWORKS}" --format=json | jq -r '.[] .sourceRanges[]'
       echo ""
    elif [ "${CMD}" == "remove" ]; then
-      echo "Removing public-ip ${PUBLICIP} to GCP ACL to remove access from this location"
-      while read line; do
+      echo "Removing public IP address ${PUBLICIP} from GCP ACL to remove access from the location"
+      while read -r line; do
          if [ -z ${SOURCERANGE} ]; then
             [ ! $line == ${PUBLICIP} ] && SOURCERANGE="$line"
          else
@@ -347,7 +332,7 @@ function gcpbuild {
       exit
    fi
 
-   RANDOMSLEEP=$((($RANDOM % 10) + 1))s
+   RANDOMSLEEP=$(((RANDOM % 10) + 1))s
    FPPREPEND=$1
    ZONE=$2
    PRODUCT=$3
@@ -371,7 +356,7 @@ function gcpbuild {
       --min-cpu-platform=Intel\ Broadwell --tags=fortipoc-deny-default,${WORKSHOPSOURCENETWORKS} \
       --image=${FPIMAGE} \
       --image-project=${GCPPROJECT} \
-      --boot-disk-size=350GB \
+      --boot-disk-size=200GB \
       --boot-disk-type=pd-standard \
       --boot-disk-device-name=${INSTANCENAME} \
       --labels=${LABELS}
@@ -382,8 +367,11 @@ function gcpbuild {
    sleep 90
    INSTANCEIP=$(gcloud compute instances describe ${INSTANCENAME} --zone=${ZONE} | grep natIP | awk '{ print $2 }')
    echo ${INSTANCENAME} "=" ${INSTANCEIP}
-   curl -k -q --retry 1 --connect-timeout 10 https://${INSTANCEIP}/ && echo "FortiPoC ${INSTANCENAME} on ${INSTANCEIP} reachable"
-   [ $? != 0 ] && echo "==> Something went wrong. The new instance is not reachable"
+   if ! curl -k -q --retry 1 --connect-timeout 10 https://${INSTANCEIP}/ && echo "FortiPoC ${INSTANCENAME} on ${INSTANCEIP} reachable"
+   then
+#   [ $? != 0 ] && echo "==> Something went wrong. The new instance is not reachable"
+      echo "==> Something went wrong. The new instance is not reachable"
+   fi
 
    # Now configure, load, prefetch and start PoC-definition
    [ "${FPTRAILKEY}" != "" ] && (
@@ -394,7 +382,7 @@ function gcpbuild {
       echo "==> Setting title"
       gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "set gui title \"${FPTITLE}\""
    )
-   gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command 'set guest passwd guest'
+      gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command 'set guest passwd guest'
    [ "${GCPREPO}" != "" ] && (
       echo "==> Adding repository"
       gcloud compute ssh admin@${INSTANCENAME} --zone ${ZONE} --command "repo add gcp-${GCPREPO} https://gcp.repository.fortipoc.com/~#{GCPREPO}/ --unsigned"
@@ -450,41 +438,84 @@ function gcpbuild {
    echo ""
 }
 
-# Function to clone a FortiPoC instance on GCP
-function gcpclone {
-   RANDOMSLEEP=$((($RANDOM % 10) + 1))s
-   FPPREPEND=$1
-   ZONE=$2
+# Function to bulk clone instances on GCP
+function gcpclonebulk {
+   TYPE=$1
+   FPPREPEND=$2
    PRODUCT=$3
-   FPNUMBERTOCLONE=$4
-   INSTANCE=$5
-   CLONESOURCE="${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
-   CLONEMACHINEIMAGE="${TYPE}-${FPPREPEND}-${PRODUCT}"
+   IMAGENUMTOCLONE=$4
+   ZONE=$5
+   INSTANCE=$6
+   CLONEMACHINEIMAGE="${TYPE}-${FPPREPEND}-${PRODUCT}-${IMAGENUMTOCLONE}"
    INSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
 
-   echo "==> Sleeping ${RANDOMSLEEP} seconds to avoid GCP DB locking"
-   sleep ${RANDOMSLEEP}
-   echo "==> Create instance ${INSTANCENAME}"
-   #  gcloud compute instances create ${INSTANCENAME} \
-   #  --project=${GCPPROJECT} \
-   #  --service-account=${GCPSERVICEACCOUNT} \
-   #  --verbosity=info \
-   #  --zone=${ZONE} \
-   #  --machine-type=n1-standard-4 \
-   #  --subnet=default --network-tier=PREMIUM \
-   #  --maintenance-policy=MIGRATE \
-   #  --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
-   #  --min-cpu-platform=Intel\ Broadwell \
-   #  --tags=${WORKSHOPSOURCENETWORKS} \
-   #  --disk "name=${INSTANCENAME},device-name=${INSTANCENAME},mode=rw,boot=yes,auto-delete=yes" \
-   #  --labels=${LABELS}
-   gcloud beta compute instances create ${INSTANCENAME} \
+   echo "  - Create instance ${INSTANCENAME}"
+   gcloud compute instances create ${INSTANCENAME} \
       --project=${GCPPROJECT} \
       --zone=${ZONE} \
-      --source-machine-image ${CLONEMACHINEIMAGE}
+      --source-machine-image ${CLONEMACHINEIMAGE} > /dev/null 2>&1
 }
 
-# Function to start FortiPoC instance
+# Function to clone instance(s) on GCP
+function gcpclone {
+   read -r -p " FortiPoC instance number to clone : " FPNUMBERTOCLONE
+   read -r -p " Enter amount of FortiPoC's clones : " FPCOUNT
+   read -r -p " Enter start of numbered range     : " FPNUMSTART
+
+   # Decrease FPCOUNT to get correct starting number
+   ((FPCOUNT--))
+   let FPNUMEND=$FPNUMSTART+$FPCOUNT
+
+   # Mark the last instance number because we make FPNUMEND dynamic
+   FPNUMMAX=$FPNUMEND
+   # Make FPNUMBERTOCLONE in 3 digit format for aligned screen output
+   FPNUMBERTOCLONE=$(printf "%03d" ${FPNUMBERTOCLONE})
+   CLONESOURCE="${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
+   CLONEMACHINEIMAGE="${TYPE}-${FPPREPEND}-${PRODUCT}"
+   FPNUMSTARTUI=$(printf "%03d" ${FPNUMSTART})
+   FPNUMENDUI=$(printf "%03d" ${FPNUMEND})
+   if [ ! -z ${SET_FPGROUP} ] && [ ${SET_FPGROUP} == "true" ]; then
+      FPGROUP=${OVERRIDE_FPGROUP}
+   fi
+   echo ""
+   read -r -p "Okay to ${ACTION} ${CLONESOURCE} to ${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMSTARTUI} till ${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMENDUI}, Project=${GCPPROJECT}, region=${ZONE}.   y/n? " choice
+   [ "${choice}" != "y" ] && exit
+
+   CLONESOURCE="${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
+   CLONEMACHINEIMAGE="${TYPE}-${FPPREPEND}-${PRODUCT}"
+   # Make a rough time estimate to show
+   let CLONETIME=${FPCOUNT}*1
+
+   echo ""; echo "==> Preparing machine-image(s)....be patienced, enjoy a tasty espresso (estimation ${CLONETIME} minutes))"
+
+   # Catch the 1 clone request 
+   [[ $FPCOUNT -eq 0 ]] && ((FPCOUNT++))
+ 
+   # Run the loop to batch 5 builds at a time
+   for ((COUNT=1; COUNT<FPCOUNT; COUNT+=5))
+   do
+      echo "  ...Wait a second for the next batch" #$COUNT"
+      echo "y" | gcloud compute machine-images delete ${CLONEMACHINEIMAGE}-${COUNT} >/dev/null 2>&1
+      gcloud compute machine-images create ${CLONEMACHINEIMAGE}-${COUNT} \
+         --source-instance ${CLONESOURCE} \
+         --source-instance-zone=${ZONE} >/dev/null 2>&1
+      let FPNUMEND=${FPNUMSTART}+5
+      if [[ $FPNUMEND -gt $FPNUMMAX ]]
+      then
+         FPNUMEND=${FPNUMMAX}
+      fi
+
+      # Make FPNUMBERTOCLONE in 3 digit format for aligned screen output
+      FPNUMSTARTUI=$(printf "%03d" ${FPNUMSTART})
+      FPNUMENDUI=$(printf "%03d" ${FPNUMEND})
+      echo "  - Cloning instances ${CLONEMACHINEIMAGE}-${FPNUMSTARTUI} to ${CLONEMACHINEIMAGE}-${FPNUMENDUI}"
+      parallel ${PARALLELOPT} -j0 gcpclonebulk ${TYPE} ${FPPREPEND} ${PRODUCT} ${COUNT} ${ZONE} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND})
+      let FPNUMSTART=${FPNUMEND}+1
+   done
+   echo "==> Cloning finished"; echo ""
+}
+
+# Function to start instance
 function gcpstart {
    FPPREPEND=$1
    ZONE=$2
@@ -495,7 +526,7 @@ function gcpstart {
    gcloud compute instances start ${INSTANCENAME} --zone=${ZONE}
 }
 
-# Function to stop FortiPoC instance
+# Function to stop instance
 function gcpstop {
    FPPREPEND=$1
    ZONE=$2
@@ -507,7 +538,7 @@ function gcpstop {
    gcloud compute instances stop ${INSTANCENAME} --zone=${ZONE}
 }
 
-# Function to delete FortiPoC instance
+# Function to delete instance
 function gcpdelete {
    FPPREPEND=$1
    ZONE=$2
@@ -518,7 +549,7 @@ function gcpdelete {
    echo yes | gcloud compute instances delete ${INSTANCENAME} --zone=${ZONE}
 }
 
-# Function to change FortiPoC instance machinetype
+# Function to change instance machinetype
 function gcpmachinetype {
    FPPREPEND=$1
    ZONE=$2
@@ -530,7 +561,7 @@ function gcpmachinetype {
    gcloud compute instances set-machine-type ${INSTANCENAME} --machine-type=${MACHINETYPE} --zone=${ZONE}
 }
 
-# Function to move FortiPoC instance to other zone
+# Function to move instance to other zone
 function gcpmove {
    FPPREPEND=$1
    ZONE=$2
@@ -543,7 +574,7 @@ function gcpmove {
    gcloud compute instances move ${INSTANCENAME} --zone=${ZONE} --destination-zone=${DESTINATIONZONE}
 }
 
-# Function to rename FortiPoC instance
+# Function to rename instance
 function gcprename {
    FPPREPEND=$1
    ZONE=$2
@@ -553,10 +584,10 @@ function gcprename {
    INSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
    NEWINSTANCENAME="${TYPE}-${FPPREPEND}-${NEWPRODUCT}-${INSTANCE}"
    echo "==> Renaming instance ${INSTANCENAME} to ${NEWINSTANCENAME}"
-   gcloud beta compute instances set-name ${INSTANCENAME} --new-name=${NEWINSTANCENAME} --zone=${ZONE}
+   gcloud compute instances set-name ${INSTANCENAME} --new-name=${NEWINSTANCENAME} --zone=${ZONE}
 }
 
-# Function to change FortiPoC instance firewall-rules
+# Function to change instance firewall-rules
 function gcpglobalaccess {
    FPPREPEND=$1
    ZONE=$2
@@ -573,7 +604,7 @@ function gcpglobalaccess {
    fi
 }
 
-# Function to add/remove/replace FortiPoC instance labels
+# Function to add/remove/replace instance labels
 function gcplabelmodify {
    FPPREPEND=$1
    ZONE=$2
@@ -596,7 +627,7 @@ function gcplabelmodify {
    fi
 }
 
-# Function to add/remove/replace FortiPoC instance network tags
+# Function to add/remove/replace instance network tags
 function gcpaccessmodify {
    FPPREPEND=$1
    ZONE=$2
@@ -619,18 +650,18 @@ function gcpaccessmodify {
    fi
 }
 
-# Function to list FortiPoC instance firewall-rules
+# Function to list instance firewall-rules
 function gcpaccesslist {
    FPPREPEND=$1
    ZONE=$2
    PRODUCT=$3
-   INSTANCESTART=$(expr $4)
-   INSTANCEEND=$(expr $5)
+   INSTANCESTART=$(($4))
+   INSTANCEEND=$(($5))
    echo "Listing network tags (firewall-rules) of selected instances"
    echo ""
-   echo "Instancename     : network tags"
+   echo "Instancename      : network tags"
    echo "---------------------------------------------------------------------------------"
-   for ((COUNT = $INSTANCESTART; $COUNT <= $INSTANCEEND; COUNT++)); do
+   for ((COUNT = INSTANCESTART; COUNT <= INSTANCEEND; COUNT++)); do
       INSTANCENUMBER=$(printf "%03d" $COUNT)
       FPINSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCENUMBER}"
       #gcloud compute instances describe ${INSTANCENAME} --zone=${ZONE} | jq -r '.tags .items[]'
@@ -639,18 +670,18 @@ function gcpaccesslist {
    done
 }
 
-# Function to list FortiPoC instance labels
+# Function to list instance labels
 function labellist {
    FPPREPEND=$1
    ZONE=$2
    PRODUCT=$3
-   INSTANCESTART=$(expr $4)
-   INSTANCEEND=$(expr $5)
+   INSTANCESTART=$(($4))
+   INSTANCEEND=$(($5))
    echo "Listing labels of selected instances"
    echo ""
    echo "Instancename     : labels"
    echo "---------------------------------------------------------------------------------"
-   for ((COUNT = $INSTANCESTART; $COUNT <= $INSTANCEEND; COUNT++)); do
+   for ((COUNT = INSTANCESTART; COUNT <= INSTANCEEND; COUNT++)); do
       INSTANCENUMBER=$(printf "%03d" $COUNT)
       FPINSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCENUMBER}"
       #gcloud compute instances describe ${INSTANCENAME} --zone=${ZONE} | jq -r '.tags .items[]'
@@ -725,7 +756,7 @@ function projectselect {
      echo "  ${i}) : ${GCPCMD_PROJECT[${i}]}"
    done
    echo ""
-   read -p " Select your GCP project : " SELECTEDPROJECT
+   read -r -p " Select your GCP project : " SELECTEDPROJECT
    if [[ ${SELECTEDPROJECT} -lt 1 ]] || [[ ${SELECTEDPROJECT} -gt ${#GCPCMD_PROJECT[@]} ]]
    then
      echo""; echo " [ERROR] Invalid project number selected"
@@ -741,21 +772,21 @@ function projectselect {
 # Function to upload a tar.gz file into GCP as image
 function gcpuploadimage {
    echo " This option allows you to upload a tar.gz file as an image"
-   read -p " What is the image filename (full path)? : " IMAGEFILENAME
+   read -r -p " What is the image filename (full path)? : " IMAGEFILENAME
    IMAGEFILE=$(basename ${IMAGEFILENAME})
    if [[ ! ${IMAGEFILE} =~ "tar.gz" ]]; then
      echo " Filename is not ending in tar.gz"
      exit
    fi
-   read -p " Provide image filename for GCP (to build an instance)  : " IMAGENAME
+   read -r -p " Provide image filename for GCP (to build an instance)  : " IMAGENAME
    echo ""
    echo " Copying ${IMAGEFILE} to you bucket gs://images-${OWNER}/"
-   gsutil ls gs://images-${OWNER} > /dev/null 2>&1
-   if [ ! "$?" = "0" ]; then
+   if ! gsutil ls gs://images-${OWNER} > /dev/null 2>&1
+   then
      gcloud storage buckets create gs://images-${OWNER} --project=${GCPPROJECT} --location=$(echo ${ZONE}|awk -F "-" '{ print $1"-"$2}')
    fi
-   gsutil cp ${IMAGEFILENAME} gs://images-${OWNER}/${IMAGEFILE}
-   if [ "$?" = "0" ]; then 
+   if ! gsutil cp ${IMAGEFILENAME} gs://images-${OWNER}/${IMAGEFILE}
+   then 
       echo ""
       echo " Building your image file ${IMAGENAME}"
       gcloud compute images create ${IMAGENAME} \
@@ -780,7 +811,7 @@ if [ ! -f ${GCPCMDCONF} ]; then
    echo "NOTE: Make sure you have enabled the 'Compute Engine API' via the Google Cloud Console first!"
    sleep 3
    echo 'DEFAULTPROJECT="1"' > ${GCPCMDCONF}
-   read -p "Would you like to have "gcpcmd" as a global command? y/n : " choice
+   read -r -p "Would you like to have "gcpcmd" as a global command? y/n : " choice
    if [ -z "${choice}" ] || [ "${choice}" == "y" ]; then
       if [[ ${PATH} =~ "/usr/local/bin" ]]; then
         [ -d /usr/local/bin ] && sudo ln -s $(pwd)/gcpcmd.sh /usr/local/bin/gcpcmd
@@ -791,11 +822,11 @@ if [ ! -f ${GCPCMDCONF} ]; then
 fi
 if [ "${EXPAND}" = "new" ]; then
    let NEWPROJECTNUM=${#GCPCMD_PROJECT[@]}+1
-   read -p "Your initials e.g. fl                       : " CONFINITIALS
-   read -p "Your name to lable instanced e.g. flastname : " CONFGCPLABEL
-   read -p "Groupname for shared instances (optional)   : " CONFGCPGROUP
+   read -r -p "Your initials e.g. fl                       : " CONFINITIALS
+   read -r -p "Your name to lable instanced e.g. flastname : " CONFGCPLABEL
+   read -r -p "Groupname for shared instances (optional)   : " CONFGCPGROUP
    until [ ! -z ${CONFREGION} ]; do
-      read -p "Your region 1) Asia, 2) Europe, 3) America  : " CONFREGIONANSWER
+      read -r -p "Your region 1) Asia, 2) Europe, 3) America  : " CONFREGIONANSWER
       case ${CONFREGIONANSWER} in
       1) CONFREGION="${ASIA}" ;;
       2) CONFREGION="${EUROPE}" ;;
@@ -815,7 +846,7 @@ if [ "${EXPAND}" = "new" ]; then
    echo ""
    echo "   q to quit"
    echo ""
-   read -p " Select your GCP project : " SELECTEDPROJECT
+   read -r -p " Select your GCP project : " SELECTEDPROJECT
    if [[ ${SELECTEDPROJECT} -lt 0 ]] || [[ ${SELECTEDPROJECT} -ge ${#GCPPROJECTID[@]} ]] && [ ! ${SELECTEDPROJECT} == "q" ]
    then
      echo""; echo " [ERROR] Invalid project selected"
@@ -830,13 +861,13 @@ if [ "${EXPAND}" = "new" ]; then
    # Request default Compute Service Account and use that if no Service Account is entered
    GCPSRVACCOUNT=$(gcloud iam service-accounts list --filter=Compute --format=json | jq -r '.[] .email')
    until [[ ${ONEACCOUNT} -eq 1 ]]; do
-      read -p "GCP service account (provide only one) [${GCPSRVACCOUNT}] : " CONFSERVICEACCOUNT
+      read -r -p "GCP service account (provide only one) [${GCPSRVACCOUNT}] : " CONFSERVICEACCOUNT
       [ -z "${CONFSERVICEACCOUNT}" ] && CONFSERVICEACCOUNT="${GCPSRVACCOUNT}"
       [[ ! ${CONFSERVICEACCOUNT} =~ \  ]] && ONEACCOUNT=1
    done
 
    until [[ ${VALIDIP} -eq 1 ]]; do
-      read -p "IP-address of license-server (optional) : " CONFLICENSESERVER
+      read -r -p "IP-address of license-server (optional) : " CONFLICENSESERVER
       if [ -z ${CONFLICENSESERVER} ]; then
          VALIDIP=1
       else
@@ -850,7 +881,7 @@ if [ "${EXPAND}" = "new" ]; then
    if [ -f ~/.ssh/id_rsa.pub ]; then
       SSHKEYPERSONAL=$(head -1 ~/.ssh/id_rsa.pub)
    fi
-   read -p "Your SSH public key for FortiPoC access (optional) [${SSHKEYPERSONAL}] : " CONFSSHKEYPERSONAL
+   read -r -p "Your SSH public key for FortiPoC access (optional) [${SSHKEYPERSONAL}] : " CONFSSHKEYPERSONAL
    CONFSSHKEYPERSONAL="${SSHKEYPERSONAL}"
 
    cat <<EOF >>${GCPCMDCONF}
@@ -937,29 +968,6 @@ if [ -z ${DEFAULTPROJECT} ] && [ ! "$1" == "-d" ]; then
    exit
 fi
 
-# Verify if SSHKEY was populated from prefences file. If not than gcpcmd.sh was updated.
-#if [ -z "${SSHKEYPERSONAL}" ] && [ ! "$1" == "-d" ]; then
-#   echo "Run ./gcpcmd.sh -d because your configured preferences are from older gcpcmd.sh version."
-#   [ -f ${GCPCMDCONF} ] && displaypreferences ${GCPCMDCONF}
-#   exit
-#fi
-
-# Verify if group variable preference is set, else gcpcmd.sh was update
-#if [ -z ${FPGROUP} ] && [ ! $(grep FPGROUP ${GCPCMDCONF}) ] && [ ! "$1" == "-d" ]; then
-#   echo "Run ./gcpcmd.sh -d because your configured preferences are from older gcpcmd.sh version."
-#   [ -f ${GCPCMDCONF} ] && displaypreferences ${GCPCMDCONF}
-#   exit
-#elif [ -z ${FPGROUP} ]; then
-#   FPGROUP=${OWNER}
-#fi
-
-# Verify if Service Account preference is set, else append to personal preference file
-#if [ ! $(grep GCPSERVICEACCOUNT ${GCPCMDCONF}) ]; then
-#   GCPSRVACCOUNT=$(gcloud iam service-accounts list --filter=Compute --format=json | jq -r '.[] .email')
-#   echo "Adding default Service Account to your personal preference file"
-#   echo "GCPSERVICEACCOUNT=\"${GCPSRVACCOUNT}\"" >>${GCPCMDCONF}
-#fi
-
 # Check if GCP default VPC and Firewall rules exist
    checkdefaultnetwork
    checkfirewallrules
@@ -993,7 +1001,7 @@ while [[ "$1" =~ ^-.* ]]; do
       exit
       ;;
    -gl | --global-access-list)
-      instancefirewallrules
+      instancefirewallrules ${OWNER} ${FPGROUP}
       exit
       ;;
    -gs | --global-access-status)
@@ -1022,7 +1030,8 @@ while [[ "$1" =~ ^-.* ]]; do
       RUN_LISTGLOBAL=true
       ;;
    -ll | --list-labels)
-      RUN_LISTLABELS=true
+      instancelabels ${OWNER} ${FPGROUP}
+      exit
       ;;
    -lr | --list-running)
       RUN_LISTRUNNING=true
@@ -1117,14 +1126,6 @@ if [ "${RUN_LISTGLOBAL}" == "true" ]; then
    echo "Listing all global instances for Project:${GCPPROJECT} Owner:${OWNER} or Group:${FPGROUP}"
    echo ""
    gcplistglobal ${OWNER} ${FPGROUP} ${1}
-   exit
-fi
-
-if [ "${RUN_LISTLABELS}" == "true" ]; then
-   displayheader
-   echo "Listing all global instances and labels for Project:${GCPPROJECT} Owner:${OWNER} or Group:${FPGROUP}"
-   echo ""
-   instancelabels ${OWNER} ${FPGROUP}
    exit
 fi
 
@@ -1242,6 +1243,7 @@ accesslist) ACTION="accesslist" ;;
 accessmodify) ACTION="accessmodify" ;;
 build) ACTION="build" ;;
 clone) ACTION="clone" ;;
+clonebulk) ACTION="clonebulk" ;;
 delete) ACTION="delete" ;;
 globalaccess) ACTION="globalaccess" ;;
 globalaccesslist) ACTION="globalaccesslist" ;;
@@ -1255,17 +1257,17 @@ rename) ACTION="rename";;
 start) ACTION="start" ;;
 stop) ACTION="stop" ;;
 *)
-   echo ""; echo " [ERROR: ACTION] Specify: accesslist, accessmodify, build, clone, delete, globalaccess, globalaccesslist, labellist, labelmodify, list, listpubip, machinetype, move, rename, start or stop"
+   echo ""; echo " [ERROR: ACTION] Specify: accesslist, accessmodify, build, clone, clonebulk,delete, globalaccess, globalaccesslist, labellist, labelmodify, list, listpubip, machinetype, move, rename, start or stop"
    exit
    ;;
 esac
 
 displayheader
 if [[ ${ACTION} == accesslist || ${ACTION} == accessmodify || ${ACTION} == build || ${ACTION} == delete || ${ACTION} == globalaccess || ${ACTION} == globalaccesslist || ${ACTION} == "labellist" || ${ACTION} == "labelmodify" || ${ACTION} == machinetype || ${ACTION} == move || ${ACTION} == rename || ${ACTION} == start || ${ACTION} == stop ]]; then
-   read -p " Enter amount of FortiPoC's : " FPCOUNT
-   read -p " Enter start of numbered range : " FPNUMSTART
+   read -r -p " Enter amount of FortiPoC's : " FPCOUNT
+   read -r -p " Enter start of numbered range : " FPNUMSTART
    if [ ${ACTION} == "machinetype" ]; then
-      read -p " select machine-type : 0) e2-medium 1) n1-standard-1, 2) n1-standard-2, 3) n1-standard-4, 4) n1-standard-8, 5) n1-standard-16 : " NEWMACHINETYPE
+      read -r -p " select machine-type : 0) e2-medium 1) n1-standard-1, 2) n1-standard-2, 3) n1-standard-4, 4) n1-standard-8, 5) n1-standard-16 : " NEWMACHINETYPE
       case ${NEWMACHINETYPE} in
       0) MACHINETYPE="e2-medium" ;;
       1) MACHINETYPE="n1-standard-1" ;;
@@ -1280,7 +1282,7 @@ if [[ ${ACTION} == accesslist || ${ACTION} == accessmodify || ${ACTION} == build
          ;;
       esac
    elif [ ${ACTION} == "globalaccess" ]; then
-      read -p " select world wide access : 1) Enable, 2) Disable : " NEWGLOBALACCESS
+      read -r -p " select world wide access : 1) Enable, 2) Disable : " NEWGLOBALACCESS
       case ${NEWGLOBALACCESS} in
       1) GLOBALACCESS="enable" ;;
       2) GLOBALACCESS="disable" ;;
@@ -1291,7 +1293,7 @@ if [[ ${ACTION} == accesslist || ${ACTION} == accessmodify || ${ACTION} == build
          ;;
       esac
    elif [ ${ACTION} == "labelmodify" ]; then
-      read -p " What label action would you like 1) Add, 2) Remove, 3) replace : " NEWLABELACTION
+      read -r -p " What label action would you like 1) Add, 2) Remove, 3) replace : " NEWLABELACTION
       case ${NEWLABELACTION} in
       1) LABELACTION="add" ;;
       2) LABELACTION="remove" ;;
@@ -1303,17 +1305,17 @@ if [[ ${ACTION} == accesslist || ${ACTION} == accessmodify || ${ACTION} == build
          ;;
       esac
       if [ ${LABELACTION} == "add" ]; then
-         read -p " Provide the new label and value e.g. name=value : " LABEL
+         read -r -p " Provide the new label and value e.g. name=value : " LABEL
          NEWLABEL="dummy"
       elif [ ${LABELACTION} == "remove" ]; then
-         read -p " Provide the label name to remove : " LABEL
+         read -r -p " Provide the label name to remove : " LABEL
          NEWLABEL="dummy"
       else
-         read -p " Provide the label name to replace : " LABEL
-         read -p " Provide the new label and value e.g. name=value : " NEWLABEL
+         read -r -p " Provide the label name to replace : " LABEL
+         read -r -p " Provide the new label and value e.g. name=value : " NEWLABEL
       fi
     elif [ ${ACTION} == "accessmodify" ]; then
-      read -p " What network tag (firewall-rule) action would you like 1) Add, 2) Remove, 3) replace : " NEWTAGACTION
+      read -r -p " What network tag (firewall-rule) action would you like 1) Add, 2) Remove, 3) replace : " NEWTAGACTION
       case ${NEWTAGACTION} in
       1) TAGACTION="add" ;;
       2) TAGACTION="remove" ;;
@@ -1325,83 +1327,54 @@ if [[ ${ACTION} == accesslist || ${ACTION} == accessmodify || ${ACTION} == build
          ;;
       esac
       if [ ${TAGACTION} == "add" ]; then
-         read -p " Provide the new network tag and value e.g. default-deny-all : " NETWORKTAG
+         read -r -p " Provide the new network tag and value e.g. default-deny-all : " NETWORKTAG
          NEWNETWORKTAG="dummy"
       elif [ ${TAGACTION} == "remove" ]; then
-         read -p " Provide the network tag  name to remove : " NETWORKTAG
+         read -r -p " Provide the network tag  name to remove : " NETWORKTAG
          NEWNETWORKTAG="dummy"
       else
-         read -p " Provide the network tag name to replace : " NETWORKTAG
-         read -p " Provide the new network tag and value e.g. allow-http-any : " NEWNETWORKTAG
+         read -r -p " Provide the network tag name to replace : " NETWORKTAG
+         read -r -p " Provide the new network tag and value e.g. allow-http-any : " NEWNETWORKTAG
       fi
    elif [ ${ACTION} == "move" ]; then
       while [[ "${ZONESTATUS}" != "UP" ]] ; do
-      read -p " To which zone would you like to move the instance(s) : " DSTZONE
+      read -r -p " To which zone would you like to move the instance(s) : " DSTZONE
       echo " Checking destination zone availability"
-      ZONESTATUS=`gcloud compute zones describe ${DSTZONE} --format=json | jq -r '.status'`
+      ZONESTATUS=$(gcloud compute zones describe ${DSTZONE} --format=json | jq -r '.status')
       if [ "${ZONESTATUS}" == "UP" ]; then
-         read -p " Are the instances NOT RUNNING? y/n " choice
+         read -r -p " Are the instances NOT RUNNING? y/n " choice
          [ "${choice}" != "y" ] && exit
       else
         echo " That destination zone is not available or UP"
       fi
       done
    elif [ ${ACTION} == "rename" ]; then
-      read -p " What is the new instance PRODUCT name (${TYPE}-${FPPREPEND}-PRODUCT-nnn) : " NEWPRODUCTNAME
-      read -p " Is this new instance name ${TYPE}-${FPPREPEND}-${NEWPRODUCTNAME}-nnn correct? y/n " choice 
+      read -r -p " What is the new instance PRODUCT name (${TYPE}-${FPPREPEND}-PRODUCT-nnn) : " NEWPRODUCTNAME
+      read -r -p " Is this new instance name ${TYPE}-${FPPREPEND}-${NEWPRODUCTNAME}-nnn correct? y/n " choice 
          [ "${choice}" != "y" ] && exit
    fi
-   let --FPCOUNT
-   let FPNUMEND=FPNUMSTART+FPCOUNT
+   ((FPCOUNT--))
+   let FPNUMEND=$FPNUMSTART+$FPCOUNT
    FPNUMSTART=$(printf "%03d" ${FPNUMSTART})
    FPNUMEND=$(printf "%03d" ${FPNUMEND})
 
    echo ""
-   read -p "Okay to ${ACTION} ${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMSTART} till ${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMEND}, Project=${GCPPROJECT}, region=${ZONE}.   y/n? " choice
+   read -r -p "Okay to ${ACTION} ${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMSTART} till ${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMEND}, Project=${GCPPROJECT}, region=${ZONE}.   y/n? " choice
    [ "${choice}" != "y" ] && exit
-fi
-
-if [[ ${ACTION} == clone ]]; then
-   displayheader
-   read -p " FortiPoC instance number to clone        : " FPNUMBERTOCLONE
-   read -p " Enter amount of FortiPoC's clones (max 5): " FPCOUNT
-   read -p " Enter start of numbered range            : " FPNUMSTART
-   let --FPCOUNT
-   let FPNUMEND=FPNUMSTART+FPCOUNT
-   FPNUMSTART=$(printf "%03d" ${FPNUMSTART})
-   FPNUMEND=$(printf "%03d" ${FPNUMEND})
-   FPNUMBERTOCLONE=$(printf "%03d" ${FPNUMBERTOCLONE})
-   CLONESOURCE="${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
-   CLONEMACHINEIMAGE="${TYPE}-${FPPREPEND}-${PRODUCT}"
-   if [ ! -z ${SET_FPGROUP} ] && [ ${SET_FPGROUP} == "true" ]; then
-      FPGROUP=${OVERRIDE_FPGROUP}
-   fi
-   echo ""
-   read -p "Okay to ${ACTION} ${CLONESOURCE} to ${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMSTART} till ${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMEND}, Project=${GCPPROJECT}, region=${ZONE}.   y/n? " choice
-   [ "${choice}" != "y" ] && exit
-   # Safest is to use fresh machine-image because it includes latest changes and there is not check if a machine-image exists
-   # To speed up cloning you could skip machine-image creation and assume there's an machine-image available.
-   read -p "Do you want to create a fresh machine-image? (No means the latest machine-image will be used, if available) y/n: " choice
-   if [ ${choice} == "y" ]; then
-      # Delete any existing machine-image before creating new.There's no overwrite AFAIK and will allow fresh snapshot
-      echo "==> Preparing machine-image....be patienced, enjoy a quick espresso"
-      echo "y" | gcloud beta compute machine-images delete ${CLONEMACHINEIMAGE} >/dev/null 2>&1
-      gcloud beta compute machine-images create ${CLONEMACHINEIMAGE} \
-         --source-instance ${CLONESOURCE} \
-         --source-instance-zone=${ZONE} >/dev/null 2>&1
-   fi
 fi
 
 echo "==> Lets go...using Owner=${OWNER} or Group=${FPGROUP}, Project=${GCPPROJECT}, Zone=${ZONE}, Product=${PRODUCT}, Action=${ACTION}"
 echo
 
-export -f gcpaccessmodify gcpbuild gcpstart gcpstop gcpdelete gcpclone gcpmachinetype gcpmove gcprename gcpglobalaccess gcplabelmodify
-export CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE WORKSHOPSOURCEANY LABELS LABEL NEWLABEL NETWORKTAG NEWNETWORKTAG FPTRAILKEY FPPREPEND POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER POCLAUNCH NEWMACHINETYPE GCPSERVICEACCOUNT SSHKEYPERSONAL WORKSHOPSOURCENETWORKS DSTZONE NEWPRODUCTNAME TYPE
+export -f gcpaccessmodify gcpbuild gcpstart gcpstop gcpdelete gcpclone gcpclonebulk gcpmachinetype gcpmove gcprename gcpglobalaccess gcplabelmodify
+export PARALLELOPT CONFIGFILE GCPPROJECT FPIMAGE MACHINETYPE WORKSHOPSOURCEANY LABELS LABEL NEWLABEL NETWORKTAG NEWNETWORKTAG FPTRAILKEY FPPREPEND \
+POCDEFINITION1 POCDEFINITION2 POCDEFINITION3 POCDEFINITION4 POCDEFINITION5 POCDEFINITION6 POCDEFINITION7 POCDEFINITION8 LICENSESERVER \
+POCLAUNCH NEWMACHINETYPE GCPSERVICEACCOUNT SSHKEYPERSONAL WORKSHOPSOURCENETWORKS DSTZONE NEWPRODUCTNAME TYPE
 
 case ${ACTION} in
 accesslist) gcpaccesslist ${FPPREPEND} ${ZONE} ${PRODUCT} ${FPNUMSTART} ${FPNUMEND} ;;
 build) parallel ${PARALLELOPT} -j0 gcpbuild ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPTITLE}" ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
-clone) parallel ${PARALLELOPT} -j0 gcpclone ${FPPREPEND} ${ZONE} ${PRODUCT} "${FPNUMBERTOCLONE}" ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
+clone) gcpclone;;
 delete) parallel ${PARALLELOPT} -j0 gcpdelete ${FPPREPEND} ${ZONE} ${PRODUCT} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
 globalaccess) parallel ${PARALLELOPT} -j0 gcpglobalaccess ${FPPREPEND} ${ZONE} ${PRODUCT} ${GLOBALACCESS} ::: $(seq -f%03g ${FPNUMSTART} ${FPNUMEND}) ;;
 labellist) labellist ${FPPREPEND} ${ZONE} ${PRODUCT} ${FPNUMSTART} ${FPNUMEND} ;;
