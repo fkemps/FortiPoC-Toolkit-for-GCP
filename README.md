@@ -169,7 +169,7 @@ This allows you to **Build**, **Clone**, **Start**, **Stop**, **Delete** and **l
 | |_ / _ \|  __| __| | |_) / _ \ / __|   | |/ _ \ / _ \| | |/ / | __| | |_ / _ \|  __| | |  _| |   | |_) |
 |  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/
 |_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|
-(Version: 2024080201)
+(Version: 2024081601)
 
 Selected project : fkemps-cse-labs
 Default deployment region: europe-west3-a
@@ -303,6 +303,36 @@ fpoc-fk-test-002  europe-west4-a  200      pd-standard  READY
 ==> Create instance fpoc-fk-test-002
 NAME              ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP   STATUS
 fpoc-fk-test-002  europe-west4-a  n1-standard-4               10.164.0.38  34.90.151.94  RUNNING
+
+
+-------------------------------------------------------------------------------------------
+                        FortiPoC Toolkit for Google Cloud Platform
+-------------------------------------------------------------------------------------------
+
+==> Lets go...using Owner=fkemps or Group=appsec, Project=fkemps-cse-labs, Zone=europe-west3-a, Product=event, Action=clone
+
+ FortiPoC instance number to clone : 1
+ Enter amount of FortiPoC's clones : 9
+ Enter start of numbered range     : 2
+
+Okay to clone fpoc-fk-test-001 to fpoc-fk-test-002 till fpoc-test-045, Project=fkemps-cse-labs, region=europe-west3-a.   y/n? y
+
+==> Preparing machine-image(s)....be patienced, enjoy a tasty espresso (estimated 2 minutes))
+  ...Wait a second for the next batch
+  => Cloning instances fpoc-fk-event-002 to fpoc-fk-event-007
+   - Create instance fpoc-fk-test-002
+   - Create instance fpoc-fk-test-003
+   - Create instance fpoc-fk-test-004
+   - Create instance fpoc-fk-test-005
+   - Create instance fpoc-fk-test-006
+   - Create instance fpoc-fk-test-007
+  ...Wait a second for the next batch
+  => Cloning instances fpoc-fk-test-008 to fpoc-fk-test-010
+   - Create instance fpoc-fk-test-008
+   - Create instance fpoc-fk-test-009
+   - Create instance fpoc-fk-test-010
+==> Cloning finished
+    It took: 2 minutes to clone.
 ```
 
 ### Delete
@@ -321,35 +351,8 @@ Okay to delete fpoc-fk-test-001 till fpoc-fk-test-003, Project=dummy, region=eur
 ==> Lets go...using Owner=fkemps or Group=demo, Project=dummy, Zone=europe-west2-a, Product=test, Action=delete
 
 ==> Deleting instance fpoc-fk-test-002
-The following instances will be deleted. Any attached disks configured
- to be auto-deleted will be deleted unless they are attached to any
-other instances or the `--keep-disks` flag is given and specifies them
- for keeping. Deleting a disk is irreversible and any data on the disk
- will be lost.
- - [fpoc-fk-test-002] in [europe-west4-a]
-
-Do you want to continue (Y/n)?
-Deleted [https://www.googleapis.com/compute/v1/projects/cse-projects-202906/zones/europe-west4-a/instances/fpoc-fk-test-002].
 ==> Deleting instance fpoc-fk-test-001
-The following instances will be deleted. Any attached disks configured
- to be auto-deleted will be deleted unless they are attached to any
-other instances or the `--keep-disks` flag is given and specifies them
- for keeping. Deleting a disk is irreversible and any data on the disk
- will be lost.
- - [fpoc-fk-test-001] in [europe-west4-a]
-
-Do you want to continue (Y/n)?
-Deleted [https://www.googleapis.com/compute/v1/projects/cse-projects-202906/zones/europe-west4-a/instances/fpoc-fk-test-001].
 ==> Deleting instance fpoc-fk-test-003
-The following instances will be deleted. Any attached disks configured
- to be auto-deleted will be deleted unless they are attached to any
-other instances or the `--keep-disks` flag is given and specifies them
- for keeping. Deleting a disk is irreversible and any data on the disk
- will be lost.
- - [fpoc-fk-test-003] in [europe-west4-a]
-
-Do you want to continue (Y/n)?
-Deleted [https://www.googleapis.com/compute/v1/projects/cse-projects-202906/zones/europe-west4-a/instances/fpoc-fk-test-003].
 ```
 
 ### Global
@@ -379,7 +382,7 @@ You can use following options to enable/disable the global firewall-rule, obtain
 #### Network tags (firewall-rules)
 The accesslist action can be used to list the network tags (firewall-rules) applied to the selected FortiPoC instances.
 
-`./gcpcmd-new.sh europe test globalaccesslist`
+`./gcpcmd-new.sh europe test accesslist`
 
 ```
 ---------------------------------------------------------------------
@@ -405,6 +408,28 @@ fpoc-fk-test-013 : fortipoc-deny-default fortipoc-http-https-redir workshop-sour
 fpoc-fk-test-014 : fortipoc-deny-default fortipoc-http-https-redir workshop-source-any workshop-source-networks
 fpoc-fk-test-015 : fortipoc-deny-default fortipoc-http-https-redir workshop-source-any workshop-source-networks
 ```
+
+You can request a global overview of the firewall-rules as well
+
+`gcpcmd --global-access-list`
+
+```script
+-------------------------------------------------------------------------------------------
+                        FortiPoC Toolkit for Google Cloud Platform
+-------------------------------------------------------------------------------------------
+
+Listing all global instances and firewall-rules for Project:fkemps-cse-labs Owner:fkemps or Group:appsec
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                  ✨ FIREWALL-RULES ✨                                                             │
+├───────────────────┬───────────────────┬───────────────────────────────────────────────────────────────────────────────┬────────────┤
+│     INSTANCE      │        ZONE       │                                      TAGS                                     │   STATUS   │
+├───────────────────┼───────────────────┼───────────────────────────────────────────────────────────────────────────────┼────────────┤
+│ fpoc-fk-test-001  │ europe-west4-a    │ ['fortipoc-deny-default', 'workshop-source-any', 'workshop-source-networks']  │ TERMINATED │
+│ fpoc-fk-test-002  │ europe-west4-a    │ ['fortipoc-deny-default', 'workshop-source-any', 'workshop-source-networks']  │ TERMINATED │
+│ fpoc-fk-test-003  │ europe-west4-a    │ ['fortipoc-deny-default', 'workshop-source-any', 'workshop-source-networks']  │ TERMINATED │
+└───────────────────┴───────────────────┴───────────────────────────────────────────────────────────────────────────────┴────────────┘
+```
+
 ### Accessmodify
 The accessmodify action can be used to add/remove/replace network tags from the selected instances.
 
@@ -499,6 +524,28 @@ fpoc-fk-test-008 : expire=2024-12-31,group=demo,owner=fkemps,purpose=fortipoc
 fpoc-fk-test-009 : expire=2024-12-31,group=demo,owner=fkemps,purpose=fortipoc
 fpoc-fk-test-010 : expire=2024-12-31,group=demo,owner=fkemps,purpose=fortipoc
 ```
+
+You can request a global overview of the labels as well
+
+`gcpcmd --global-access-list`
+
+```script
+------------------------------------------------------------------------------------------
+                        FortiPoC Toolkit for Google Cloud Platform
+-------------------------------------------------------------------------------------------
+
+Listing all global instances and labels for Project:fkemps-cse-labs Owner:fkemps or Group:appsec
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                             ✨ LABELS ✨                                                                  │
+├───────────────────┬─────────────────┬─────────────────────────────────────────────────────────────────────────────────--──────┬────────────┤
+│      INSTANCE     │        ZONE     │                                           LABELS                                        │   STATUS   │
+├───────────────────┼─────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┼────────────┤
+│ fpoc-fk-test-001  │ europe-west4-a  │ {'expire': '31-12-2025', 'group': 'demo', 'owner': 'fkemps', 'purpose': 'fortipoc'}     │ TERMINATED │
+│ fpoc-fk-test-002  │ europe-west4-a  │ {'expire': '31-12-2025', 'group': 'demo', 'owner': 'fkemps',  purpose': 'fortipoc'}     │ TERMINATED │
+│ fpoc-fk-test-003  │ europe-west4-a  │ {'expire': '31-12-2025', 'group': 'demo', 'owner': 'fkemps', 'purpose': 'fortipoc'}     │ TERMINATED │
+└───────────────────┴─────────────────┴─────────────────────────────────────────────────────────────────────────────────────────┴────────────┘
+```
+
 ### Labelmodify
 The labelmodify action can be used to add/remove/replace labels from the selected instances.
 
