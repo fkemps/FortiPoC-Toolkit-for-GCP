@@ -91,7 +91,8 @@
 # 2024081401 Ferry Kemps, Shell code syntax checked and corrected
 # 2024081501 Ferry Kemps, Syntax updates, beta statements removed, reduced pd-standard-disk to 200GB to reduce storage cost, added bulk cloning
 # 2024081601 Ferry Kemps, Optimizing the bulk clone option
-GCPCMDVERSION="2024081601"
+# 2024082301 Ferry Kemps, Supressed instance delete output, added coloring
+GCPCMDVERSION="2024082301"
 
 # Disclaimer: This tool comes without warranty of any kind.
 #             Use it at your own risk. We assume no liability for the accuracy, group-management
@@ -208,20 +209,20 @@ function togglefirewallruleany() {
 
 function instancefirewallrules() {
    displayheader
-   echo "Listing all global instances and firewall-rules for Project:${GCPPROJECT} Owner:${OWNER} or Group:${FPGROUP}"
+   printf "Listing all global instances and firewall-rules for Project:${CYAN}${GCPPROJECT}${NOCOLOR} Owner:${CYAN}${OWNER}${NOCOLOR} or Group:${CYAN}${FPGROUP}${NOCOLOR}\n"
    gcloud compute instances list --filter="((labels.owner:${OWNER} OR labels.group:${FPGROUP}) AND tags.items:*)" --format="table[box,title='✨ FIREWALL-RULES ✨'](name:label=INSTANCE, zone:label=ZONE, tags.items:label=TAGS,STATUS)"
 }
 
 function instancelabels() {
    displayheader
-   echo "Listing all global instances and labels for Project:${GCPPROJECT} Owner:${OWNER} or Group:${FPGROUP}"
+   printf "Listing all global instances and labels for Project:${CYAN}${GCPPROJECT}${NOCOLOR} Owner:${OWNER} or Group:${CYAN}${FPGROUP}${NOCOLOR}\n"
    gcloud compute instances list --filter="(labels.owner:${OWNER} OR labels.group:${FPGROUP})" --format="table[box, title='✨ LABELS ✨'](name:label=INSTANCE, zone:label=ZONE, labels:label=LABELS,STATUS)"
 }
 
 function displayheader() {
    clear
    echo "-------------------------------------------------------------------------------------------"
-   echo "                        FortiPoC Toolkit for Google Cloud Platform                         "
+   printf "                        ${YELLOW}FortiPoC Toolkit for Google Cloud Platform${NOCOLOR}                         \n"
    echo "-------------------------------------------------------------------------------------------"
    echo ""
 }
@@ -484,8 +485,10 @@ function gcpclone {
 
    CLONESOURCE="${TYPE}-${FPPREPEND}-${PRODUCT}-${FPNUMBERTOCLONE}"
    CLONEMACHINEIMAGE="${TYPE}-${FPPREPEND}-${PRODUCT}"
+   
    # Make a rough time estimate to show
-   CLONETIME=$((FPCOUNT*2))
+   CLONETIME=$((FPCOUNT/4))
+   [[ CLONETIME -eq 0 ]] && CLONETIME="couple"
    echo ""; echo "==> Preparing machine-image(s)....be patienced, enjoy a tasty espresso (estimated ${CLONETIME} minutes))"
    STARTTIME=$SECONDS
    # Catch the 1 clone request 
@@ -557,7 +560,7 @@ function gcpdelete {
    INSTANCE=$4
    INSTANCENAME="${TYPE}-${FPPREPEND}-${PRODUCT}-${INSTANCE}"
    echo "==> Deleting instance ${INSTANCENAME}"
-   echo yes | gcloud compute instances delete ${INSTANCENAME} --zone=${ZONE}
+   echo yes | gcloud compute instances delete ${INSTANCENAME} --zone=${ZONE} > /dev/null 2>&1
 }
 
 # Function to change instance machinetype
@@ -708,18 +711,16 @@ function displayhelp {
    echo '| |_ / _ \|  __| __| | |_) / _ \ / __|   | |/ _ \ / _ \| | |/ / | __| | |_ / _ \|  __| | |  _| |   | |_) |'
    echo '|  _| (_) | |  | |_| |  __/ (_) | (__    | | (_) | (_) | |   <| | |_  |  _| (_) | |    | |_| | |___|  __/'
    echo '|_|  \___/|_|   \__|_|_|   \___/ \___|   |_|\___/ \___/|_|_|\_\_|\__| |_|  \___/|_|     \____|\____|_|'
-   echo "(Version: ${GCPCMDVERSION})"
+   printf "${LIGHTRED}(Version: ${GCPCMDVERSION})${NOCOLOR}\n"
    echo ""
-   echo "Selected project : ${GCPPROJECT}"
-   echo "Default deployment region: ${ZONE}"
-   echo "Personal instance identification: ${FPPREPEND}"
-   echo "Default product: ${PRODUCT}"
+   printf "Selected project : ${CYAN}${GCPPROJECT}${NOCOLOR}\n"
+   printf "Default deployment region: ${CYAN}${ZONE}${NOCOLOR}\n"
+   printf "Personal instance identification: ${CYAN}${FPPREPEND}${NOCOLOR}\n"
+   printf "Default product: ${CYAN}${PRODUCT}${NOCOLOR}\n"
    echo ""
-   echo "Usage: $0 [OPTIONS] [ARGUMENTS]"
-   echo "       $0 [OPTIONS] <region> <product> <action>"
+   echo "Usage: $0 [OPTIONS] [ARGUMENTS] e.g. $0 -z europe-west1-a -i fl <region> <product> <action>"
    echo "       $0 [OPTIONS] <-b configfile> <region> <product> build"
-   echo "       $0 [OPTIONS] [region] [product] list"
-   echo "       $0 [OPTIONS] [region] [product] listpubip"
+   echo "       $0 [OPTIONS] [region] [product] list|listpubip"
    echo "OPTIONS:"
    echo "        -b    --build-file                     File for building instances. Leave blank to generate example"
    echo "        -d    --delete-config                  Delete default user config settings"
@@ -1134,7 +1135,7 @@ fi
 if [ "${RUN_LISTGLOBAL}" == "true" ]; then
    displayheader
    #echo "Listing all global instances for project: ${GREENREVERSED}${GCPPROJECT}${NOCOLOR} owner:${GREENREVERSED}${OWNER}${NOCOLOR} or group:${GREENREVERSED}${FPGROUP}${NOCOLOR}"
-   echo "Listing all global instances for Project:${GCPPROJECT} Owner:${OWNER} or Group:${FPGROUP}"
+   printf "Listing all global instances for Project:${CYAN}${GCPPROJECT}${NOCOLOR} Owner:${CYAN}${OWNER}${NOCOLOR} or Group:${CYAN}${FPGROUP}${NOCOLOR}\n"
    echo ""
    gcplistglobal ${OWNER} ${FPGROUP} ${1}
    exit
@@ -1374,7 +1375,7 @@ if [[ ${ACTION} == accesslist || ${ACTION} == accessmodify || ${ACTION} == build
    [ "${choice}" != "y" ] && exit
 fi
 
-echo "==> Lets go...using Owner=${OWNER} or Group=${FPGROUP}, Project=${GCPPROJECT}, Zone=${ZONE}, Product=${PRODUCT}, Action=${ACTION}"
+printf "==> Lets go...using Owner=${CYAN}${OWNER}${NOCOLOR} or Group=${CYAN}${FPGROUP}${NOCOLOR}, Project=${CYAN}${GCPPROJECT}${NOCOLOR}, Zone=${CYAN}${ZONE}${NOCOLOR}, Product=${CYAN}${PRODUCT}${NOCOLOR}, Action=${CYAN}${ACTION}${NOCOLOR}\n"
 echo
 
 export -f gcpaccessmodify gcpbuild gcpstart gcpstop gcpdelete gcpclone gcpclonebulk gcpmachinetype gcpmove gcprename gcpglobalaccess gcplabelmodify
