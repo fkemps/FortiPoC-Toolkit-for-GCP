@@ -91,7 +91,7 @@
 # 2024081401 Ferry Kemps, Shell code syntax checked and corrected
 # 2024081501 Ferry Kemps, Syntax updates, beta statements removed, reduced pd-standard-disk to 200GB to reduce storage cost, added bulk cloning
 # 2024081601 Ferry Kemps, Optimizing the bulk clone option
-# 2024082301 Ferry Kemps, Supressed instance delete output, added coloring
+# 2024082301 Ferry Kemps, Supressed instance delete output, added coloring, fixed --project-select/add, image build
 GCPCMDVERSION="2024082301"
 
 # Disclaimer: This tool comes without warranty of any kind.
@@ -1053,11 +1053,11 @@ while [[ "$1" =~ ^-.* ]]; do
       displaypreferences ${GCPCMDCONF}
       exit
       ;;
-   -pa | --projectadd)
+   -pa | --project-add)
       gatherpreferences new
       exit
       ;;
-   -ps | --projectselect)
+   -ps | --project-select)
       projectselect
       exit
       ;;
